@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import { CATEGORIES, type RequestCategory } from "@/lib/categories";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowBigUp, MapPin, ArrowLeft, Flag, Loader2, Send } from "lucide-react";
+import { ArrowBigUp, MapPin, ArrowLeft, Flag, Loader2, Send, Store } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function RequestDetailPage() {

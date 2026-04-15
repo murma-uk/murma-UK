@@ -3,29 +3,67 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "@/components/Navbar";
-import MapView from "@/components/MapView";
+import MapView, { type MapBusiness } from "@/components/MapView";
 import RequestCard from "@/components/RequestCard";
 import CategoryFilter from "@/components/CategoryFilter";
 import CreateRequestDialog from "@/components/CreateRequestDialog";
 import { type RequestCategory } from "@/lib/categories";
-import { Loader2 } from "lucide-react";
+import { Loader2, Store, Map, List } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function ExplorePage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [requests, setRequests] = useState<any[]>([]);
+  const [businesses, setBusinesses] = useState<MapBusiness[]>([]);
   const [upvotedIds, setUpvotedIds] = useState<Set<string>>(new Set());
   const [selectedCategory, setSelectedCategory] = useState<RequestCategory | null>(null);
+  const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(searchParams.get("create") === "true");
+  const [viewMode, setViewMode] = useState<"businesses" | "requests">("businesses");
 
   const fetchRequests = useCallback(async () => {
     let query = supabase.from("requests").select("*").eq("status", "active").order("upvote_count", { ascending: false });
     if (selectedCategory) query = query.eq("category", selectedCategory);
+    if (selectedBusinessId) query = query.eq("business_id" as any, selectedBusinessId);
     const { data } = await query;
     setRequests(data ?? []);
     setLoading(false);
-  }, [selectedCategory]);
+  }, [selectedCategory, selectedBusinessId]);
+
+  const fetchBusinesses = useCallback(async () => {
+    // Fetch businesses that have at least one request linked
+    const { data } = await supabase.from("businesses").select("*");
+    if (!data) return;
+
+    // Count requests per business
+    const { data: reqCounts } = await supabase
+      .from("requests")
+      .select("business_id")
+      .eq("status", "active")
+      .not("business_id" as any, "is", null);
+
+    const countMap = new Map<string, number>();
+    reqCounts?.forEach((r: any) => {
+      countMap.set(r.business_id, (countMap.get(r.business_id) || 0) + 1);
+    });
+
+    const mapped: MapBusiness[] = data
+      .filter((b: any) => countMap.has(b.id))
+      .map((b: any) => ({
+        id: b.id,
+        name: b.name,
+        business_type: b.business_type || "business",
+        lat: b.lat,
+        lng: b.lng,
+        town: b.town,
+        request_count: countMap.get(b.id) || 0,
+      }));
+
+    setBusinesses(mapped);
+  }, []);
 
   const fetchUpvotes = useCallback(async () => {
     if (!user) return;
@@ -35,12 +73,18 @@ export default function ExplorePage() {
 
   useEffect(() => {
     fetchRequests();
+    fetchBusinesses();
     fetchUpvotes();
-  }, [fetchRequests, fetchUpvotes]);
+  }, [fetchRequests, fetchBusinesses, fetchUpvotes]);
 
   const handleCreateOpenChange = (open: boolean) => {
     setCreateOpen(open);
     if (!open) setSearchParams({});
+  };
+
+  const handleBusinessClick = (id: string) => {
+    setSelectedBusinessId(id === selectedBusinessId ? null : id);
+    setViewMode("requests");
   };
 
   const mapRequests = requests.map((r) => ({
@@ -53,6 +97,8 @@ export default function ExplorePage() {
     upvote_count: r.upvote_count,
   }));
 
+  const selectedBiz = businesses.find((b) => b.id === selectedBusinessId);
+
   return (
     <div className="flex h-screen flex-col bg-background">
       <Navbar />
@@ -61,14 +107,83 @@ export default function ExplorePage() {
         {/* Sidebar */}
         <div className="flex w-full flex-col border-r border-border md:w-96">
           <div className="border-b border-border p-4">
-            <h2 className="mb-3 font-heading text-lg font-bold">Requests</h2>
-            <CategoryFilter selected={selectedCategory} onSelect={setSelectedCategory} />
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="font-heading text-lg font-bold">
+                {viewMode === "businesses" ? "Businesses" : "Requests"}
+              </h2>
+              <div className="flex gap-1">
+                <Button
+                  variant={viewMode === "businesses" ? "default" : "outline"}
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  onClick={() => { setViewMode("businesses"); setSelectedBusinessId(null); }}
+                >
+                  <Store className="h-3.5 w-3.5" />
+                  Businesses
+                </Button>
+                <Button
+                  variant={viewMode === "requests" ? "default" : "outline"}
+                  size="sm"
+                  className="gap-1.5 text-xs"
+                  onClick={() => { setViewMode("requests"); setSelectedBusinessId(null); }}
+                >
+                  <List className="h-3.5 w-3.5" />
+                  Requests
+                </Button>
+              </div>
+            </div>
+
+            {viewMode === "requests" && (
+              <>
+                {selectedBiz && (
+                  <div className="mb-3 flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2">
+                    <Store className="h-4 w-4 text-primary shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{selectedBiz.name}</p>
+                      <p className="text-xs text-muted-foreground">{selectedBiz.request_count} request{selectedBiz.request_count !== 1 ? "s" : ""}</p>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => setSelectedBusinessId(null)}>
+                      Clear
+                    </Button>
+                  </div>
+                )}
+                <CategoryFilter selected={selectedCategory} onSelect={setSelectedCategory} />
+              </>
+            )}
           </div>
+
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {loading ? (
               <div className="flex justify-center py-12">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
+            ) : viewMode === "businesses" ? (
+              businesses.length === 0 ? (
+                <div className="py-12 text-center text-sm text-muted-foreground">
+                  No businesses with requests yet. Create a request and link a business!
+                </div>
+              ) : (
+                businesses.map((b) => (
+                  <button
+                    key={b.id}
+                    className="w-full rounded-lg border border-border bg-card p-4 text-left hover:border-primary/30 transition-colors"
+                    onClick={() => handleBusinessClick(b.id)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                        <Store className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-heading font-semibold truncate">{b.name}</h3>
+                        <p className="text-sm text-muted-foreground capitalize">
+                          {b.business_type.replace(/_/g, " ")} · {b.town}
+                        </p>
+                      </div>
+                      <span className="text-sm font-bold text-primary">{b.request_count}</span>
+                    </div>
+                  </button>
+                ))
+              )
             ) : requests.length === 0 ? (
               <div className="py-12 text-center text-sm text-muted-foreground">
                 No requests yet. Be the first to make one!
@@ -94,14 +209,19 @@ export default function ExplorePage() {
 
         {/* Map */}
         <div className="hidden flex-1 md:block">
-          <MapView requests={mapRequests} />
+          <MapView
+            requests={viewMode === "requests" ? mapRequests : []}
+            businesses={viewMode === "businesses" ? businesses : (selectedBiz ? [selectedBiz] : [])}
+            onMarkerClick={(id) => navigate(`/request/${id}`)}
+            onBusinessClick={handleBusinessClick}
+          />
         </div>
       </div>
 
       <CreateRequestDialog
         open={createOpen}
         onOpenChange={handleCreateOpenChange}
-        onCreated={fetchRequests}
+        onCreated={() => { fetchRequests(); fetchBusinesses(); }}
       />
     </div>
   );
