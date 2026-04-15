@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      businesses: {
+        Row: {
+          address: string | null
+          business_type: string | null
+          created_at: string
+          id: string
+          lat: number
+          lng: number
+          name: string
+          osm_id: number | null
+          town: string
+        }
+        Insert: {
+          address?: string | null
+          business_type?: string | null
+          created_at?: string
+          id?: string
+          lat: number
+          lng: number
+          name: string
+          osm_id?: number | null
+          town: string
+        }
+        Update: {
+          address?: string | null
+          business_type?: string | null
+          created_at?: string
+          id?: string
+          lat?: number
+          lng?: number
+          name?: string
+          osm_id?: number | null
+          town?: string
+        }
+        Relationships: []
+      }
       comments: {
         Row: {
           content: string
@@ -75,6 +111,7 @@ export type Database = {
       }
       requests: {
         Row: {
+          business_id: string | null
           category: Database["public"]["Enums"]["request_category"]
           created_at: string
           description: string | null
@@ -89,6 +126,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          business_id?: string | null
           category: Database["public"]["Enums"]["request_category"]
           created_at?: string
           description?: string | null
@@ -103,6 +141,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          business_id?: string | null
           category?: Database["public"]["Enums"]["request_category"]
           created_at?: string
           description?: string | null
@@ -116,7 +155,15 @@ export type Database = {
           upvote_count?: number
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "requests_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       upvotes: {
         Row: {

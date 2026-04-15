@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import { CATEGORIES, type RequestCategory } from "@/lib/categories";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowBigUp, MapPin, ArrowLeft, Flag, Loader2, Send } from "lucide-react";
+import { ArrowBigUp, MapPin, ArrowLeft, Flag, Loader2, Send, Store } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function RequestDetailPage() {
@@ -16,6 +16,7 @@ export default function RequestDetailPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [request, setRequest] = useState<any>(null);
+  const [business, setBusiness] = useState<any>(null);
   const [comments, setComments] = useState<any[]>([]);
   const [hasUpvoted, setHasUpvoted] = useState(false);
   const [newComment, setNewComment] = useState("");
@@ -29,6 +30,18 @@ export default function RequestDetailPage() {
       supabase.from("comments").select("*").eq("request_id", id).order("created_at", { ascending: true }),
     ]);
     setRequest(reqRes.data);
+
+    // Fetch linked business if any
+    if (reqRes.data?.business_id) {
+      const { data: bizData } = await supabase
+        .from("businesses")
+        .select("*")
+        .eq("id", reqRes.data.business_id)
+        .single();
+      setBusiness(bizData);
+    } else {
+      setBusiness(null);
+    }
 
     // Fetch display names for commenters
     if (comRes.data && comRes.data.length > 0) {
@@ -137,6 +150,18 @@ export default function RequestDetailPage() {
           <h1 className="font-heading text-2xl font-bold md:text-3xl">{request.title}</h1>
           {request.description && (
             <p className="mt-3 text-muted-foreground leading-relaxed">{request.description}</p>
+          )}
+
+          {business && (
+            <div className="mt-4 flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
+              <Store className="h-4 w-4 text-primary shrink-0" />
+              <div>
+                <p className="text-sm font-medium">{business.name}</p>
+                <p className="text-xs text-muted-foreground capitalize">
+                  {business.business_type?.replace(/_/g, " ")} · {business.town}
+                </p>
+              </div>
+            </div>
           )}
 
           <div className="mt-6 flex items-center gap-4">
