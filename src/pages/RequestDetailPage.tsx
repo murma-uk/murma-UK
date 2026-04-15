@@ -190,7 +190,7 @@ export default function RequestDetailPage() {
               <div key={c.id} className="rounded-lg border border-border bg-card p-4">
                 <div className="mb-2 flex items-center justify-between">
                   <span className="text-sm font-medium font-heading">
-                    {c.profiles?.display_name ?? "Anonymous"}
+                    {c.display_name ?? "Anonymous"}
                   </span>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground">
