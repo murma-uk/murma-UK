@@ -26,9 +26,17 @@ export default function RequestDetailPage() {
     if (!id) return;
     const [reqRes, comRes] = await Promise.all([
       supabase.from("requests").select("*").eq("id", id).single(),
-      supabase.from("comments").select("*, profiles(display_name)").eq("request_id", id).order("created_at", { ascending: true }),
+      supabase.from("comments").select("*").eq("request_id", id).order("created_at", { ascending: true }),
     ]);
     setRequest(reqRes.data);
+
+    // Fetch display names for commenters
+    if (comRes.data && comRes.data.length > 0) {
+      const userIds = [...new Set(comRes.data.map((c: any) => c.user_id))];
+      const { data: profiles } = await supabase.from("profiles").select("user_id, display_name").in("user_id", userIds);
+      const profileMap = new Map(profiles?.map((p: any) => [p.user_id, p.display_name]) ?? []);
+      comRes.data.forEach((c: any) => { c.display_name = profileMap.get(c.user_id) ?? "Anonymous"; });
+    }
     setComments(comRes.data ?? []);
 
     if (user) {
