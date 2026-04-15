@@ -25,9 +25,9 @@ export default function ExplorePage() {
   const [viewMode, setViewMode] = useState<"businesses" | "requests">("businesses");
 
   const fetchRequests = useCallback(async () => {
-    let query = supabase.from("requests").select("*").eq("status", "active").order("upvote_count", { ascending: false });
+    let query = supabase.from("requests").select("*").eq("status", "active").order("upvote_count", { ascending: false }) as any;
     if (selectedCategory) query = query.eq("category", selectedCategory);
-    if (selectedBusinessId) query = query.eq("business_id" as any, selectedBusinessId);
+    if (selectedBusinessId) query = query.eq("business_id", selectedBusinessId);
     const { data } = await query;
     setRequests(data ?? []);
     setLoading(false);
@@ -39,11 +39,11 @@ export default function ExplorePage() {
     if (!data) return;
 
     // Count requests per business
-    const { data: reqCounts } = await supabase
+    const { data: reqCounts } = await (supabase
       .from("requests")
       .select("business_id")
       .eq("status", "active")
-      .not("business_id" as any, "is", null);
+      .not("business_id", "is", null) as any);
 
     const countMap = new Map<string, number>();
     reqCounts?.forEach((r: any) => {
