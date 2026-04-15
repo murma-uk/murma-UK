@@ -16,6 +16,7 @@ export default function RequestDetailPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [request, setRequest] = useState<any>(null);
+  const [business, setBusiness] = useState<any>(null);
   const [comments, setComments] = useState<any[]>([]);
   const [hasUpvoted, setHasUpvoted] = useState(false);
   const [newComment, setNewComment] = useState("");
@@ -29,6 +30,18 @@ export default function RequestDetailPage() {
       supabase.from("comments").select("*").eq("request_id", id).order("created_at", { ascending: true }),
     ]);
     setRequest(reqRes.data);
+
+    // Fetch linked business if any
+    if (reqRes.data?.business_id) {
+      const { data: bizData } = await supabase
+        .from("businesses")
+        .select("*")
+        .eq("id", reqRes.data.business_id)
+        .single();
+      setBusiness(bizData);
+    } else {
+      setBusiness(null);
+    }
 
     // Fetch display names for commenters
     if (comRes.data && comRes.data.length > 0) {
