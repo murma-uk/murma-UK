@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { CATEGORIES, type RequestCategory } from "@/lib/categories";
@@ -12,6 +11,15 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
 });
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function createCategoryIcon(category: RequestCategory) {
   const color = CATEGORIES[category].color;
   return L.divIcon({
@@ -20,6 +28,7 @@ function createCategoryIcon(category: RequestCategory) {
       width: 28px; height: 28px; border-radius: 50% 50% 50% 0;
       background: ${color}; transform: rotate(-45deg);
       border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      position: relative;
     "><div style="
       width: 10px; height: 10px; border-radius: 50%;
       background: white; position: absolute;
@@ -36,7 +45,7 @@ function createBusinessIcon() {
     className: "custom-marker",
     html: `<div style="
       width: 32px; height: 32px; border-radius: 6px;
-      background: hsl(210, 100%, 50%); transform: none;
+      background: hsl(var(--primary));
       border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.35);
       display: flex; align-items: center; justify-content: center;
     "><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -79,14 +88,6 @@ interface MapViewProps {
   className?: string;
 }
 
-function FlyTo({ center, zoom }: { center: [number, number]; zoom: number }) {
-  const map = useMap();
-  useEffect(() => {
-    map.flyTo(center, zoom, { duration: 1 });
-  }, [center, zoom, map]);
-  return null;
-}
-
 export default function MapView({
   requests,
   businesses = [],
@@ -96,56 +97,83 @@ export default function MapView({
   zoom = 6,
   className = "",
 }: MapViewProps) {
-  return (
-    <MapContainer
-      center={center}
-      zoom={zoom}
-      className={`z-0 rounded-lg ${className}`}
-      style={{ height: "100%", width: "100%" }}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      <FlyTo center={center} zoom={zoom} />
+  const mapElementRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<L.Map | null>(null);
+  const markerLayerRef = useRef<L.LayerGroup | null>(null);
 
-      {/* Business markers */}
-      {businesses.map((biz) => (
-        <Marker
-          key={`biz-${biz.id}`}
-          position={[biz.lat, biz.lng]}
-          icon={createBusinessIcon()}
-          eventHandlers={{ click: () => onBusinessClick?.(biz.id) }}
-        >
-          <Popup>
-            <div className="font-heading">
-              <strong>{biz.name}</strong>
-              <br />
-              <span className="text-sm capitalize">{biz.business_type.replace(/_/g, " ")}</span>
-              <br />
-              <span className="text-sm text-muted-foreground">{biz.town} · {biz.request_count} request{biz.request_count !== 1 ? "s" : ""}</span>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
+  useEffect(() => {
+    if (!mapElementRef.current || mapRef.current) return;
 
-      {/* Request markers (shown when no businesses or as overlay) */}
-      {requests.map((req) => (
-        <Marker
-          key={req.id}
-          position={[req.lat, req.lng]}
-          icon={createCategoryIcon(req.category)}
-          eventHandlers={{ click: () => onMarkerClick?.(req.id) }}
-        >
-          <Popup>
-            <div className="font-heading">
-              <strong>{req.title}</strong>
-              <br />
-              <span className="text-sm">{req.town} · {req.upvote_count} votes</span>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
-    </MapContainer>
-  );
+    const map = L.map(mapElementRef.current, {
+      zoomControl: true,
+      attributionControl: true,
+    }).setView(center, zoom);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
+
+    markerLayerRef.current = L.layerGroup().addTo(map);
+    mapRef.current = map;
+
+    return () => {
+      markerLayerRef.current?.clearLayers();
+      markerLayerRef.current = null;
+      map.remove();
+      mapRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!mapRef.current) return;
+    mapRef.current.flyTo(center, zoom, { duration: 1 });
+  }, [center, zoom]);
+
+  useEffect(() => {
+    const layer = markerLayerRef.current;
+    if (!layer) return;
+
+    layer.clearLayers();
+
+    businesses.forEach((biz) => {
+      const marker = L.marker([biz.lat, biz.lng], {
+        icon: createBusinessIcon(),
+      });
+
+      marker.bindPopup(`
+        <div class="font-heading">
+          <strong>${escapeHtml(biz.name)}</strong><br />
+          <span class="text-sm capitalize">${escapeHtml(biz.business_type.replace(/_/g, " "))}</span><br />
+          <span class="text-sm">${escapeHtml(biz.town)} · ${biz.request_count} request${biz.request_count !== 1 ? "s" : ""}</span>
+        </div>
+      `);
+
+      if (onBusinessClick) {
+        marker.on("click", () => onBusinessClick(biz.id));
+      }
+
+      marker.addTo(layer);
+    });
+
+    requests.forEach((req) => {
+      const marker = L.marker([req.lat, req.lng], {
+        icon: createCategoryIcon(req.category),
+      });
+
+      marker.bindPopup(`
+        <div class="font-heading">
+          <strong>${escapeHtml(req.title)}</strong><br />
+          <span class="text-sm">${escapeHtml(req.town)} · ${req.upvote_count} votes</span>
+        </div>
+      `);
+
+      if (onMarkerClick) {
+        marker.on("click", () => onMarkerClick(req.id));
+      }
+
+      marker.addTo(layer);
+    });
+  }, [requests, businesses, onMarkerClick, onBusinessClick]);
+
+  return <div ref={mapElementRef} className={`z-0 rounded-lg ${className}`} style={{ height: "100%", width: "100%" }} />;
 }
