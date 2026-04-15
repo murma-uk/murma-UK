@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -31,6 +31,24 @@ function createCategoryIcon(category: RequestCategory) {
   });
 }
 
+function createBusinessIcon() {
+  return L.divIcon({
+    className: "custom-marker",
+    html: `<div style="
+      width: 32px; height: 32px; border-radius: 6px;
+      background: hsl(210, 100%, 50%); transform: none;
+      border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+      display: flex; align-items: center; justify-content: center;
+    "><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+      <polyline points="9 22 9 12 15 12 15 22"></polyline>
+    </svg></div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  });
+}
+
 interface MapRequest {
   id: string;
   title: string;
@@ -41,9 +59,21 @@ interface MapRequest {
   upvote_count: number;
 }
 
+export interface MapBusiness {
+  id: string;
+  name: string;
+  business_type: string;
+  lat: number;
+  lng: number;
+  town: string;
+  request_count: number;
+}
+
 interface MapViewProps {
   requests: MapRequest[];
+  businesses?: MapBusiness[];
   onMarkerClick?: (id: string) => void;
+  onBusinessClick?: (id: string) => void;
   center?: [number, number];
   zoom?: number;
   className?: string;
@@ -59,7 +89,9 @@ function FlyTo({ center, zoom }: { center: [number, number]; zoom: number }) {
 
 export default function MapView({
   requests,
+  businesses = [],
   onMarkerClick,
+  onBusinessClick,
   center = [53.5, -2],
   zoom = 6,
   className = "",
@@ -76,6 +108,28 @@ export default function MapView({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <FlyTo center={center} zoom={zoom} />
+
+      {/* Business markers */}
+      {businesses.map((biz) => (
+        <Marker
+          key={`biz-${biz.id}`}
+          position={[biz.lat, biz.lng]}
+          icon={createBusinessIcon()}
+          eventHandlers={{ click: () => onBusinessClick?.(biz.id) }}
+        >
+          <Popup>
+            <div className="font-heading">
+              <strong>{biz.name}</strong>
+              <br />
+              <span className="text-sm capitalize">{biz.business_type.replace(/_/g, " ")}</span>
+              <br />
+              <span className="text-sm text-muted-foreground">{biz.town} · {biz.request_count} request{biz.request_count !== 1 ? "s" : ""}</span>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+
+      {/* Request markers (shown when no businesses or as overlay) */}
       {requests.map((req) => (
         <Marker
           key={req.id}
