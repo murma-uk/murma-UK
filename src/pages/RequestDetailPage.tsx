@@ -152,6 +152,18 @@ export default function RequestDetailPage() {
             <p className="mt-3 text-muted-foreground leading-relaxed">{request.description}</p>
           )}
 
+          {business && (
+            <div className="mt-4 flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3">
+              <Store className="h-4 w-4 text-primary shrink-0" />
+              <div>
+                <p className="text-sm font-medium">{business.name}</p>
+                <p className="text-xs text-muted-foreground capitalize">
+                  {business.business_type?.replace(/_/g, " ")} · {business.town}
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="mt-6 flex items-center gap-4">
             <Button
               onClick={handleUpvote}
