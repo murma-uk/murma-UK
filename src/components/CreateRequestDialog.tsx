@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
+import BusinessSearch, { type BusinessResult } from "./BusinessSearch";
 
 interface Props {
   open: boolean;
@@ -24,6 +25,7 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated }: P
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState<RequestCategory | "">("");
   const [town, setTown] = useState("");
+  const [selectedBusiness, setSelectedBusiness] = useState<BusinessResult | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,17 +33,51 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated }: P
 
     setLoading(true);
     try {
-      // Geocode town to get coordinates (simple approach using Nominatim)
-      const geoRes = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(town)}&format=json&limit=1&countrycodes=gb,ie`
-      );
-      const geoData = await geoRes.json();
-
       let lat = 51.5074;
       let lng = -0.1278;
-      if (geoData.length > 0) {
-        lat = parseFloat(geoData[0].lat);
-        lng = parseFloat(geoData[0].lon);
+      let businessId: string | undefined;
+
+      if (selectedBusiness) {
+        // Use business coordinates and upsert business record
+        lat = selectedBusiness.lat;
+        lng = selectedBusiness.lng;
+
+        // Check if business already exists
+        const { data: existing } = await supabase
+          .from("businesses")
+          .select("id")
+          .eq("osm_id", selectedBusiness.osm_id)
+          .maybeSingle();
+
+        if (existing) {
+          businessId = existing.id;
+        } else {
+          const { data: newBiz, error: bizErr } = await supabase
+            .from("businesses")
+            .insert({
+              osm_id: selectedBusiness.osm_id,
+              name: selectedBusiness.name,
+              business_type: selectedBusiness.business_type,
+              lat: selectedBusiness.lat,
+              lng: selectedBusiness.lng,
+              town: selectedBusiness.town,
+              address: selectedBusiness.address || null,
+            })
+            .select("id")
+            .single();
+          if (bizErr) throw bizErr;
+          businessId = newBiz.id;
+        }
+      } else {
+        // Geocode town
+        const geoRes = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(town)}&format=json&limit=1&countrycodes=gb,ie`
+        );
+        const geoData = await geoRes.json();
+        if (geoData.length > 0) {
+          lat = parseFloat(geoData[0].lat);
+          lng = parseFloat(geoData[0].lon);
+        }
       }
 
       const { error } = await supabase.from("requests").insert({
@@ -52,7 +88,8 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated }: P
         lat,
         lng,
         user_id: user.id,
-      });
+        business_id: businessId || null,
+      } as any);
 
       if (error) throw error;
 
@@ -61,6 +98,7 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated }: P
       setDescription("");
       setCategory("");
       setTown("");
+      setSelectedBusiness(null);
       onOpenChange(false);
       onCreated?.();
     } catch (err: any) {
@@ -115,6 +153,12 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated }: P
             value={town}
             onChange={(e) => setTown(e.target.value)}
             required
+          />
+
+          <BusinessSearch
+            town={town}
+            selected={selectedBusiness}
+            onSelect={setSelectedBusiness}
           />
 
           <Button type="submit" className="w-full font-heading font-medium" disabled={loading || !category || !title || !town}>
