@@ -84,8 +84,33 @@ export default function ExplorePage() {
 
   const handleCreateOpenChange = (open: boolean) => {
     setCreateOpen(open);
-    if (!open) setSearchParams({});
+    if (!open) {
+      setSearchParams({});
+      setDroppedPin(null);
+    }
   };
+
+  const handleMapClick = useCallback(async (lat: number, lng: number) => {
+    if (!user) {
+      toast({ title: "Please sign in", description: "Sign in to drop a pin and create a request.", variant: "destructive" });
+      navigate("/auth");
+      return;
+    }
+    setPinMode(false);
+    // Reverse geocode to get a town name
+    let town = "";
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=12&addressdetails=1`
+      );
+      const data = await res.json();
+      town = data?.address?.city || data?.address?.town || data?.address?.village || data?.address?.suburb || data?.address?.county || "";
+    } catch {
+      // ignore
+    }
+    setDroppedPin({ lat, lng, town });
+    setCreateOpen(true);
+  }, [user, navigate, toast]);
 
   const handleBusinessClick = (id: string) => {
     setSelectedBusinessId(id === selectedBusinessId ? null : id);
