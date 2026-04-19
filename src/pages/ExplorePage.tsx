@@ -254,20 +254,50 @@ export default function ExplorePage() {
         </div>
 
         {/* Map */}
-        <div className={`${mobileView === "map" ? "flex" : "hidden"} md:flex flex-1`}>
+        <div className={`${mobileView === "map" ? "flex" : "hidden"} md:flex flex-1 relative`}>
           <MapView
             requests={viewMode === "requests" ? mapRequests : []}
             businesses={viewMode === "businesses" ? businesses : (selectedBiz ? [selectedBiz] : [])}
-            onMarkerClick={(id) => navigate(`/request/${id}`)}
-            onBusinessClick={handleBusinessClick}
+            onMarkerClick={(id) => pinMode ? undefined : navigate(`/request/${id}`)}
+            onBusinessClick={(id) => pinMode ? undefined : handleBusinessClick(id)}
+            onMapClick={handleMapClick}
+            pinMode={pinMode}
+            droppedPin={droppedPin}
           />
+
+          {/* Drop pin floating control */}
+          <div className="pointer-events-none absolute inset-x-0 top-3 z-[400] flex justify-center px-3">
+            {pinMode ? (
+              <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-card/95 border border-primary/40 px-3 py-2 shadow-lg backdrop-blur">
+                <MapPin className="h-4 w-4 text-primary animate-pulse" />
+                <span className="text-sm font-medium">Tap the map to drop a pin</span>
+                <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => setPinMode(false)}>
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ) : (
+              <Button
+                size="sm"
+                className="pointer-events-auto rounded-full shadow-lg gap-2"
+                onClick={() => {
+                  if (!user) { navigate("/auth"); return; }
+                  setPinMode(true);
+                  setMobileView("map");
+                }}
+              >
+                <MapPin className="h-4 w-4" />
+                Drop pin to request
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
       <CreateRequestDialog
         open={createOpen}
         onOpenChange={handleCreateOpenChange}
-        onCreated={() => { fetchRequests(); fetchBusinesses(); }}
+        onCreated={() => { fetchRequests(); fetchBusinesses(); setDroppedPin(null); }}
+        pinLocation={droppedPin}
       />
     </div>
   );
