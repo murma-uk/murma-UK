@@ -208,7 +208,7 @@ export default function ExplorePage() {
         </div>
 
         {/* Map */}
-        <div className="hidden flex-1 md:block">
+        <div className="hidden flex-1 sm:block">
           <MapView
             requests={viewMode === "requests" ? mapRequests : []}
             businesses={viewMode === "businesses" ? businesses : (selectedBiz ? [selectedBiz] : [])}
