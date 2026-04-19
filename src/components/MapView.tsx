@@ -182,6 +182,15 @@ export default function MapView({
     }
   }, [droppedPin]);
 
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const map = mapRef.current;
+    const nextCenter = getSafeCenter(center);
+    const nextZoom = Number.isFinite(zoom) ? zoom : 6;
+    if (!hasVisibleSize(map)) {
+      map.setView(nextCenter, nextZoom, { animate: false });
+      return;
+    }
     map.invalidateSize(false);
     map.flyTo(nextCenter, nextZoom, { duration: 1 });
   }, [center, zoom]);
