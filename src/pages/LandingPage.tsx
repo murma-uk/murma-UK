@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, MapPin, ArrowBigUp, Users, Building2, Landmark } from "lucide-react";
 import { CATEGORIES, type RequestCategory } from "@/lib/categories";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const stats = [
   { label: "Active Requests", value: "—", icon: MapPin },
@@ -161,13 +162,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border bg-card/50 py-8">
-        <div className="container text-center text-sm text-muted-foreground">
-          <p>© {new Date().getFullYear()} Hey, Open Up. UK/EU GDPR compliant.</p>
-          <p className="mt-1">Your data is stored securely. We never share personal information.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }

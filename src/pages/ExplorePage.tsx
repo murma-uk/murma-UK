@@ -8,7 +8,7 @@ import RequestCard from "@/components/RequestCard";
 import CategoryFilter from "@/components/CategoryFilter";
 import CreateRequestDialog from "@/components/CreateRequestDialog";
 import { type RequestCategory } from "@/lib/categories";
-import { Loader2, Store, List } from "lucide-react";
+import { Loader2, Store, List, Map as MapIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function ExplorePage() {
@@ -23,6 +23,7 @@ export default function ExplorePage() {
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(searchParams.get("create") === "true");
   const [viewMode, setViewMode] = useState<"businesses" | "requests">("businesses");
+  const [mobileView, setMobileView] = useState<"list" | "map">("list");
 
   const fetchRequests = useCallback(async () => {
     let query = supabase.from("requests").select("*").eq("status", "active").order("upvote_count", { ascending: false }) as any;
@@ -103,11 +104,27 @@ export default function ExplorePage() {
     <div className="flex h-screen flex-col bg-background">
       <Navbar />
 
+      {/* Mobile Map/List toggle */}
+      <div className="flex border-b border-border bg-card md:hidden">
+        <button
+          className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${mobileView === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
+          onClick={() => setMobileView("list")}
+        >
+          <List className="h-4 w-4" /> List
+        </button>
+        <button
+          className={`flex-1 flex items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${mobileView === "map" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}
+          onClick={() => setMobileView("map")}
+        >
+          <MapIcon className="h-4 w-4" /> Map
+        </button>
+      </div>
+
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <div className="flex w-full flex-col border-r border-border sm:w-72 md:w-96 sm:flex-shrink-0">
+        <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex w-full flex-col border-r border-border md:w-96 md:flex-shrink-0`}>
           <div className="border-b border-border p-4">
-            <div className="mb-3 flex items-center justify-between">
+            <div className="mb-3 flex items-center justify-between gap-2">
               <h2 className="font-heading text-lg font-bold">
                 {viewMode === "businesses" ? "Businesses" : "Requests"}
               </h2>
@@ -167,7 +184,7 @@ export default function ExplorePage() {
                   <button
                     key={b.id}
                     className="w-full rounded-lg border border-border bg-card p-4 text-left hover:border-primary/30 transition-colors"
-                    onClick={() => handleBusinessClick(b.id)}
+                    onClick={() => { handleBusinessClick(b.id); setMobileView("map"); }}
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
@@ -208,7 +225,7 @@ export default function ExplorePage() {
         </div>
 
         {/* Map */}
-        <div className="hidden flex-1 sm:block">
+        <div className={`${mobileView === "map" ? "flex" : "hidden"} md:flex flex-1`}>
           <MapView
             requests={viewMode === "requests" ? mapRequests : []}
             businesses={viewMode === "businesses" ? businesses : (selectedBiz ? [selectedBiz] : [])}
