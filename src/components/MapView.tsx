@@ -11,6 +11,21 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
 });
 
+const DEFAULT_CENTER: [number, number] = [53.5, -2];
+
+function isValidLatLng(lat: unknown, lng: unknown): lat is number {
+  return typeof lat === "number" && typeof lng === "number" && Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
+}
+
+function getSafeCenter(center: [number, number] | undefined) {
+  return center && isValidLatLng(center[0], center[1]) ? center : DEFAULT_CENTER;
+}
+
+function hasVisibleSize(map: L.Map) {
+  const container = map.getContainer();
+  return container.clientWidth > 0 && container.clientHeight > 0;
+}
+
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, "&amp;")
@@ -93,7 +108,7 @@ export default function MapView({
   businesses = [],
   onMarkerClick,
   onBusinessClick,
-  center = [53.5, -2],
+  center = DEFAULT_CENTER,
   zoom = 6,
   className = "",
 }: MapViewProps) {
@@ -104,10 +119,13 @@ export default function MapView({
   useEffect(() => {
     if (!mapElementRef.current || mapRef.current) return;
 
+    const initialCenter = getSafeCenter(center);
+    const initialZoom = Number.isFinite(zoom) ? zoom : 6;
+
     const map = L.map(mapElementRef.current, {
       zoomControl: true,
       attributionControl: true,
-    }).setView(center, zoom);
+    }).setView(initialCenter, initialZoom);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>',
@@ -126,7 +144,18 @@ export default function MapView({
 
   useEffect(() => {
     if (!mapRef.current) return;
-    mapRef.current.flyTo(center, zoom, { duration: 1 });
+
+    const map = mapRef.current;
+    const nextCenter = getSafeCenter(center);
+    const nextZoom = Number.isFinite(zoom) ? zoom : 6;
+
+    if (!hasVisibleSize(map)) {
+      map.setView(nextCenter, nextZoom, { animate: false });
+      return;
+    }
+
+    map.invalidateSize(false);
+    map.flyTo(nextCenter, nextZoom, { duration: 1 });
   }, [center, zoom]);
 
   useEffect(() => {
@@ -136,6 +165,8 @@ export default function MapView({
     layer.clearLayers();
 
     businesses.forEach((biz) => {
+      if (!isValidLatLng(biz.lat, biz.lng)) return;
+
       const marker = L.marker([biz.lat, biz.lng], {
         icon: createBusinessIcon(),
       });
@@ -156,6 +187,8 @@ export default function MapView({
     });
 
     requests.forEach((req) => {
+      if (!isValidLatLng(req.lat, req.lng)) return;
+
       const marker = L.marker([req.lat, req.lng], {
         icon: createCategoryIcon(req.category),
       });
