@@ -109,7 +109,7 @@ export default function MapView({
   onMarkerClick,
   onBusinessClick,
   center = DEFAULT_CENTER,
-  zoom = 6,
+  zoom = 5, // UK-wide view
   className = "",
 }: MapViewProps) {
   const mapElementRef = useRef<HTMLDivElement | null>(null);
