@@ -98,6 +98,9 @@ interface MapViewProps {
   businesses?: MapBusiness[];
   onMarkerClick?: (id: string) => void;
   onBusinessClick?: (id: string) => void;
+  onMapClick?: (lat: number, lng: number) => void;
+  pinMode?: boolean;
+  droppedPin?: { lat: number; lng: number } | null;
   center?: [number, number];
   zoom?: number;
   className?: string;
@@ -108,6 +111,9 @@ export default function MapView({
   businesses = [],
   onMarkerClick,
   onBusinessClick,
+  onMapClick,
+  pinMode = false,
+  droppedPin = null,
   center = DEFAULT_CENTER,
   zoom = 5, // UK-wide view
   className = "",
@@ -115,6 +121,11 @@ export default function MapView({
   const mapElementRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markerLayerRef = useRef<L.LayerGroup | null>(null);
+  const pinMarkerRef = useRef<L.Marker | null>(null);
+  const onMapClickRef = useRef(onMapClick);
+  onMapClickRef.current = onMapClick;
+  const pinModeRef = useRef(pinMode);
+  pinModeRef.current = pinMode;
 
   useEffect(() => {
     if (!mapElementRef.current || mapRef.current) return;
