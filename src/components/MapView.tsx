@@ -145,25 +145,42 @@ export default function MapView({
     markerLayerRef.current = L.layerGroup().addTo(map);
     mapRef.current = map;
 
+    map.on("click", (e: L.LeafletMouseEvent) => {
+      if (pinModeRef.current && onMapClickRef.current) {
+        onMapClickRef.current(e.latlng.lat, e.latlng.lng);
+      }
+    });
+
     return () => {
       markerLayerRef.current?.clearLayers();
       markerLayerRef.current = null;
+      pinMarkerRef.current = null;
       map.remove();
       mapRef.current = null;
     };
   }, []);
 
+  // Pin mode cursor + dropped pin marker
   useEffect(() => {
-    if (!mapRef.current) return;
-
     const map = mapRef.current;
-    const nextCenter = getSafeCenter(center);
-    const nextZoom = Number.isFinite(zoom) ? zoom : 6;
+    if (!map) return;
+    const container = map.getContainer();
+    container.style.cursor = pinMode ? "crosshair" : "";
+  }, [pinMode]);
 
-    if (!hasVisibleSize(map)) {
-      map.setView(nextCenter, nextZoom, { animate: false });
-      return;
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (pinMarkerRef.current) {
+      pinMarkerRef.current.remove();
+      pinMarkerRef.current = null;
     }
+    if (droppedPin && isValidLatLng(droppedPin.lat, droppedPin.lng)) {
+      pinMarkerRef.current = L.marker([droppedPin.lat, droppedPin.lng], {
+        zIndexOffset: 1000,
+      }).addTo(map);
+    }
+  }, [droppedPin]);
 
     map.invalidateSize(false);
     map.flyTo(nextCenter, nextZoom, { duration: 1 });
