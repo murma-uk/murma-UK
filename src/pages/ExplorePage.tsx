@@ -8,12 +8,14 @@ import RequestCard from "@/components/RequestCard";
 import CategoryFilter from "@/components/CategoryFilter";
 import CreateRequestDialog from "@/components/CreateRequestDialog";
 import { type RequestCategory } from "@/lib/categories";
-import { Loader2, Store, List, Map as MapIcon } from "lucide-react";
+import { Loader2, Store, List, Map as MapIcon, MapPin, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ExplorePage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const [requests, setRequests] = useState<any[]>([]);
   const [businesses, setBusinesses] = useState<MapBusiness[]>([]);
@@ -24,6 +26,8 @@ export default function ExplorePage() {
   const [createOpen, setCreateOpen] = useState(searchParams.get("create") === "true");
   const [viewMode, setViewMode] = useState<"businesses" | "requests">("businesses");
   const [mobileView, setMobileView] = useState<"list" | "map">("list");
+  const [pinMode, setPinMode] = useState(false);
+  const [droppedPin, setDroppedPin] = useState<{ lat: number; lng: number; town: string } | null>(null);
 
   const fetchRequests = useCallback(async () => {
     let query = supabase.from("requests").select("*").eq("status", "active").order("upvote_count", { ascending: false }) as any;
@@ -80,8 +84,33 @@ export default function ExplorePage() {
 
   const handleCreateOpenChange = (open: boolean) => {
     setCreateOpen(open);
-    if (!open) setSearchParams({});
+    if (!open) {
+      setSearchParams({});
+      setDroppedPin(null);
+    }
   };
+
+  const handleMapClick = useCallback(async (lat: number, lng: number) => {
+    if (!user) {
+      toast({ title: "Please sign in", description: "Sign in to drop a pin and create a request.", variant: "destructive" });
+      navigate("/auth");
+      return;
+    }
+    setPinMode(false);
+    // Reverse geocode to get a town name
+    let town = "";
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=12&addressdetails=1`
+      );
+      const data = await res.json();
+      town = data?.address?.city || data?.address?.town || data?.address?.village || data?.address?.suburb || data?.address?.county || "";
+    } catch {
+      // ignore
+    }
+    setDroppedPin({ lat, lng, town });
+    setCreateOpen(true);
+  }, [user, navigate, toast]);
 
   const handleBusinessClick = (id: string) => {
     setSelectedBusinessId(id === selectedBusinessId ? null : id);
@@ -225,20 +254,50 @@ export default function ExplorePage() {
         </div>
 
         {/* Map */}
-        <div className={`${mobileView === "map" ? "flex" : "hidden"} md:flex flex-1`}>
+        <div className={`${mobileView === "map" ? "flex" : "hidden"} md:flex flex-1 relative`}>
           <MapView
             requests={viewMode === "requests" ? mapRequests : []}
             businesses={viewMode === "businesses" ? businesses : (selectedBiz ? [selectedBiz] : [])}
-            onMarkerClick={(id) => navigate(`/request/${id}`)}
-            onBusinessClick={handleBusinessClick}
+            onMarkerClick={(id) => pinMode ? undefined : navigate(`/request/${id}`)}
+            onBusinessClick={(id) => pinMode ? undefined : handleBusinessClick(id)}
+            onMapClick={handleMapClick}
+            pinMode={pinMode}
+            droppedPin={droppedPin}
           />
+
+          {/* Drop pin floating control */}
+          <div className="pointer-events-none absolute inset-x-0 top-3 z-[400] flex justify-center px-3">
+            {pinMode ? (
+              <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-card/95 border border-primary/40 px-3 py-2 shadow-lg backdrop-blur">
+                <MapPin className="h-4 w-4 text-primary animate-pulse" />
+                <span className="text-sm font-medium">Tap the map to drop a pin</span>
+                <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => setPinMode(false)}>
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ) : (
+              <Button
+                size="sm"
+                className="pointer-events-auto rounded-full shadow-lg gap-2"
+                onClick={() => {
+                  if (!user) { navigate("/auth"); return; }
+                  setPinMode(true);
+                  setMobileView("map");
+                }}
+              >
+                <MapPin className="h-4 w-4" />
+                Drop pin to request
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
       <CreateRequestDialog
         open={createOpen}
         onOpenChange={handleCreateOpenChange}
-        onCreated={() => { fetchRequests(); fetchBusinesses(); }}
+        onCreated={() => { fetchRequests(); fetchBusinesses(); setDroppedPin(null); }}
+        pinLocation={droppedPin}
       />
     </div>
   );
