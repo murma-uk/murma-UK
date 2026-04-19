@@ -23,6 +23,7 @@ export default function ExplorePage() {
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(searchParams.get("create") === "true");
   const [viewMode, setViewMode] = useState<"businesses" | "requests">("businesses");
+  const [mobileView, setMobileView] = useState<"list" | "map">("list");
 
   const fetchRequests = useCallback(async () => {
     let query = supabase.from("requests").select("*").eq("status", "active").order("upvote_count", { ascending: false }) as any;
