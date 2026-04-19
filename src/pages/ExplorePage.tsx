@@ -105,7 +105,7 @@ export default function ExplorePage() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <div className="flex w-full flex-col border-r border-border md:w-96">
+        <div className="flex w-full flex-col border-r border-border sm:w-80 md:w-96 sm:flex-shrink-0 max-sm:hidden">
           <div className="border-b border-border p-4">
             <div className="mb-3 flex items-center justify-between">
               <h2 className="font-heading text-lg font-bold">
