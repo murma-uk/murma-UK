@@ -8,7 +8,7 @@ import RequestCard from "@/components/RequestCard";
 import CategoryFilter from "@/components/CategoryFilter";
 import CreateRequestDialog from "@/components/CreateRequestDialog";
 import { type RequestCategory } from "@/lib/categories";
-import { Loader2, Store, List } from "lucide-react";
+import { Loader2, Store, List, Map as MapIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function ExplorePage() {
