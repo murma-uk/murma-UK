@@ -11,7 +11,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
 });
 
-const DEFAULT_CENTER: [number, number] = [53.5, -2];
+const DEFAULT_CENTER: [number, number] = [51.5, -0.12]; // London, UK
 
 function isValidLatLng(lat: unknown, lng: unknown): lat is number {
   return typeof lat === "number" && typeof lng === "number" && Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
