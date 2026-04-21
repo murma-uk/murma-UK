@@ -151,7 +151,29 @@ export default function MapView({
       }
     });
 
+    // Watch container size — Leaflet needs invalidateSize() when its container
+    // goes from hidden (0x0) to visible (e.g. mobile tab toggle, orientation change).
+    let lastW = 0;
+    let lastH = 0;
+    const resizeObserver = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      const { width, height } = entry.contentRect;
+      if (width === lastW && height === lastH) return;
+      const wasHidden = lastW === 0 || lastH === 0;
+      lastW = width;
+      lastH = height;
+      if (width === 0 || height === 0) return;
+      map.invalidateSize(false);
+      // When revealing from hidden, re-centre so tiles load around the right spot.
+      if (wasHidden) {
+        map.setView(map.getCenter(), map.getZoom(), { animate: false });
+      }
+    });
+    resizeObserver.observe(mapElementRef.current);
+
     return () => {
+      resizeObserver.disconnect();
       markerLayerRef.current?.clearLayers();
       markerLayerRef.current = null;
       pinMarkerRef.current = null;
