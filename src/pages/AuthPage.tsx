@@ -1,11 +1,12 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Loader2 } from "lucide-react";
+import { MapPin, Loader2, FileText } from "lucide-react";
 
 export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -13,12 +14,20 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [hasPendingDraft, setHasPendingDraft] = useState(false);
   const { signIn, signUp, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const redirectTo = searchParams.get("redirect") || "/explore";
+
+  useEffect(() => {
+    setHasPendingDraft(!!sessionStorage.getItem("pendingRequest"));
+  }, []);
 
   if (user) {
-    navigate("/explore");
+    navigate(redirectTo);
     return null;
   }
 
@@ -31,7 +40,7 @@ export default function AuthPage() {
         toast({ title: "Check your email", description: "We sent you a confirmation link." });
       } else {
         await signIn(email, password);
-        navigate("/explore");
+        navigate(redirectTo);
       }
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -53,6 +62,14 @@ export default function AuthPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {hasPendingDraft && (
+            <Alert className="mb-4 border-primary/30 bg-primary/5">
+              <FileText className="h-4 w-4 text-primary" />
+              <AlertDescription className="text-xs">
+                Your request draft is saved — {isSignUp ? "sign up and confirm your email" : "sign in"} to post it.
+              </AlertDescription>
+            </Alert>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
               <Input
