@@ -83,6 +83,23 @@ export default function ExplorePage() {
     fetchUpvotes();
   }, [fetchRequests, fetchBusinesses, fetchUpvotes]);
 
+  // Resume pending draft after sign-in
+  useEffect(() => {
+    if (!user) return;
+    const raw = sessionStorage.getItem("pendingRequest");
+    if (!raw) return;
+    try {
+      const draft = JSON.parse(raw);
+      if (draft?.lat != null && draft?.lng != null) {
+        setDroppedPin({ lat: draft.lat, lng: draft.lng, town: draft.town || "" });
+      }
+      setInitialDraft(draft);
+      setCreateOpen(true);
+    } catch {
+      sessionStorage.removeItem("pendingRequest");
+    }
+  }, [user]);
+
   const handleCreateOpenChange = (open: boolean) => {
     setCreateOpen(open);
     if (!open) {
