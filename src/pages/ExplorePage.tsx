@@ -105,6 +105,7 @@ export default function ExplorePage() {
     if (!open) {
       setSearchParams({});
       setDroppedPin(null);
+      setInitialDraft(null);
     }
   };
 
