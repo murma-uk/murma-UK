@@ -28,6 +28,7 @@ export default function ExplorePage() {
   const [mobileView, setMobileView] = useState<"list" | "map">("list");
   const [pinMode, setPinMode] = useState(false);
   const [droppedPin, setDroppedPin] = useState<{ lat: number; lng: number; town: string } | null>(null);
+  const [initialDraft, setInitialDraft] = useState<any | null>(null);
 
   const fetchRequests = useCallback(async () => {
     let query = supabase.from("requests").select("*").eq("status", "active").order("upvote_count", { ascending: false }) as any;
@@ -82,20 +83,33 @@ export default function ExplorePage() {
     fetchUpvotes();
   }, [fetchRequests, fetchBusinesses, fetchUpvotes]);
 
+  // Resume pending draft after sign-in
+  useEffect(() => {
+    if (!user) return;
+    const raw = sessionStorage.getItem("pendingRequest");
+    if (!raw) return;
+    try {
+      const draft = JSON.parse(raw);
+      if (draft?.lat != null && draft?.lng != null) {
+        setDroppedPin({ lat: draft.lat, lng: draft.lng, town: draft.town || "" });
+      }
+      setInitialDraft(draft);
+      setCreateOpen(true);
+    } catch {
+      sessionStorage.removeItem("pendingRequest");
+    }
+  }, [user]);
+
   const handleCreateOpenChange = (open: boolean) => {
     setCreateOpen(open);
     if (!open) {
       setSearchParams({});
       setDroppedPin(null);
+      setInitialDraft(null);
     }
   };
 
   const handleMapClick = useCallback(async (lat: number, lng: number) => {
-    if (!user) {
-      toast({ title: "Please sign in", description: "Sign in to drop a pin and create a request.", variant: "destructive" });
-      navigate("/auth");
-      return;
-    }
     setPinMode(false);
     // Reverse geocode to get a town name
     let town = "";
@@ -276,18 +290,24 @@ export default function ExplorePage() {
                 </Button>
               </div>
             ) : (
-              <Button
-                size="sm"
-                className="pointer-events-auto rounded-full shadow-lg gap-2"
-                onClick={() => {
-                  if (!user) { navigate("/auth"); return; }
-                  setPinMode(true);
-                  setMobileView("map");
-                }}
-              >
-                <MapPin className="h-4 w-4" />
-                Drop pin to request
-              </Button>
+              <div className="pointer-events-auto flex flex-col items-center gap-1">
+                <Button
+                  size="sm"
+                  className="rounded-full shadow-lg gap-2"
+                  onClick={() => {
+                    setPinMode(true);
+                    setMobileView("map");
+                  }}
+                >
+                  <MapPin className="h-4 w-4" />
+                  Drop pin to request
+                </Button>
+                {!user && (
+                  <span className="rounded-full bg-card/95 border border-border px-2.5 py-0.5 text-[11px] text-muted-foreground shadow-sm backdrop-blur">
+                    Plan now — sign in required to post
+                  </span>
+                )}
+              </div>
             )}
           </div>
         </div>
@@ -296,8 +316,15 @@ export default function ExplorePage() {
       <CreateRequestDialog
         open={createOpen}
         onOpenChange={handleCreateOpenChange}
-        onCreated={() => { fetchRequests(); fetchBusinesses(); setDroppedPin(null); }}
+        onCreated={() => {
+          fetchRequests();
+          fetchBusinesses();
+          setDroppedPin(null);
+          setInitialDraft(null);
+          sessionStorage.removeItem("pendingRequest");
+        }}
         pinLocation={droppedPin}
+        initialDraft={initialDraft}
       />
     </div>
   );

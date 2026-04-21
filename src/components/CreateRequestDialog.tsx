@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CATEGORIES, type RequestCategory } from "@/lib/categories";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, MapPin } from "lucide-react";
+import { Loader2, MapPin, Lock, ArrowRight } from "lucide-react";
 import BusinessSearch, { type BusinessResult } from "./BusinessSearch";
 
 interface PinLocation {
@@ -18,18 +20,38 @@ interface PinLocation {
   town: string;
 }
 
+export interface RequestDraft {
+  title?: string;
+  description?: string;
+  category?: RequestCategory | "";
+  town?: string;
+  lat?: number;
+  lng?: number;
+  selectedBusiness?: BusinessResult | null;
+  openTime?: string;
+  closeTime?: string;
+  days?: string[];
+  classType?: string;
+  skillLevel?: string;
+  artistName?: string;
+  eventDate?: string;
+  audienceSize?: string;
+}
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated?: () => void;
   pinLocation?: PinLocation | null;
+  initialDraft?: RequestDraft | null;
 }
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-export default function CreateRequestDialog({ open, onOpenChange, onCreated, pinLocation }: Props) {
+export default function CreateRequestDialog({ open, onOpenChange, onCreated, pinLocation, initialDraft }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -51,6 +73,24 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
   useEffect(() => {
     if (pinLocation?.town && !town) setTown(pinLocation.town);
   }, [pinLocation]);
+
+  // Hydrate from saved draft (resume after sign-in)
+  useEffect(() => {
+    if (!initialDraft || !open) return;
+    if (initialDraft.title) setTitle(initialDraft.title);
+    if (initialDraft.description) setDescription(initialDraft.description);
+    if (initialDraft.category) setCategory(initialDraft.category);
+    if (initialDraft.town) setTown(initialDraft.town);
+    if (initialDraft.selectedBusiness) setSelectedBusiness(initialDraft.selectedBusiness);
+    if (initialDraft.openTime) setOpenTime(initialDraft.openTime);
+    if (initialDraft.closeTime) setCloseTime(initialDraft.closeTime);
+    if (initialDraft.days) setDays(initialDraft.days);
+    if (initialDraft.classType) setClassType(initialDraft.classType);
+    if (initialDraft.skillLevel) setSkillLevel(initialDraft.skillLevel);
+    if (initialDraft.artistName) setArtistName(initialDraft.artistName);
+    if (initialDraft.eventDate) setEventDate(initialDraft.eventDate);
+    if (initialDraft.audienceSize) setAudienceSize(initialDraft.audienceSize);
+  }, [initialDraft, open]);
 
   const reset = () => {
     setTitle(""); setDescription(""); setCategory(""); setTown("");
@@ -76,8 +116,6 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
       if (artistName) parts.push(`Artist: ${artistName}`);
       if (eventDate) parts.push(`Preferred date: ${eventDate}`);
       if (audienceSize) parts.push(`Estimated audience: ${audienceSize}`);
-    } else if (category === "new_branch") {
-      // location handled by pin/town
     }
     if (description.trim()) parts.push(description.trim());
     return parts.join("\n");
@@ -85,7 +123,28 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !category) return;
+    if (!category) return;
+
+    // Guest: save draft to sessionStorage and redirect to auth
+    if (!user) {
+      const draft: RequestDraft = {
+        title, description, category, town,
+        lat: pinLocation?.lat, lng: pinLocation?.lng,
+        selectedBusiness,
+        openTime, closeTime, days,
+        classType, skillLevel,
+        artistName, eventDate, audienceSize,
+      };
+      try {
+        sessionStorage.setItem("pendingRequest", JSON.stringify(draft));
+      } catch {
+        // ignore storage errors
+      }
+      toast({ title: "Draft saved", description: "Sign in to post your request — we'll bring you back here." });
+      onOpenChange(false);
+      navigate("/auth?redirect=/explore&resume=request");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -123,7 +182,6 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
           businessId = newBiz.id;
         }
       } else if (!pinLocation) {
-        // Geocode town fallback when no pin & no business
         const geoRes = await fetch(
           `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(town)}&format=json&limit=1&countrycodes=gb,ie`
         );
@@ -249,6 +307,8 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
     }
   };
 
+  const isGuest = !user;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
@@ -262,6 +322,16 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
             </DialogDescription>
           )}
         </DialogHeader>
+
+        {isGuest && (
+          <Alert className="border-primary/30 bg-primary/5">
+            <Lock className="h-4 w-4 text-primary" />
+            <AlertDescription className="text-xs">
+              You can plan your request now. You'll need to sign in to post it — your draft will be saved.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label className="text-xs">Request type</Label>
@@ -324,9 +394,30 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
             />
           </div>
 
-          <Button type="submit" className="w-full font-heading font-medium" disabled={loading || !category || !title || !town}>
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Submit Request"}
-          </Button>
+          <div className="space-y-1.5">
+            <Button
+              type="submit"
+              className="w-full font-heading font-medium gap-2"
+              disabled={loading || !category || !title || !town}
+            >
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : isGuest ? (
+                <>
+                  <Lock className="h-4 w-4" />
+                  Continue to sign in
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              ) : (
+                "Submit Request"
+              )}
+            </Button>
+            {isGuest && (
+              <p className="text-center text-[11px] text-muted-foreground">
+                We'll save your draft and bring you back here after sign-in.
+              </p>
+            )}
+          </div>
         </form>
       </DialogContent>
     </Dialog>
