@@ -91,11 +91,6 @@ export default function ExplorePage() {
   };
 
   const handleMapClick = useCallback(async (lat: number, lng: number) => {
-    if (!user) {
-      toast({ title: "Please sign in", description: "Sign in to drop a pin and create a request.", variant: "destructive" });
-      navigate("/auth");
-      return;
-    }
     setPinMode(false);
     // Reverse geocode to get a town name
     let town = "";
