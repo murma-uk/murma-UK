@@ -316,8 +316,15 @@ export default function ExplorePage() {
       <CreateRequestDialog
         open={createOpen}
         onOpenChange={handleCreateOpenChange}
-        onCreated={() => { fetchRequests(); fetchBusinesses(); setDroppedPin(null); }}
+        onCreated={() => {
+          fetchRequests();
+          fetchBusinesses();
+          setDroppedPin(null);
+          setInitialDraft(null);
+          sessionStorage.removeItem("pendingRequest");
+        }}
         pinLocation={droppedPin}
+        initialDraft={initialDraft}
       />
     </div>
   );
