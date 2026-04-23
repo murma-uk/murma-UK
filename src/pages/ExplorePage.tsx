@@ -254,6 +254,7 @@ export default function ExplorePage() {
                 <RequestCard
                   key={r.id}
                   id={r.id}
+                  slug={r.slug}
                   title={r.title}
                   description={r.description}
                   category={r.category as RequestCategory}
