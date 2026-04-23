@@ -104,21 +104,21 @@ export default function RequestDetailPage() {
 
   const handleUpvote = async () => {
     if (!user) { navigate("/auth"); return; }
-    if (!id) return;
+    if (!request?.id) return;
     if (hasUpvoted) {
-      await supabase.from("upvotes").delete().eq("request_id", id).eq("user_id", user.id);
+      await supabase.from("upvotes").delete().eq("request_id", request.id).eq("user_id", user.id);
     } else {
-      await supabase.from("upvotes").insert({ request_id: id, user_id: user.id });
+      await supabase.from("upvotes").insert({ request_id: request.id, user_id: user.id });
     }
     fetchData();
   };
 
   const handleComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !id || !newComment.trim()) return;
+    if (!user || !request?.id || !newComment.trim()) return;
     setPosting(true);
     const { error } = await supabase.from("comments").insert({
-      request_id: id,
+      request_id: request.id,
       user_id: user.id,
       content: newComment.trim(),
     });
