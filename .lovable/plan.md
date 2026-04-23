@@ -1,66 +1,66 @@
 
-## Plan: Pretty request URLs with slugs
 
-Move request URLs from `/request/{uuid}` to `/request/{slug}-{shortId}` (e.g. `/request/bring-tk-maxx-to-leeds-8f2a1c3d`). Old UUID-only links keep working.
+## Plan: Fix the two security warnings
 
-### URL format
+### Issue 1 — `unaccent` extension in `public` schema
 
+Move it to the dedicated `extensions` schema where Supabase expects it. The `slugify()` function already has `SET search_path = public, extensions`, so it'll keep working unchanged.
+
+**Migration:**
+```sql
+DROP EXTENSION IF EXISTS unaccent;
+CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA extensions;
 ```
-/request/bring-tk-maxx-to-leeds-8f2a1c3d
-         └────── slug ───────┘ └─ short ─┘
+
+If the drop fails because `slugify()` depends on it, we'll `CREATE EXTENSION ... WITH SCHEMA extensions` first and then update `slugify()` to call `extensions.unaccent(...)` explicitly.
+
+### Issue 2 — `businesses.INSERT` policy is wide open
+
+Currently any signed-in user can insert any row into `businesses` (`WITH CHECK (true)`), which means a malicious user could spam fake business records. We can't drop the table without a bigger refactor (the Businesses sidebar, map markers, and `requests.business_id` join all depend on it), so we'll move the insert path off the client and behind a trusted server boundary that re-validates the data against a third-party source (OpenStreetMap, which we already use).
+
+**Approach:** Replace direct client inserts with an edge function `link-business` that:
+
+1. Accepts `{ osm_id, osm_type }` from the client (just the OSM identifier — no name/coords/etc. that the client could forge).
+2. Validates the user's JWT.
+3. Fetches the canonical record from the OSM API server-side:
+   `https://www.openstreetmap.org/api/0.6/{node|way|relation}/{osm_id}.json`
+4. Extracts `name`, `tags.shop|amenity|leisure|tourism`, `lat`, `lng`, address fields directly from the OSM response — client-supplied values are ignored.
+5. Reverse-geocodes the town via Nominatim (server-side, with our app's User-Agent).
+6. Upserts into `businesses` keyed on `osm_id` using the service role (bypassing RLS).
+7. Returns the `businesses.id` for the client to attach as `requests.business_id`.
+
+Then tighten RLS:
+```sql
+DROP POLICY "Authenticated users can add businesses" ON public.businesses;
+-- No INSERT policy = no client inserts allowed.
+-- The edge function uses the service role, which bypasses RLS.
 ```
 
-- **slug** — kebab-case from `title` (+ `town` if not already in title), max 60 chars, ASCII only.
-- **shortId** — first 8 chars of the request UUID. Enough to disambiguate; we still resolve via DB lookup so collisions don't break.
+**Client changes** (`src/components/CreateRequestDialog.tsx`):
+- Replace the inline `select existing → insert new` block with a single `supabase.functions.invoke("link-business", { body: { osm_id, osm_type } })` call that returns `{ business_id }`.
+- `BusinessSearch` already gets `osm_id` from Overpass; we'll also pass through `osm_type` (Overpass returns `type: "node"` etc. — store it on `BusinessResult`).
 
-### Database changes (migration)
-
-1. Add `slug text` column to `requests` (nullable, no unique constraint — the short-id keeps URLs unique).
-2. Create a SQL helper `public.slugify(text)` that lowercases, strips diacritics, replaces non-alphanumerics with `-`, trims, and clips to 60 chars.
-3. Trigger `requests_set_slug` BEFORE INSERT OR UPDATE OF title, town: sets `NEW.slug = slugify(NEW.title || '-' || NEW.town)` when slug is null or title/town changed.
-4. Backfill: `UPDATE requests SET slug = slugify(title || '-' || town) WHERE slug IS NULL;`
-
-No RLS changes needed — slug is a public field on an already-public table.
-
-### Code changes
-
-**`src/lib/slug.ts` (new)** — tiny helpers:
-- `buildRequestPath(id, slug)` → `/request/${slug}-${id.slice(0,8)}` (falls back to `/request/${id}` if slug missing).
-- `parseRequestParam(param)` → returns `{ shortId, isUuid }`. If param is a full UUID, treat as legacy. Otherwise extract the trailing 8-hex-char segment as `shortId`.
-
-**`src/pages/RequestDetailPage.tsx`** — update fetch logic:
-- Use `parseRequestParam(id)`.
-- If full UUID: `eq("id", id)` as today, then `navigate(buildRequestPath(...), { replace: true })` to canonicalise.
-- If short-id: query with `.ilike("id::text", shortId + "%")` — actually use `.filter("id", "like", shortId + "%")` after casting; simpler: store `id_short` as a generated column. **Decision:** add a generated column `id_short text GENERATED ALWAYS AS (substring(id::text, 1, 8)) STORED` with an index, then `.eq("id_short", shortId)`.
-- 404 if no match; if multiple matches (collision), pick newest and log a warning.
-
-**Update all link generators** to use `buildRequestPath(r.id, r.slug)`:
-- `src/components/RequestCard.tsx` (navigate on click)
-- `src/pages/ExplorePage.tsx` (`onMarkerClick` → navigate)
-- `src/pages/MyRequestsPage.tsx` (if/when present)
-- `ShareButton` canonical URL
-
-**`src/App.tsx`** — route stays `/request/:id` (the param now accepts both formats; no router change needed).
-
-**Type regeneration** — `src/integrations/supabase/types.ts` will auto-regenerate after the migration so `requests.slug` and `id_short` are typed.
-
-### Backwards compatibility
-
-- Old `/request/{full-uuid}` links continue to work and 301-style redirect (via `navigate(..., { replace: true })`) to the pretty URL once loaded.
-- Already-shared links on social/messaging keep resolving.
+**Why this is safer:**
+- Users can no longer write arbitrary `name`/`lat`/`lng`/`address` to the public `businesses` table.
+- The server is the only writer, and it only writes data it fetched itself from OSM — a trusted third-party source.
+- Existing rows keep working unchanged; the table shape doesn't change (no schema migration on `businesses`).
 
 ### Files
 
 ```text
-NEW    supabase migration             — add slug, id_short, slugify(), trigger, backfill
-NEW    src/lib/slug.ts                — buildRequestPath / parseRequestParam
-EDIT   src/pages/RequestDetailPage.tsx — resolve by short-id or uuid, canonicalise URL
-EDIT   src/components/RequestCard.tsx  — link via buildRequestPath
-EDIT   src/pages/ExplorePage.tsx       — marker navigation via buildRequestPath
-EDIT   src/components/CreateRequestDialog.tsx — after insert, navigate to pretty URL (if it does so today)
+NEW    supabase/migrations/<ts>_security_fixes.sql
+         - move unaccent extension to extensions schema
+         - drop businesses INSERT policy
+NEW    supabase/functions/link-business/index.ts
+         - JWT verify, fetch OSM, upsert via service role
+EDIT   src/components/BusinessSearch.tsx
+         - include osm_type ("node"/"way"/"relation") on BusinessResult
+EDIT   src/components/CreateRequestDialog.tsx
+         - call link-business edge function instead of direct insert
 ```
 
 ### Notes
-- 8-hex-char short IDs give 4.3 billion combinations — collision risk is negligible at this scale, and the resolver handles it gracefully.
-- Slug is informational only; changing the title later updates the slug, but old links still resolve because the short-id is the actual key.
-- No SEO meta tags are added in this pass — can be a follow-up if you want richer link previews.
+- No user-facing UX change — picking a business and submitting still works the same way.
+- The edge function's outbound calls to OSM are rate-limited by OSM's fair-use policy (1 req/sec for Nominatim); for a community app this is fine.
+- We're NOT dropping the `businesses` table or moving fully to live OSM lookups — that would break the Businesses sidebar/map view, the `business_id` foreign-link on requests, and request counts per business. Happy to plan that as a separate larger refactor if you'd prefer.
+
