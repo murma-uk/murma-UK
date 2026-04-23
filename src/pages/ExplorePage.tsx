@@ -8,6 +8,7 @@ import RequestCard from "@/components/RequestCard";
 import CategoryFilter from "@/components/CategoryFilter";
 import CreateRequestDialog from "@/components/CreateRequestDialog";
 import { type RequestCategory } from "@/lib/categories";
+import { buildRequestPath } from "@/lib/slug";
 import { Loader2, Store, List, Map as MapIcon, MapPin, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -253,6 +254,7 @@ export default function ExplorePage() {
                 <RequestCard
                   key={r.id}
                   id={r.id}
+                  slug={r.slug}
                   title={r.title}
                   description={r.description}
                   category={r.category as RequestCategory}
@@ -272,7 +274,11 @@ export default function ExplorePage() {
           <MapView
             requests={viewMode === "requests" ? mapRequests : []}
             businesses={viewMode === "businesses" ? businesses : (selectedBiz ? [selectedBiz] : [])}
-            onMarkerClick={(id) => pinMode ? undefined : navigate(`/request/${id}`)}
+            onMarkerClick={(id) => {
+              if (pinMode) return;
+              const r = requests.find((x) => x.id === id);
+              navigate(buildRequestPath(id, r?.slug));
+            }}
             onBusinessClick={(id) => pinMode ? undefined : handleBusinessClick(id)}
             onMapClick={handleMapClick}
             pinMode={pinMode}

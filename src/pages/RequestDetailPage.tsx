@@ -5,13 +5,14 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import { CATEGORIES, type RequestCategory } from "@/lib/categories";
+import { buildRequestPath, parseRequestParam } from "@/lib/slug";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowBigUp, MapPin, ArrowLeft, Flag, Loader2, Send, Store } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function RequestDetailPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id: routeParam } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -24,60 +25,100 @@ export default function RequestDetailPage() {
   const [posting, setPosting] = useState(false);
 
   const fetchData = useCallback(async () => {
-    if (!id) return;
-    const [reqRes, comRes] = await Promise.all([
-      supabase.from("requests").select("*").eq("id", id).single(),
-      supabase.from("comments").select("*").eq("request_id", id).order("created_at", { ascending: true }),
-    ]);
-    setRequest(reqRes.data);
+    if (!routeParam) return;
+    const { uuid, shortId } = parseRequestParam(routeParam);
 
-    // Fetch linked business if any
-    if (reqRes.data?.business_id) {
+    // Resolve the request: by full UUID (legacy) or by id_short (pretty URL).
+    let reqQuery = supabase.from("requests").select("*");
+    if (uuid) {
+      reqQuery = reqQuery.eq("id", uuid);
+    } else if (shortId) {
+      reqQuery = (reqQuery as any).eq("id_short", shortId);
+    } else {
+      setRequest(null);
+      setLoading(false);
+      return;
+    }
+
+    const { data: reqRows } = await reqQuery
+      .order("created_at", { ascending: false })
+      .limit(1);
+    const reqData = reqRows?.[0] ?? null;
+    setRequest(reqData);
+
+    if (!reqData) {
+      setLoading(false);
+      return;
+    }
+
+    // Canonicalise the URL: if user landed via legacy UUID or mismatched slug,
+    // replace the URL with the pretty one (no history entry).
+    const canonical = buildRequestPath(reqData.id, (reqData as any).slug);
+    if (canonical !== `/request/${routeParam}`) {
+      navigate(canonical, { replace: true });
+    }
+
+    const { data: comData } = await supabase
+      .from("comments")
+      .select("*")
+      .eq("request_id", reqData.id)
+      .order("created_at", { ascending: true });
+
+    if (reqData.business_id) {
       const { data: bizData } = await supabase
         .from("businesses")
         .select("*")
-        .eq("id", reqRes.data.business_id)
+        .eq("id", reqData.business_id)
         .single();
       setBusiness(bizData);
     } else {
       setBusiness(null);
     }
 
-    // Fetch display names for commenters
-    if (comRes.data && comRes.data.length > 0) {
-      const userIds = [...new Set(comRes.data.map((c: any) => c.user_id))];
-      const { data: profiles } = await supabase.from("profiles").select("user_id, display_name").in("user_id", userIds);
+    if (comData && comData.length > 0) {
+      const userIds = [...new Set(comData.map((c: any) => c.user_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, display_name")
+        .in("user_id", userIds);
       const profileMap = new Map(profiles?.map((p: any) => [p.user_id, p.display_name]) ?? []);
-      comRes.data.forEach((c: any) => { c.display_name = profileMap.get(c.user_id) ?? "Anonymous"; });
+      comData.forEach((c: any) => {
+        c.display_name = profileMap.get(c.user_id) ?? "Anonymous";
+      });
     }
-    setComments(comRes.data ?? []);
+    setComments(comData ?? []);
 
     if (user) {
-      const { data } = await supabase.from("upvotes").select("id").eq("request_id", id).eq("user_id", user.id).maybeSingle();
+      const { data } = await supabase
+        .from("upvotes")
+        .select("id")
+        .eq("request_id", reqData.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
       setHasUpvoted(!!data);
     }
     setLoading(false);
-  }, [id, user]);
+  }, [routeParam, user, navigate]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
   const handleUpvote = async () => {
     if (!user) { navigate("/auth"); return; }
-    if (!id) return;
+    if (!request?.id) return;
     if (hasUpvoted) {
-      await supabase.from("upvotes").delete().eq("request_id", id).eq("user_id", user.id);
+      await supabase.from("upvotes").delete().eq("request_id", request.id).eq("user_id", user.id);
     } else {
-      await supabase.from("upvotes").insert({ request_id: id, user_id: user.id });
+      await supabase.from("upvotes").insert({ request_id: request.id, user_id: user.id });
     }
     fetchData();
   };
 
   const handleComment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !id || !newComment.trim()) return;
+    if (!user || !request?.id || !newComment.trim()) return;
     setPosting(true);
     const { error } = await supabase.from("comments").insert({
-      request_id: id,
+      request_id: request.id,
       user_id: user.id,
       content: newComment.trim(),
     });
