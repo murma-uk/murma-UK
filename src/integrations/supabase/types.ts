@@ -116,8 +116,10 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          id_short: string | null
           lat: number
           lng: number
+          slug: string | null
           status: string
           title: string
           town: string
@@ -131,8 +133,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          id_short?: string | null
           lat: number
           lng: number
+          slug?: string | null
           status?: string
           title: string
           town: string
@@ -146,8 +150,10 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          id_short?: string | null
           lat?: number
           lng?: number
+          slug?: string | null
           status?: string
           title?: string
           town?: string
@@ -224,6 +230,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      slugify: { Args: { input: string }; Returns: string }
+      unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
       app_role: "user" | "business" | "authority" | "admin"

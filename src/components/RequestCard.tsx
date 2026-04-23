@@ -6,9 +6,11 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
+import { buildRequestPath } from "@/lib/slug";
 
 interface RequestCardProps {
   id: string;
+  slug?: string | null;
   title: string;
   description: string | null;
   category: RequestCategory;
@@ -21,7 +23,7 @@ interface RequestCardProps {
 }
 
 export default function RequestCard({
-  id, title, description, category, town, upvoteCount,
+  id, slug, title, description, category, town, upvoteCount,
   commentCount = 0, hasUpvoted, createdAt, onUpvoteChange,
 }: RequestCardProps) {
   const { user } = useAuth();
@@ -57,7 +59,7 @@ export default function RequestCard({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className="card-hover cursor-pointer rounded-lg border border-border bg-card p-4"
-      onClick={() => navigate(`/request/${id}`)}
+      onClick={() => navigate(buildRequestPath(id, slug))}
     >
       <div className="flex gap-3">
         <div className="flex flex-col items-center gap-1">
