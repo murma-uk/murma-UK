@@ -267,6 +267,23 @@ export default function ExplorePage() {
               ))
             )}
           </div>
+
+          {/* Floating create button (mobile list view) */}
+          <div className="md:hidden pointer-events-none absolute bottom-4 right-4 z-20 flex flex-col items-end gap-1">
+            <Button
+              size="sm"
+              className="pointer-events-auto rounded-full shadow-lg gap-2 h-11 px-4"
+              onClick={() => setCreateOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              New request
+            </Button>
+            {!user && (
+              <span className="pointer-events-auto rounded-full bg-card/95 border border-border px-2.5 py-0.5 text-[11px] text-muted-foreground shadow-sm backdrop-blur">
+                Plan now — sign in required to post
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Map */}
