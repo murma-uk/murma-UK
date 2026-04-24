@@ -307,13 +307,19 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-xl">New Request</DialogTitle>
-          {pinLocation && (
+          {selectedBusiness ? (
+            <DialogDescription className="flex items-center gap-1.5 text-xs">
+              <MapPin className="h-3.5 w-3.5 text-primary" />
+              Location set from {selectedBusiness.name}
+              {selectedBusiness.town ? ` · ${selectedBusiness.town}` : ""}
+            </DialogDescription>
+          ) : pinLocation ? (
             <DialogDescription className="flex items-center gap-1.5 text-xs">
               <MapPin className="h-3.5 w-3.5 text-primary" />
               Pinned at {pinLocation.lat.toFixed(4)}, {pinLocation.lng.toFixed(4)}
               {pinLocation.town ? ` · ${pinLocation.town}` : ""}
             </DialogDescription>
-          )}
+          ) : null}
         </DialogHeader>
 
         {isGuest && (
