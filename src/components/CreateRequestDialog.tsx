@@ -44,11 +44,12 @@ interface Props {
   onCreated?: () => void;
   pinLocation?: PinLocation | null;
   initialDraft?: RequestDraft | null;
+  onRequestPin?: (draft: RequestDraft) => void;
 }
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-export default function CreateRequestDialog({ open, onOpenChange, onCreated, pinLocation, initialDraft }: Props) {
+export default function CreateRequestDialog({ open, onOpenChange, onCreated, pinLocation, initialDraft, onRequestPin }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -73,6 +74,11 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
   useEffect(() => {
     if (pinLocation?.town && !town) setTown(pinLocation.town);
   }, [pinLocation]);
+
+  // Prefill town from selected business
+  useEffect(() => {
+    if (selectedBusiness?.town && !town) setTown(selectedBusiness.town);
+  }, [selectedBusiness]);
 
   // Hydrate from saved draft (resume after sign-in)
   useEffect(() => {
@@ -301,13 +307,19 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-xl">New Request</DialogTitle>
-          {pinLocation && (
+          {selectedBusiness ? (
+            <DialogDescription className="flex items-center gap-1.5 text-xs">
+              <MapPin className="h-3.5 w-3.5 text-primary" />
+              Location set from {selectedBusiness.name}
+              {selectedBusiness.town ? ` · ${selectedBusiness.town}` : ""}
+            </DialogDescription>
+          ) : pinLocation ? (
             <DialogDescription className="flex items-center gap-1.5 text-xs">
               <MapPin className="h-3.5 w-3.5 text-primary" />
               Pinned at {pinLocation.lat.toFixed(4)}, {pinLocation.lng.toFixed(4)}
               {pinLocation.town ? ` · ${pinLocation.town}` : ""}
             </DialogDescription>
-          )}
+          ) : null}
         </DialogHeader>
 
         {isGuest && (
@@ -380,6 +392,32 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
               rows={3}
             />
           </div>
+
+          {!selectedBusiness && !pinLocation && onRequestPin && (
+            <div className="rounded-lg border border-dashed border-border bg-muted/30 p-3 space-y-2">
+              <p className="text-xs text-muted-foreground">
+                Pick a business above or drop a pin on the map to set a precise location.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full gap-1.5"
+                onClick={() =>
+                  onRequestPin({
+                    title, description, category, town,
+                    selectedBusiness,
+                    openTime, closeTime, days,
+                    classType, skillLevel,
+                    artistName, eventDate, audienceSize,
+                  })
+                }
+              >
+                <MapPin className="h-3.5 w-3.5" />
+                Drop pin on map
+              </Button>
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <Button
