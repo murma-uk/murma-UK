@@ -393,6 +393,32 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
             />
           </div>
 
+          {!selectedBusiness && !pinLocation && onRequestPin && (
+            <div className="rounded-lg border border-dashed border-border bg-muted/30 p-3 space-y-2">
+              <p className="text-xs text-muted-foreground">
+                Pick a business above or drop a pin on the map to set a precise location.
+              </p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full gap-1.5"
+                onClick={() =>
+                  onRequestPin({
+                    title, description, category, town,
+                    selectedBusiness,
+                    openTime, closeTime, days,
+                    classType, skillLevel,
+                    artistName, eventDate, audienceSize,
+                  })
+                }
+              >
+                <MapPin className="h-3.5 w-3.5" />
+                Drop pin on map
+              </Button>
+            </div>
+          )}
+
           <div className="space-y-1.5">
             <Button
               type="submit"
