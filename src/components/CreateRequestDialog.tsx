@@ -49,7 +49,7 @@ interface Props {
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-export default function CreateRequestDialog({ open, onOpenChange, onCreated, pinLocation, initialDraft }: Props) {
+export default function CreateRequestDialog({ open, onOpenChange, onCreated, pinLocation, initialDraft, onRequestPin }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
