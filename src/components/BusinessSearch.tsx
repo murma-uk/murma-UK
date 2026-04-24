@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 export interface BusinessResult {
   id?: string;
   osm_id: number;
+  osm_type: "node" | "way" | "relation";
   name: string;
   business_type: string;
   lat: number;
@@ -71,6 +72,7 @@ export default function BusinessSearch({ town, selected, onSelect }: Props) {
 
       const businesses: BusinessResult[] = (data.elements || []).map((el: any) => ({
         osm_id: el.id,
+        osm_type: (el.type as "node" | "way" | "relation") ?? "node",
         name: el.tags?.name || "Unknown",
         business_type: el.tags?.amenity || el.tags?.shop || el.tags?.leisure || el.tags?.tourism || "business",
         lat: el.lat,
