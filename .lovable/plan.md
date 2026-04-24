@@ -1,66 +1,48 @@
 
 
-## Plan: Fix the two security warnings
+## Plan: Let users start a request from the list, derive location from the business
 
-### Issue 1 — `unaccent` extension in `public` schema
+Right now on mobile, the only entry point to create a request is the "Drop pin to request" button on the map pane. That button forces map-first interaction even when the user already knows the business they want to nominate. We'll add a list-view entry point and rework `CreateRequestDialog` so a pin is optional when a business is chosen.
 
-Move it to the dedicated `extensions` schema where Supabase expects it. The `slugify()` function already has `SET search_path = public, extensions`, so it'll keep working unchanged.
+### What the user will see
 
-**Migration:**
-```sql
-DROP EXTENSION IF EXISTS unaccent;
-CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA extensions;
-```
+**Mobile List view** gets a floating "+ New request" pill (bottom-right). Tapping it opens the Create Request dialog immediately — no map flip required.
 
-If the drop fails because `slugify()` depends on it, we'll `CREATE EXTENSION ... WITH SCHEMA extensions` first and then update `slugify()` to call `extensions.unaccent(...)` explicitly.
+Inside the dialog, the user can fill in Title, Description, Category, Town, and (most usefully) **search/pick a Business**. Location is resolved in this priority:
 
-### Issue 2 — `businesses.INSERT` policy is wide open
+1. **Business picked** → coordinates and town come from the business (OSM lat/lng). No pin needed.
+2. **Pin dropped on map** → coordinates and reverse-geocoded town come from the pin (today's behaviour).
+3. **Neither** → a small inline prompt appears: *"Pick a business or drop a pin on the map to set a location"* with a **"Drop pin on map"** button that closes the dialog, switches the mobile view to **Map**, and enters pin mode. The dialog re-opens with the user's already-typed Title/Description/Category/Town preserved when the pin lands.
 
-Currently any signed-in user can insert any row into `businesses` (`WITH CHECK (true)`), which means a malicious user could spam fake business records. We can't drop the table without a bigger refactor (the Businesses sidebar, map markers, and `requests.business_id` join all depend on it), so we'll move the insert path off the client and behind a trusted server boundary that re-validates the data against a third-party source (OpenStreetMap, which we already use).
+Submit button is disabled until either a business or a pin is set.
 
-**Approach:** Replace direct client inserts with an edge function `link-business` that:
+### Desktop
 
-1. Accepts `{ osm_id, osm_type }` from the client (just the OSM identifier — no name/coords/etc. that the client could forge).
-2. Validates the user's JWT.
-3. Fetches the canonical record from the OSM API server-side:
-   `https://www.openstreetmap.org/api/0.6/{node|way|relation}/{osm_id}.json`
-4. Extracts `name`, `tags.shop|amenity|leisure|tourism`, `lat`, `lng`, address fields directly from the OSM response — client-supplied values are ignored.
-5. Reverse-geocodes the town via Nominatim (server-side, with our app's User-Agent).
-6. Upserts into `businesses` keyed on `osm_id` using the service role (bypassing RLS).
-7. Returns the `businesses.id` for the client to attach as `requests.business_id`.
+Unchanged in layout — the new floating button is `md:hidden`. Desktop users can also benefit from the new "business sets the location" rule: picking a business in the dialog now satisfies the location requirement without needing to drop a pin first.
 
-Then tighten RLS:
-```sql
-DROP POLICY "Authenticated users can add businesses" ON public.businesses;
--- No INSERT policy = no client inserts allowed.
--- The edge function uses the service role, which bypasses RLS.
-```
+### Technical changes
 
-**Client changes** (`src/components/CreateRequestDialog.tsx`):
-- Replace the inline `select existing → insert new` block with a single `supabase.functions.invoke("link-business", { body: { osm_id, osm_type } })` call that returns `{ business_id }`.
-- `BusinessSearch` already gets `osm_id` from Overpass; we'll also pass through `osm_type` (Overpass returns `type: "node"` etc. — store it on `BusinessResult`).
+**`src/pages/ExplorePage.tsx`**
+- Make the sidebar wrapper `relative` and add a `md:hidden` floating Button (bottom-right, `rounded-full shadow-lg`, `MapPin` icon, label "New request") that calls `setCreateOpen(true)`. Below it, when `!user`, show the same "Plan now — sign in required to post" hint as the map button.
+- New helper `handleRequestPinFromDialog(draft)`:
+  - Stash the in-progress draft in state (`setInitialDraft(draft)`),
+  - `setCreateOpen(false)`, `setMobileView("map")`, `setPinMode(true)`.
+- When the map click resolves (`handleMapClick`), the existing flow already re-opens the dialog with `droppedPin` set; we just also pass through the preserved `initialDraft` (already wired).
+- Pass `handleRequestPinFromDialog` as a new `onRequestPin` prop to `CreateRequestDialog`.
 
-**Why this is safer:**
-- Users can no longer write arbitrary `name`/`lat`/`lng`/`address` to the public `businesses` table.
-- The server is the only writer, and it only writes data it fetched itself from OSM — a trusted third-party source.
-- Existing rows keep working unchanged; the table shape doesn't change (no schema migration on `businesses`).
+**`src/components/CreateRequestDialog.tsx`** (need to view to confirm exact shape, but the contract is):
+- Accept new optional prop `onRequestPin?: (draft) => void`.
+- Selected business (from `BusinessSearch`) already exposes `lat`, `lng`, `town`. When a business is selected, treat its coords as the location and **hide** the "drop a pin" prompt; auto-fill Town from the business if the field is empty.
+- If no business and no `pinLocation`:
+  - Show an inline notice + a "Drop pin on map" button that calls `onRequestPin({ title, description, category, town, business })`.
+  - Disable the submit button.
+- On submit, resolve `lat`/`lng` from `selectedBusiness ?? pinLocation`.
 
-### Files
+**`src/lib/slug.ts` / routing / DB** — no changes.
 
-```text
-NEW    supabase/migrations/<ts>_security_fixes.sql
-         - move unaccent extension to extensions schema
-         - drop businesses INSERT policy
-NEW    supabase/functions/link-business/index.ts
-         - JWT verify, fetch OSM, upsert via service role
-EDIT   src/components/BusinessSearch.tsx
-         - include osm_type ("node"/"way"/"relation") on BusinessResult
-EDIT   src/components/CreateRequestDialog.tsx
-         - call link-business edge function instead of direct insert
-```
+### Edge cases
 
-### Notes
-- No user-facing UX change — picking a business and submitting still works the same way.
-- The edge function's outbound calls to OSM are rate-limited by OSM's fair-use policy (1 req/sec for Nominatim); for a community app this is fine.
-- We're NOT dropping the `businesses` table or moving fully to live OSM lookups — that would break the Businesses sidebar/map view, the `business_id` foreign-link on requests, and request counts per business. Happy to plan that as a separate larger refactor if you'd prefer.
+- User picks a business, then later drops a pin → business wins (coords from business). If they want to override, they can clear the business in `BusinessSearch` (the `X` button already exists).
+- User had a pin, then picks a business → business wins; the pin is ignored for submission (we don't clear `droppedPin` so the map still shows it visually).
+- Draft preservation across map flip uses the existing `initialDraft` mechanism + `sessionStorage` fallback — no new persistence code needed.
 
