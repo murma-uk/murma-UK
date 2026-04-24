@@ -231,7 +231,6 @@ export type Database = {
         Returns: boolean
       }
       slugify: { Args: { input: string }; Returns: string }
-      unaccent: { Args: { "": string }; Returns: string }
     }
     Enums: {
       app_role: "user" | "business" | "authority" | "admin"

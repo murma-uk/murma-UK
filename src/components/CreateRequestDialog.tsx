@@ -156,31 +156,18 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
         lat = selectedBusiness.lat;
         lng = selectedBusiness.lng;
 
-        const { data: existing } = await supabase
-          .from("businesses")
-          .select("id")
-          .eq("osm_id", selectedBusiness.osm_id)
-          .maybeSingle();
-
-        if (existing) {
-          businessId = existing.id;
-        } else {
-          const { data: newBiz, error: bizErr } = await supabase
-            .from("businesses")
-            .insert({
+        const { data: linkData, error: linkErr } = await supabase.functions.invoke(
+          "link-business",
+          {
+            body: {
               osm_id: selectedBusiness.osm_id,
-              name: selectedBusiness.name,
-              business_type: selectedBusiness.business_type,
-              lat: selectedBusiness.lat,
-              lng: selectedBusiness.lng,
-              town: selectedBusiness.town,
-              address: selectedBusiness.address || null,
-            })
-            .select("id")
-            .single();
-          if (bizErr) throw bizErr;
-          businessId = newBiz.id;
-        }
+              osm_type: selectedBusiness.osm_type,
+            },
+          },
+        );
+        if (linkErr) throw linkErr;
+        if (!linkData?.business_id) throw new Error("Could not link business");
+        businessId = linkData.business_id as string;
       } else if (!pinLocation) {
         const geoRes = await fetch(
           `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(town)}&format=json&limit=1&countrycodes=gb,ie`
