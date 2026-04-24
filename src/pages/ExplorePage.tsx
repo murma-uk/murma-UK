@@ -9,7 +9,7 @@ import CategoryFilter from "@/components/CategoryFilter";
 import CreateRequestDialog from "@/components/CreateRequestDialog";
 import { type RequestCategory } from "@/lib/categories";
 import { buildRequestPath } from "@/lib/slug";
-import { Loader2, Store, List, Map as MapIcon, MapPin, X } from "lucide-react";
+import { Loader2, Store, List, Map as MapIcon, MapPin, X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
