@@ -348,6 +348,12 @@ export default function ExplorePage() {
         }}
         pinLocation={droppedPin}
         initialDraft={initialDraft}
+        onRequestPin={(draft) => {
+          setInitialDraft(draft);
+          setCreateOpen(false);
+          setMobileView("map");
+          setPinMode(true);
+        }}
       />
     </div>
   );
