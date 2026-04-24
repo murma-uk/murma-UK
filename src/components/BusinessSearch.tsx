@@ -34,54 +34,11 @@ export default function BusinessSearch({ town, selected, onSelect }: Props) {
     setSearched(true);
 
     try {
-      // First geocode the town to get a bounding box
-      const geoRes = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(town)}&format=json&limit=1&countrycodes=gb,ie`
-      );
-      const geoData = await geoRes.json();
-      if (!geoData.length) {
-        setResults([]);
-        return;
-      }
-
-      const { lat, lon, boundingbox } = geoData[0];
-      const [south, north, west, east] = boundingbox;
-
-      // Query Overpass API for amenities/shops in the area
-      const nameFilter = query.trim()
-        ? `["name"~"${query.replace(/"/g, "")}", i]`
-        : `["name"]`;
-
-      const overpassQuery = `
-        [out:json][timeout:10];
-        (
-          node["amenity"${nameFilter}](${south},${west},${north},${east});
-          node["shop"${nameFilter}](${south},${west},${north},${east});
-          node["leisure"${nameFilter}](${south},${west},${north},${east});
-          node["tourism"${nameFilter}](${south},${west},${north},${east});
-        );
-        out body 50;
-      `;
-
-      const res = await fetch("https://overpass-api.de/api/interpreter", {
-        method: "POST",
-        body: `data=${encodeURIComponent(overpassQuery)}`,
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      const { data, error } = await supabase.functions.invoke("search-businesses", {
+        body: { town, query },
       });
-      const data = await res.json();
-
-      const businesses: BusinessResult[] = (data.elements || []).map((el: any) => ({
-        osm_id: el.id,
-        osm_type: (el.type as "node" | "way" | "relation") ?? "node",
-        name: el.tags?.name || "Unknown",
-        business_type: el.tags?.amenity || el.tags?.shop || el.tags?.leisure || el.tags?.tourism || "business",
-        lat: el.lat,
-        lng: el.lon,
-        town,
-        address: [el.tags?.["addr:street"], el.tags?.["addr:housenumber"]].filter(Boolean).join(" ") || undefined,
-      }));
-
-      setResults(businesses);
+      if (error) throw error;
+      setResults((data?.results ?? []) as BusinessResult[]);
     } catch {
       setResults([]);
     } finally {
