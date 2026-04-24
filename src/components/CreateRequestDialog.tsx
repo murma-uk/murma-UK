@@ -44,6 +44,7 @@ interface Props {
   onCreated?: () => void;
   pinLocation?: PinLocation | null;
   initialDraft?: RequestDraft | null;
+  onRequestPin?: (draft: RequestDraft) => void;
 }
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
