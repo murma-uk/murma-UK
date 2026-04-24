@@ -75,6 +75,11 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
     if (pinLocation?.town && !town) setTown(pinLocation.town);
   }, [pinLocation]);
 
+  // Prefill town from selected business
+  useEffect(() => {
+    if (selectedBusiness?.town && !town) setTown(selectedBusiness.town);
+  }, [selectedBusiness]);
+
   // Hydrate from saved draft (resume after sign-in)
   useEffect(() => {
     if (!initialDraft || !open) return;
