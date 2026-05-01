@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CATEGORIES, type RequestCategory } from "@/lib/categories";
+import { useCategories, type RequestCategory } from "@/lib/categories";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -53,6 +53,7 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { data: categories = [] } = useCategories();
   const [loading, setLoading] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -339,14 +340,17 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
                 <SelectValue placeholder="What are you requesting?" />
               </SelectTrigger>
               <SelectContent>
-                {(Object.entries(CATEGORIES) as [RequestCategory, typeof CATEGORIES[RequestCategory]][]).map(([key, cat]) => (
-                  <SelectItem key={key} value={key}>
-                    <span className="flex items-center gap-2">
-                      <cat.icon className="h-4 w-4" style={{ color: cat.color }} />
-                      {cat.label}
-                    </span>
-                  </SelectItem>
-                ))}
+                {categories.map((cat) => {
+                  const Icon = cat.Icon;
+                  return (
+                    <SelectItem key={cat.slug} value={cat.slug}>
+                      <span className="flex items-center gap-2">
+                        <Icon className="h-4 w-4" style={{ color: cat.color }} />
+                        {cat.label}
+                      </span>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>

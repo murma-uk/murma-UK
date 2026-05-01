@@ -1,10 +1,12 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { MapPin, LogOut, Plus, User } from "lucide-react";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { MapPin, LogOut, Plus, User, Shield } from "lucide-react";
 
 export default function Navbar() {
   const { user, signOut } = useAuth();
+  const { data: isAdmin } = useIsAdmin();
   const navigate = useNavigate();
 
   return (
@@ -32,6 +34,14 @@ export default function Navbar() {
                   New Request
                 </Button>
               </Link>
+              {isAdmin && (
+                <Link to="/admin/categories">
+                  <Button variant="ghost" size="sm" className="gap-1.5 font-heading font-medium">
+                    <Shield className="h-4 w-4" />
+                    Admin
+                  </Button>
+                </Link>
+              )}
               <Button
                 variant="ghost"
                 size="icon"

@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, MapPin, ArrowBigUp, Users, Building2, Landmark } from "lucide-react";
-import { CATEGORIES, type RequestCategory } from "@/lib/categories";
+import { useCategories } from "@/lib/categories";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -46,6 +46,7 @@ const audiences = [
 ];
 
 export default function LandingPage() {
+  const { data: categories = [] } = useCategories();
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -94,11 +95,11 @@ export default function LandingPage() {
       <section className="border-y border-border bg-card/50">
         <div className="container py-8">
           <div className="flex flex-wrap justify-center gap-3">
-            {(Object.entries(CATEGORIES) as [RequestCategory, typeof CATEGORIES[RequestCategory]][]).map(([key, cat]) => {
-              const Icon = cat.icon;
+            {categories.map((cat) => {
+              const Icon = cat.Icon;
               return (
                 <div
-                  key={key}
+                  key={cat.slug}
                   className="flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium"
                   style={{ color: cat.color }}
                 >
