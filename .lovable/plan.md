@@ -1,48 +1,74 @@
+## Plan: Move request categories into a database table
 
+Today categories live in two places: a Postgres enum `request_category` and a hardcoded map in `src/lib/categories.ts`. We'll introduce a `request_categories` table as the source of truth for **labels, icons, colors, sort order, and active state**, while keeping the existing enum as the stable slug used by `requests.category`. This keeps every existing request working and avoids a risky enum migration.
 
-## Plan: Let users start a request from the list, derive location from the business
+An **admin-only management page** will let users with the `admin` role add, edit, reorder, and disable categories.
 
-Right now on mobile, the only entry point to create a request is the "Drop pin to request" button on the map pane. That button forces map-first interaction even when the user already knows the business they want to nominate. We'll add a list-view entry point and rework `CreateRequestDialog` so a pin is optional when a business is chosen.
+### Database (migration)
 
-### What the user will see
+New table `public.request_categories`:
 
-**Mobile List view** gets a floating "+ New request" pill (bottom-right). Tapping it opens the Create Request dialog immediately — no map flip required.
+| column | type | notes |
+|---|---|---|
+| `id` | uuid PK | `gen_random_uuid()` |
+| `slug` | text UNIQUE NOT NULL | matches `request_category` enum values for the seeded 5 |
+| `label` | text NOT NULL | display name |
+| `icon_name` | text NOT NULL | Lucide component name, e.g. `"Clock"` |
+| `color` | text NOT NULL | HSL string, e.g. `"hsl(210, 100%, 50%)"` |
+| `sort_order` | int NOT NULL DEFAULT 0 | for ordering in pickers/filters |
+| `is_active` | bool NOT NULL DEFAULT true | hides without deleting |
+| `created_at` / `updated_at` | timestamptz | `update_updated_at_column` trigger |
 
-Inside the dialog, the user can fill in Title, Description, Category, Town, and (most usefully) **search/pick a Business**. Location is resolved in this priority:
+**RLS policies:**
+- `SELECT`: public — needed so the explore page, filters, and dialog can render.
+- `INSERT` / `UPDATE` / `DELETE`: only when `public.has_role(auth.uid(), 'admin')`.
 
-1. **Business picked** → coordinates and town come from the business (OSM lat/lng). No pin needed.
-2. **Pin dropped on map** → coordinates and reverse-geocoded town come from the pin (today's behaviour).
-3. **Neither** → a small inline prompt appears: *"Pick a business or drop a pin on the map to set a location"* with a **"Drop pin on map"** button that closes the dialog, switches the mobile view to **Map**, and enters pin mode. The dialog re-opens with the user's already-typed Title/Description/Category/Town preserved when the pin lands.
+**Seed rows** (slugs match the existing enum, so `requests.category` keeps validating):
+- `opening_hours` — Opening Hours, `Clock`, `hsl(210, 100%, 50%)`
+- `new_branch` — New Branch, `MapPin`, `hsl(145, 65%, 42%)`
+- `classes_sessions` — Classes & Sessions, `GraduationCap`, `hsl(280, 70%, 55%)`
+- `artist_visit` — Artist Visit, `Palette`, `hsl(12, 90%, 60%)`
+- `announcement` — Announcement, `Megaphone`, `hsl(38, 92%, 50%)`
 
-Submit button is disabled until either a business or a pin is set.
+**No change** to the `request_category` enum or to `requests.category`. New categories added later will require an enum value to be added (one-line migration) and a row in this table — we'll document this trade-off in `mem://`.
 
-### Desktop
+### Frontend changes
 
-Unchanged in layout — the new floating button is `md:hidden`. Desktop users can also benefit from the new "business sets the location" rule: picking a business in the dialog now satisfies the location requirement without needing to drop a pin first.
+**`src/lib/iconRegistry.ts` (new)** — small whitelist mapping Lucide icon names to components (`Clock`, `MapPin`, `GraduationCap`, `Palette`, `Megaphone`, plus a starter set like `Coffee`, `ShoppingBag`, `Music`, `Calendar`, `Star`, `Heart`, `Bell` for admin choice). Falls back to a default icon if an unknown name is stored.
 
-### Technical changes
+**`src/lib/categories.ts`** — replace the hardcoded `CATEGORIES` constant with:
+- `useCategories()` hook that fetches active rows from `request_categories` ordered by `sort_order`, caches in React Query (or a lightweight context), and exposes `{ slug, label, color, Icon }`.
+- A `getCategory(slug)` helper for lookups.
+- Keeps exporting `RequestCategory` type for compile-time safety on the enum-bound column.
 
-**`src/pages/ExplorePage.tsx`**
-- Make the sidebar wrapper `relative` and add a `md:hidden` floating Button (bottom-right, `rounded-full shadow-lg`, `MapPin` icon, label "New request") that calls `setCreateOpen(true)`. Below it, when `!user`, show the same "Plan now — sign in required to post" hint as the map button.
-- New helper `handleRequestPinFromDialog(draft)`:
-  - Stash the in-progress draft in state (`setInitialDraft(draft)`),
-  - `setCreateOpen(false)`, `setMobileView("map")`, `setPinMode(true)`.
-- When the map click resolves (`handleMapClick`), the existing flow already re-opens the dialog with `droppedPin` set; we just also pass through the preserved `initialDraft` (already wired).
-- Pass `handleRequestPinFromDialog` as a new `onRequestPin` prop to `CreateRequestDialog`.
+**Components updated to consume the hook** (no logic changes, just swap the import):
+- `src/components/CategoryFilter.tsx`
+- `src/components/CreateRequestDialog.tsx`
+- `src/components/RequestCard.tsx`
+- `src/components/MapView.tsx` (icon rendering for markers)
+- `src/pages/RequestDetailPage.tsx`
+- `src/pages/LandingPage.tsx`
 
-**`src/components/CreateRequestDialog.tsx`** (need to view to confirm exact shape, but the contract is):
-- Accept new optional prop `onRequestPin?: (draft) => void`.
-- Selected business (from `BusinessSearch`) already exposes `lat`, `lng`, `town`. When a business is selected, treat its coords as the location and **hide** the "drop a pin" prompt; auto-fill Town from the business if the field is empty.
-- If no business and no `pinLocation`:
-  - Show an inline notice + a "Drop pin on map" button that calls `onRequestPin({ title, description, category, town, business })`.
-  - Disable the submit button.
-- On submit, resolve `lat`/`lng` from `selectedBusiness ?? pinLocation`.
+Loading state: filters and pickers render a small skeleton while the hook resolves; `MapView` defers marker creation until categories load (already async-friendly).
 
-**`src/lib/slug.ts` / routing / DB** — no changes.
+### Admin management page
 
-### Edge cases
+**`src/pages/AdminCategoriesPage.tsx` (new)** at route `/admin/categories`:
+- Guarded by `useAuth()` + a `useIsAdmin()` hook (`select 1 from user_roles where role='admin'`). Non-admins get a 403 message; unauthenticated users redirect to `/auth`.
+- Table of categories with inline edit for `label`, `color` (color picker), `icon_name` (combobox of registry icons with live preview), `sort_order` (drag handle or number), `is_active` (switch).
+- "Add category" button — note in the UI that adding a brand-new slug also requires a developer to add the enum value (we won't try to ALTER TYPE from the client). For now, admins can only edit existing categories; "Add" is disabled with a tooltip explaining this. (If you later want to allow adding new categories from the UI, we'd add a backend function that runs `ALTER TYPE request_category ADD VALUE`.)
+- Soft delete via `is_active = false` (hard delete blocked because requests reference the slug).
 
-- User picks a business, then later drops a pin → business wins (coords from business). If they want to override, they can clear the business in `BusinessSearch` (the `X` button already exists).
-- User had a pin, then picks a business → business wins; the pin is ignored for submission (we don't clear `droppedPin` so the map still shows it visually).
-- Draft preservation across map flip uses the existing `initialDraft` mechanism + `sessionStorage` fallback — no new persistence code needed.
+**Navbar:** show an "Admin" link only when `useIsAdmin()` is true.
 
+### Files touched
+
+- **New:** migration, `src/lib/iconRegistry.ts`, `src/pages/AdminCategoriesPage.tsx`, `src/hooks/useIsAdmin.tsx`
+- **Modified:** `src/lib/categories.ts`, `src/App.tsx` (route), `src/components/Navbar.tsx`, the 6 components/pages listed above
+- **Memory:** add `mem://features/categories` documenting the slug-mirrors-enum rule and how to add a new category end-to-end
+
+### What this does **not** do
+
+- Does not remove the `request_category` enum.
+- Does not let admins create entirely new category slugs from the UI (requires enum migration).
+- Does not change any existing request data.
