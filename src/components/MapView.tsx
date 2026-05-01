@@ -1,7 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { CATEGORIES, type RequestCategory } from "@/lib/categories";
+import { useCategories, type RequestCategory, type CategoryInfo } from "@/lib/categories";
 
 // Fix default marker icon
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -35,8 +35,9 @@ function escapeHtml(value: string) {
     .replace(/'/g, "&#39;");
 }
 
-function createCategoryIcon(category: RequestCategory) {
-  const color = CATEGORIES[category].color;
+const FALLBACK_COLOR = "hsl(210, 100%, 50%)";
+
+function createCategoryIcon(color: string) {
   return L.divIcon({
     className: "custom-marker",
     html: `<div style="
