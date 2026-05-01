@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
-import { CATEGORIES, type RequestCategory } from "@/lib/categories";
+import { useCategories, getCategory, type RequestCategory } from "@/lib/categories";
 import { buildRequestPath, parseRequestParam } from "@/lib/slug";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,6 +23,7 @@ export default function RequestDetailPage() {
   const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
+  const { data: categories } = useCategories();
 
   const fetchData = useCallback(async () => {
     if (!routeParam) return;
@@ -158,8 +159,8 @@ export default function RequestDetailPage() {
     );
   }
 
-  const cat = CATEGORIES[request.category as RequestCategory];
-  const Icon = cat.icon;
+  const cat = getCategory(categories, request.category as RequestCategory);
+  const Icon = cat.Icon;
 
   return (
     <div className="min-h-screen bg-background">
