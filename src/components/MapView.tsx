@@ -128,6 +128,13 @@ export default function MapView({
   const pinModeRef = useRef(pinMode);
   pinModeRef.current = pinMode;
 
+  const { data: categories } = useCategories();
+  const colorBySlug = useMemo(() => {
+    const map = new Map<string, string>();
+    (categories ?? []).forEach((c) => map.set(c.slug, c.color));
+    return map;
+  }, [categories]);
+
   useEffect(() => {
     if (!mapElementRef.current || mapRef.current) return;
 
@@ -250,7 +257,7 @@ export default function MapView({
       if (!isValidLatLng(req.lat, req.lng)) return;
 
       const marker = L.marker([req.lat, req.lng], {
-        icon: createCategoryIcon(req.category),
+        icon: createCategoryIcon(colorBySlug.get(req.category) ?? FALLBACK_COLOR),
       });
 
       marker.bindPopup(`
@@ -266,7 +273,7 @@ export default function MapView({
 
       marker.addTo(layer);
     });
-  }, [requests, businesses, onMarkerClick, onBusinessClick]);
+  }, [requests, businesses, onMarkerClick, onBusinessClick, colorBySlug]);
 
   return <div ref={mapElementRef} className={`z-0 rounded-lg ${className}`} style={{ height: "100%", width: "100%" }} />;
 }
