@@ -13,6 +13,7 @@ import PrivacyPage from "./pages/PrivacyPage";
 import TermsPage from "./pages/TermsPage";
 import CookiesPage from "./pages/CookiesPage";
 import NotFound from "./pages/NotFound";
+import AdminCategoriesPage from "./pages/AdminCategoriesPage";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/cookies" element={<CookiesPage />} />
+            <Route path="/admin/categories" element={<AdminCategoriesPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <CookieBanner />
