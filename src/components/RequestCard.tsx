@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowBigUp, MessageCircle, MapPin } from "lucide-react";
-import { CATEGORIES, type RequestCategory } from "@/lib/categories";
+import { useCategories, getCategory, type RequestCategory } from "@/lib/categories";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -30,8 +30,9 @@ export default function RequestCard({
   const { toast } = useToast();
   const navigate = useNavigate();
   const [animating, setAnimating] = useState(false);
-  const cat = CATEGORIES[category];
-  const Icon = cat.icon;
+  const { data: categories } = useCategories();
+  const cat = getCategory(categories, category);
+  const Icon = cat.Icon;
 
   const handleUpvote = async (e: React.MouseEvent) => {
     e.stopPropagation();
