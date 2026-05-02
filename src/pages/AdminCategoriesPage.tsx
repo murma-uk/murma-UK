@@ -19,7 +19,9 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { Loader2, Save, Info } from "lucide-react";
+import { Loader2, Save, Info, Plus, Settings2 } from "lucide-react";
+import AddCategoryDialog from "@/components/admin/AddCategoryDialog";
+import CategoryFieldsPanel from "@/components/admin/CategoryFieldsPanel";
 
 interface Draft {
   id: string;
