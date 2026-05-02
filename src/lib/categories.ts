@@ -7,6 +7,7 @@ import { getIcon } from "./iconRegistry";
 type RequestCategory = Database["public"]["Enums"]["request_category"];
 
 export interface CategoryInfo {
+  id: string;
   slug: RequestCategory;
   label: string;
   color: string;
@@ -27,6 +28,7 @@ export interface CategoryRow {
 }
 
 const FALLBACK: CategoryInfo = {
+  id: "",
   slug: "announcement" as RequestCategory,
   label: "Unknown",
   color: "hsl(var(--muted-foreground))",
@@ -38,6 +40,7 @@ const FALLBACK: CategoryInfo = {
 
 function toInfo(row: CategoryRow): CategoryInfo {
   return {
+    id: row.id,
     slug: row.slug as RequestCategory,
     label: row.label,
     color: row.color,
