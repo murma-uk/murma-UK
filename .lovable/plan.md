@@ -1,74 +1,87 @@
-## Plan: Move request categories into a database table
+## Plan: Admin-managed categories + per-category custom fields
 
-Today categories live in two places: a Postgres enum `request_category` and a hardcoded map in `src/lib/categories.ts`. We'll introduce a `request_categories` table as the source of truth for **labels, icons, colors, sort order, and active state**, while keeping the existing enum as the stable slug used by `requests.category`. This keeps every existing request working and avoids a risky enum migration.
+Two related upgrades to the existing admin categories system:
 
-An **admin-only management page** will let users with the `admin` role add, edit, reorder, and disable categories.
+1. **Categories** — let admins add new rows in the UI, with a clear note about the enum constraint (any new slug must be one of the existing enum values, or a developer adds a new enum value via migration first).
+2. **Custom fields** — replace the hardcoded per-category field blocks in `CreateRequestDialog` with a fully data-driven schema builder. Admins design the questions; the dialog renders them dynamically; answers are stored as JSONB on each request.
 
-### Database (migration)
+---
 
-New table `public.request_categories`:
+### Database changes
+
+**New table `public.request_category_fields`**
 
 | column | type | notes |
 |---|---|---|
 | `id` | uuid PK | `gen_random_uuid()` |
-| `slug` | text UNIQUE NOT NULL | matches `request_category` enum values for the seeded 5 |
-| `label` | text NOT NULL | display name |
-| `icon_name` | text NOT NULL | Lucide component name, e.g. `"Clock"` |
-| `color` | text NOT NULL | HSL string, e.g. `"hsl(210, 100%, 50%)"` |
-| `sort_order` | int NOT NULL DEFAULT 0 | for ordering in pickers/filters |
-| `is_active` | bool NOT NULL DEFAULT true | hides without deleting |
-| `created_at` / `updated_at` | timestamptz | `update_updated_at_column` trigger |
+| `category_id` | uuid NOT NULL | FK → `request_categories.id`, on delete cascade |
+| `key` | text NOT NULL | machine name, unique per category (e.g. `open_time`) |
+| `label` | text NOT NULL | shown to users |
+| `field_type` | text NOT NULL | one of `text`, `textarea`, `number`, `date`, `time`, `select`, `multiselect`, `days` |
+| `options` | jsonb | array of `{value,label}` for select/multiselect; null otherwise |
+| `placeholder` | text | optional |
+| `help_text` | text | optional |
+| `required` | bool NOT NULL DEFAULT false |
+| `sort_order` | int NOT NULL DEFAULT 0 |
+| `is_active` | bool NOT NULL DEFAULT true |
+| `created_at` / `updated_at` | timestamptz | trigger-managed |
 
-**RLS policies:**
-- `SELECT`: public — needed so the explore page, filters, and dialog can render.
-- `INSERT` / `UPDATE` / `DELETE`: only when `public.has_role(auth.uid(), 'admin')`.
+Validation trigger (not CHECK) on `field_type` and on `options` shape when type is select/multiselect.
 
-**Seed rows** (slugs match the existing enum, so `requests.category` keeps validating):
-- `opening_hours` — Opening Hours, `Clock`, `hsl(210, 100%, 50%)`
-- `new_branch` — New Branch, `MapPin`, `hsl(145, 65%, 42%)`
-- `classes_sessions` — Classes & Sessions, `GraduationCap`, `hsl(280, 70%, 55%)`
-- `artist_visit` — Artist Visit, `Palette`, `hsl(12, 90%, 60%)`
-- `announcement` — Announcement, `Megaphone`, `hsl(38, 92%, 50%)`
+UNIQUE(`category_id`, `key`).
 
-**No change** to the `request_category` enum or to `requests.category`. New categories added later will require an enum value to be added (one-line migration) and a row in this table — we'll document this trade-off in `mem://`.
+**RLS**: public SELECT; admin-only INSERT/UPDATE/DELETE via `has_role(auth.uid(), 'admin')`.
 
-### Frontend changes
+**`requests` table**: add `field_values jsonb NOT NULL DEFAULT '{}'::jsonb`. Existing rows default to `{}`.
 
-**`src/lib/iconRegistry.ts` (new)** — small whitelist mapping Lucide icon names to components (`Clock`, `MapPin`, `GraduationCap`, `Palette`, `Megaphone`, plus a starter set like `Coffee`, `ShoppingBag`, `Music`, `Calendar`, `Star`, `Heart`, `Bell` for admin choice). Falls back to a default icon if an unknown name is stored.
+**Seed**: migration inserts the current 5 categories' field definitions so behavior is unchanged on day one:
+- `opening_hours`: `open_time` (time), `close_time` (time), `days` (days)
+- `classes_sessions`: `class_type` (text), `skill_level` (select: beginner/intermediate/advanced/all)
+- `artist_visit`: `artist_name` (text), `event_date` (date), `audience_size` (number)
+- `new_branch`, `announcement`: no fields (description-only, as today)
 
-**`src/lib/categories.ts`** — replace the hardcoded `CATEGORIES` constant with:
-- `useCategories()` hook that fetches active rows from `request_categories` ordered by `sort_order`, caches in React Query (or a lightweight context), and exposes `{ slug, label, color, Icon }`.
-- A `getCategory(slug)` helper for lookups.
-- Keeps exporting `RequestCategory` type for compile-time safety on the enum-bound column.
+### Frontend
 
-**Components updated to consume the hook** (no logic changes, just swap the import):
-- `src/components/CategoryFilter.tsx`
-- `src/components/CreateRequestDialog.tsx`
-- `src/components/RequestCard.tsx`
-- `src/components/MapView.tsx` (icon rendering for markers)
-- `src/pages/RequestDetailPage.tsx`
-- `src/pages/LandingPage.tsx`
+**Dynamic form renderer**
+- New `src/components/DynamicFieldRenderer.tsx` — given a list of field definitions and a `values`/`onChange`, renders the right control per `field_type` (reuses existing Input/Textarea/Select; `days` reuses the day-pill pattern already in `CreateRequestDialog`).
+- New hook `src/lib/categoryFields.ts` → `useCategoryFields(categoryId)` (TanStack Query, keyed by category id, fetches active fields ordered by `sort_order`).
 
-Loading state: filters and pickers render a small skeleton while the hook resolves; `MapView` defers marker creation until categories load (already async-friendly).
+**`CreateRequestDialog` refactor**
+- Remove the hardcoded `openTime/closeTime/days/classType/...` state and the `renderCategoryFields` switch.
+- Hold a single `fieldValues: Record<string, unknown>` state.
+- When category changes, fetch its fields and render them via `DynamicFieldRenderer`.
+- On submit:
+  - Validate required fields client-side with zod built from the field definitions.
+  - Build the description preview by concatenating field key/value pairs (same UX as today) and also save the structured values to `requests.field_values`.
+- Update the draft (`RequestDraft`) saved to sessionStorage to use `fieldValues` instead of the old per-field props. Old drafts are ignored if shape doesn't match.
 
-### Admin management page
+**`RequestDetailPage`**
+- If the request has `field_values`, render them as a small definition-list (label → value) above the description, looking up labels from the category's fields.
 
-**`src/pages/AdminCategoriesPage.tsx` (new)** at route `/admin/categories`:
-- Guarded by `useAuth()` + a `useIsAdmin()` hook (`select 1 from user_roles where role='admin'`). Non-admins get a 403 message; unauthenticated users redirect to `/auth`.
-- Table of categories with inline edit for `label`, `color` (color picker), `icon_name` (combobox of registry icons with live preview), `sort_order` (drag handle or number), `is_active` (switch).
-- "Add category" button — note in the UI that adding a brand-new slug also requires a developer to add the enum value (we won't try to ALTER TYPE from the client). For now, admins can only edit existing categories; "Add" is disabled with a tooltip explaining this. (If you later want to allow adding new categories from the UI, we'd add a backend function that runs `ALTER TYPE request_category ADD VALUE`.)
-- Soft delete via `is_active = false` (hard delete blocked because requests reference the slug).
+**Admin UI** (`src/pages/AdminCategoriesPage.tsx`)
+- **Add category** button — opens a dialog asking for slug (dropdown of unused enum values: computed as `enum values – existing categories`), label, icon, color, sort order. If no enum values are available, the button is disabled with a tooltip explaining a developer needs to extend the enum first. This preserves the "keep current trade-off" decision while giving admins room to add a category whenever an enum slot is free.
+- **Manage fields** button per category row — opens a side panel listing that category's fields, with inline edit, drag-to-reorder (using `sort_order`), add/remove field, and a small preview that renders `DynamicFieldRenderer` against the current draft list.
+- Field editor controls: label, key (auto-slugified from label, editable), type (select), options editor (only for select/multiselect), placeholder, help text, required switch, active switch.
 
-**Navbar:** show an "Admin" link only when `useIsAdmin()` is true.
+### Files
 
-### Files touched
+**New**
+- migration: `request_category_fields` table + `requests.field_values` column + seed
+- `src/lib/categoryFields.ts`
+- `src/components/DynamicFieldRenderer.tsx`
+- `src/components/admin/CategoryFieldsPanel.tsx`
+- `src/components/admin/AddCategoryDialog.tsx`
 
-- **New:** migration, `src/lib/iconRegistry.ts`, `src/pages/AdminCategoriesPage.tsx`, `src/hooks/useIsAdmin.tsx`
-- **Modified:** `src/lib/categories.ts`, `src/App.tsx` (route), `src/components/Navbar.tsx`, the 6 components/pages listed above
-- **Memory:** add `mem://features/categories` documenting the slug-mirrors-enum rule and how to add a new category end-to-end
+**Modified**
+- `src/components/CreateRequestDialog.tsx` — dynamic field rendering, JSONB submit, draft shape change
+- `src/pages/AdminCategoriesPage.tsx` — add-category + manage-fields entry points
+- `src/pages/RequestDetailPage.tsx` — render structured `field_values`
+- `src/integrations/supabase/types.ts` — auto-regenerated
+- `mem://features/categories` — document the new field schema and the enum-availability rule for adding categories
 
-### What this does **not** do
+### Non-goals
 
-- Does not remove the `request_category` enum.
-- Does not let admins create entirely new category slugs from the UI (requires enum migration).
-- Does not change any existing request data.
+- Not removing the `request_category` enum (per your "keep current trade-off" choice).
+- Not adding ALTER TYPE from the client.
+- Not migrating historical request descriptions back into structured `field_values` — only new submissions populate it.
+- No conditional/visibility logic between fields in v1.

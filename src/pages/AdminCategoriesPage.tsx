@@ -19,7 +19,9 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
-import { Loader2, Save, Info } from "lucide-react";
+import { Loader2, Save, Info, Plus, Settings2 } from "lucide-react";
+import AddCategoryDialog from "@/components/admin/AddCategoryDialog";
+import CategoryFieldsPanel from "@/components/admin/CategoryFieldsPanel";
 
 interface Draft {
   id: string;
@@ -41,6 +43,8 @@ export default function AdminCategoriesPage() {
 
   const [drafts, setDrafts] = useState<Record<string, Draft>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
+  const [fieldsFor, setFieldsFor] = useState<{ id: string; label: string } | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) navigate("/auth?redirect=/admin/categories");
@@ -120,10 +124,17 @@ export default function AdminCategoriesPage() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container max-w-4xl py-8">
-        <h1 className="font-heading text-2xl font-bold">Request Categories</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Edit how categories appear across the app. Changes go live immediately.
-        </p>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h1 className="font-heading text-2xl font-bold">Request Categories</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Edit how categories appear across the app. Changes go live immediately.
+            </p>
+          </div>
+          <Button onClick={() => setAddOpen(true)} className="gap-1.5">
+            <Plus className="h-4 w-4" /> Add category
+          </Button>
+        </div>
 
         <div className="mt-4 flex items-start gap-2 rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
           <Info className="h-4 w-4 shrink-0 mt-0.5" />
@@ -217,7 +228,15 @@ export default function AdminCategoriesPage() {
                   </div>
                 </div>
 
-                <div className="mt-3 flex justify-end">
+                <div className="mt-3 flex items-center justify-between">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setFieldsFor({ id: d.id, label: d.label })}
+                    className="gap-1.5"
+                  >
+                    <Settings2 className="h-4 w-4" /> Manage fields
+                  </Button>
                   <Button
                     size="sm"
                     onClick={() => save(d.slug)}
@@ -237,6 +256,18 @@ export default function AdminCategoriesPage() {
           })}
         </div>
       </div>
+
+      <AddCategoryDialog
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        existing={categories ?? []}
+      />
+      <CategoryFieldsPanel
+        open={!!fieldsFor}
+        onOpenChange={(o) => !o && setFieldsFor(null)}
+        categoryId={fieldsFor?.id ?? null}
+        categoryLabel={fieldsFor?.label ?? ""}
+      />
     </div>
   );
 }

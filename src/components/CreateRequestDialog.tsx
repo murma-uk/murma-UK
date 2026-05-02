@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useCategories, type RequestCategory } from "@/lib/categories";
+import {
+  useCategoryFields,
+  formatFieldValue,
+  validateFieldValues,
+  type CategoryField,
+} from "@/lib/categoryFields";
+import DynamicFieldRenderer from "./DynamicFieldRenderer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -28,14 +35,7 @@ export interface RequestDraft {
   lat?: number;
   lng?: number;
   selectedBusiness?: BusinessResult | null;
-  openTime?: string;
-  closeTime?: string;
-  days?: string[];
-  classType?: string;
-  skillLevel?: string;
-  artistName?: string;
-  eventDate?: string;
-  audienceSize?: string;
+  fieldValues?: Record<string, unknown>;
 }
 
 interface Props {
@@ -47,7 +47,19 @@ interface Props {
   onRequestPin?: (draft: RequestDraft) => void;
 }
 
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+function buildDescriptionFromFields(
+  fields: CategoryField[],
+  values: Record<string, unknown>,
+  extra: string,
+): string {
+  const parts: string[] = [];
+  for (const f of fields) {
+    const formatted = formatFieldValue(f, values[f.key]);
+    if (formatted) parts.push(`${f.label}: ${formatted}`);
+  }
+  if (extra.trim()) parts.push(extra.trim());
+  return parts.join("\n");
+}
 
 export default function CreateRequestDialog({ open, onOpenChange, onCreated, pinLocation, initialDraft, onRequestPin }: Props) {
   const { user } = useAuth();
@@ -60,16 +72,13 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
   const [category, setCategory] = useState<RequestCategory | "">("");
   const [town, setTown] = useState("");
   const [selectedBusiness, setSelectedBusiness] = useState<BusinessResult | null>(null);
+  const [fieldValues, setFieldValues] = useState<Record<string, unknown>>({});
 
-  // Category-specific fields
-  const [openTime, setOpenTime] = useState("");
-  const [closeTime, setCloseTime] = useState("");
-  const [days, setDays] = useState<string[]>([]);
-  const [classType, setClassType] = useState("");
-  const [skillLevel, setSkillLevel] = useState("");
-  const [artistName, setArtistName] = useState("");
-  const [eventDate, setEventDate] = useState("");
-  const [audienceSize, setAudienceSize] = useState("");
+  const selectedCategory = useMemo(
+    () => categories.find((c) => c.slug === category),
+    [categories, category],
+  );
+  const { data: fields = [] } = useCategoryFields(selectedCategory?.id);
 
   // Prefill town from dropped pin
   useEffect(() => {
@@ -89,48 +98,28 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
     if (initialDraft.category) setCategory(initialDraft.category);
     if (initialDraft.town) setTown(initialDraft.town);
     if (initialDraft.selectedBusiness) setSelectedBusiness(initialDraft.selectedBusiness);
-    if (initialDraft.openTime) setOpenTime(initialDraft.openTime);
-    if (initialDraft.closeTime) setCloseTime(initialDraft.closeTime);
-    if (initialDraft.days) setDays(initialDraft.days);
-    if (initialDraft.classType) setClassType(initialDraft.classType);
-    if (initialDraft.skillLevel) setSkillLevel(initialDraft.skillLevel);
-    if (initialDraft.artistName) setArtistName(initialDraft.artistName);
-    if (initialDraft.eventDate) setEventDate(initialDraft.eventDate);
-    if (initialDraft.audienceSize) setAudienceSize(initialDraft.audienceSize);
+    if (initialDraft.fieldValues) setFieldValues(initialDraft.fieldValues);
   }, [initialDraft, open]);
 
   const reset = () => {
     setTitle(""); setDescription(""); setCategory(""); setTown("");
     setSelectedBusiness(null);
-    setOpenTime(""); setCloseTime(""); setDays([]);
-    setClassType(""); setSkillLevel("");
-    setArtistName(""); setEventDate(""); setAudienceSize("");
+    setFieldValues({});
   };
 
-  const toggleDay = (d: string) => {
-    setDays((prev) => prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]);
-  };
-
-  const buildDescription = (): string => {
-    const parts: string[] = [];
-    if (category === "opening_hours") {
-      if (openTime || closeTime) parts.push(`Preferred hours: ${openTime || "?"} – ${closeTime || "?"}`);
-      if (days.length) parts.push(`Days: ${days.join(", ")}`);
-    } else if (category === "classes_sessions") {
-      if (classType) parts.push(`Type: ${classType}`);
-      if (skillLevel) parts.push(`Level: ${skillLevel}`);
-    } else if (category === "artist_visit") {
-      if (artistName) parts.push(`Artist: ${artistName}`);
-      if (eventDate) parts.push(`Preferred date: ${eventDate}`);
-      if (audienceSize) parts.push(`Estimated audience: ${audienceSize}`);
-    }
-    if (description.trim()) parts.push(description.trim());
-    return parts.join("\n");
+  const updateField = (key: string, value: unknown) => {
+    setFieldValues((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!category) return;
+
+    const validationError = validateFieldValues(fields, fieldValues);
+    if (validationError) {
+      toast({ title: "Missing info", description: validationError, variant: "destructive" });
+      return;
+    }
 
     // Guest: save draft to sessionStorage and redirect to auth
     if (!user) {
@@ -138,9 +127,7 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
         title, description, category, town,
         lat: pinLocation?.lat, lng: pinLocation?.lng,
         selectedBusiness,
-        openTime, closeTime, days,
-        classType, skillLevel,
-        artistName, eventDate, audienceSize,
+        fieldValues,
       };
       try {
         sessionStorage.setItem("pendingRequest", JSON.stringify(draft));
@@ -186,15 +173,18 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
         }
       }
 
+      const composed = buildDescriptionFromFields(fields, fieldValues, description);
+
       const { error } = await supabase.from("requests").insert({
         title,
-        description: buildDescription() || null,
+        description: composed || null,
         category,
         town,
         lat,
         lng,
         user_id: user.id,
         business_id: businessId || null,
+        field_values: fieldValues as any,
       } as any);
 
       if (error) throw error;
@@ -207,97 +197,6 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
       toast({ title: "Error", description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const renderCategoryFields = () => {
-    switch (category) {
-      case "opening_hours":
-        return (
-          <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label className="text-xs">Open from</Label>
-                <Input type="time" value={openTime} onChange={(e) => setOpenTime(e.target.value)} />
-              </div>
-              <div>
-                <Label className="text-xs">Open until</Label>
-                <Input type="time" value={closeTime} onChange={(e) => setCloseTime(e.target.value)} />
-              </div>
-            </div>
-            <div>
-              <Label className="text-xs">Days</Label>
-              <div className="flex flex-wrap gap-1.5 mt-1">
-                {DAYS.map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => toggleDay(d)}
-                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
-                      days.includes(d) ? "bg-primary text-primary-foreground" : "bg-background border border-border hover:border-primary/40"
-                    }`}
-                  >
-                    {d}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-      case "classes_sessions":
-        return (
-          <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
-            <div>
-              <Label className="text-xs">Class or session type</Label>
-              <Input placeholder="e.g. Yoga, Pottery, Coding" value={classType} onChange={(e) => setClassType(e.target.value)} />
-            </div>
-            <div>
-              <Label className="text-xs">Skill level</Label>
-              <Select value={skillLevel} onValueChange={setSkillLevel}>
-                <SelectTrigger><SelectValue placeholder="Any level" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="beginner">Beginner</SelectItem>
-                  <SelectItem value="intermediate">Intermediate</SelectItem>
-                  <SelectItem value="advanced">Advanced</SelectItem>
-                  <SelectItem value="all">All levels</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        );
-      case "artist_visit":
-        return (
-          <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
-            <div>
-              <Label className="text-xs">Artist or performer</Label>
-              <Input placeholder="Who would you like to see?" value={artistName} onChange={(e) => setArtistName(e.target.value)} />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <Label className="text-xs">Preferred date</Label>
-                <Input type="date" value={eventDate} onChange={(e) => setEventDate(e.target.value)} />
-              </div>
-              <div>
-                <Label className="text-xs">Audience size</Label>
-                <Input type="number" min="1" placeholder="e.g. 50" value={audienceSize} onChange={(e) => setAudienceSize(e.target.value)} />
-              </div>
-            </div>
-          </div>
-        );
-      case "new_branch":
-        return (
-          <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
-            Drop a pin on the map or search for an existing nearby business to indicate where you'd like a new branch.
-          </div>
-        );
-      case "announcement":
-        return (
-          <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
-            Use the description below to share what you'd like the community or a business to announce.
-          </div>
-        );
-      default:
-        return null;
     }
   };
 
@@ -335,7 +234,7 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label className="text-xs">Request type</Label>
-            <Select value={category} onValueChange={(v) => setCategory(v as RequestCategory)}>
+            <Select value={category} onValueChange={(v) => { setCategory(v as RequestCategory); setFieldValues({}); }}>
               <SelectTrigger>
                 <SelectValue placeholder="What are you requesting?" />
               </SelectTrigger>
@@ -366,7 +265,7 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
             />
           </div>
 
-          {renderCategoryFields()}
+          <DynamicFieldRenderer fields={fields} values={fieldValues} onChange={updateField} />
 
           <div>
             <Label className="text-xs">Town or city</Label>
@@ -410,10 +309,7 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
                 onClick={() =>
                   onRequestPin({
                     title, description, category, town,
-                    selectedBusiness,
-                    openTime, closeTime, days,
-                    classType, skillLevel,
-                    artistName, eventDate, audienceSize,
+                    selectedBusiness, fieldValues,
                   })
                 }
               >
