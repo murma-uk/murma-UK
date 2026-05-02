@@ -228,7 +228,15 @@ export default function AdminCategoriesPage() {
                   </div>
                 </div>
 
-                <div className="mt-3 flex justify-end">
+                <div className="mt-3 flex items-center justify-between">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setFieldsFor({ id: d.id, label: d.label })}
+                    className="gap-1.5"
+                  >
+                    <Settings2 className="h-4 w-4" /> Manage fields
+                  </Button>
                   <Button
                     size="sm"
                     onClick={() => save(d.slug)}
@@ -248,6 +256,18 @@ export default function AdminCategoriesPage() {
           })}
         </div>
       </div>
+
+      <AddCategoryDialog
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        existing={categories ?? []}
+      />
+      <CategoryFieldsPanel
+        open={!!fieldsFor}
+        onOpenChange={(o) => !o && setFieldsFor(null)}
+        categoryId={fieldsFor?.id ?? null}
+        categoryLabel={fieldsFor?.label ?? ""}
+      />
     </div>
   );
 }
