@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import { useCategories, getCategory, type RequestCategory } from "@/lib/categories";
+import { useCategoryFields, formatFieldValue } from "@/lib/categoryFields";
 import { buildRequestPath, parseRequestParam } from "@/lib/slug";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -161,6 +162,11 @@ export default function RequestDetailPage() {
 
   const cat = getCategory(categories, request.category as RequestCategory);
   const Icon = cat.Icon;
+  const { data: fields = [] } = useCategoryFields(cat.id || undefined);
+  const fieldValues = (request.field_values ?? {}) as Record<string, unknown>;
+  const structured = fields
+    .map((f) => ({ label: f.label, value: formatFieldValue(f, fieldValues[f.key]) }))
+    .filter((x) => x.value);
 
   return (
     <div className="min-h-screen bg-background">
@@ -190,8 +196,20 @@ export default function RequestDetailPage() {
           </div>
 
           <h1 className="font-heading text-2xl font-bold md:text-3xl">{request.title}</h1>
+
+          {structured.length > 0 && (
+            <dl className="mt-4 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1.5 rounded-lg border border-border bg-muted/30 p-3 text-sm">
+              {structured.map((s) => (
+                <div key={s.label} className="contents">
+                  <dt className="text-muted-foreground">{s.label}</dt>
+                  <dd className="font-medium">{s.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+
           {request.description && (
-            <p className="mt-3 text-muted-foreground leading-relaxed">{request.description}</p>
+            <p className="mt-3 text-muted-foreground leading-relaxed whitespace-pre-line">{request.description}</p>
           )}
 
           {business && (

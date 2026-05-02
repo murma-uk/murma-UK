@@ -145,12 +145,69 @@ export type Database = {
         }
         Relationships: []
       }
+      request_category_fields: {
+        Row: {
+          category_id: string
+          created_at: string
+          field_type: string
+          help_text: string | null
+          id: string
+          is_active: boolean
+          key: string
+          label: string
+          options: Json | null
+          placeholder: string | null
+          required: boolean
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          field_type: string
+          help_text?: string | null
+          id?: string
+          is_active?: boolean
+          key: string
+          label: string
+          options?: Json | null
+          placeholder?: string | null
+          required?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          field_type?: string
+          help_text?: string | null
+          id?: string
+          is_active?: boolean
+          key?: string
+          label?: string
+          options?: Json | null
+          placeholder?: string | null
+          required?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_category_fields_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "request_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       requests: {
         Row: {
           business_id: string | null
           category: Database["public"]["Enums"]["request_category"]
           created_at: string
           description: string | null
+          field_values: Json
           id: string
           id_short: string | null
           lat: number
@@ -168,6 +225,7 @@ export type Database = {
           category: Database["public"]["Enums"]["request_category"]
           created_at?: string
           description?: string | null
+          field_values?: Json
           id?: string
           id_short?: string | null
           lat: number
@@ -185,6 +243,7 @@ export type Database = {
           category?: Database["public"]["Enums"]["request_category"]
           created_at?: string
           description?: string | null
+          field_values?: Json
           id?: string
           id_short?: string | null
           lat?: number
