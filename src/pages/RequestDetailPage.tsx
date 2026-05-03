@@ -25,6 +25,8 @@ export default function RequestDetailPage() {
   const [loading, setLoading] = useState(true);
   const [posting, setPosting] = useState(false);
   const { data: categories } = useCategories();
+  const cat = request ? getCategory(categories, request.category as RequestCategory) : null;
+  const { data: fields = [] } = useCategoryFields(cat?.id || undefined);
 
   const fetchData = useCallback(async () => {
     if (!routeParam) return;
@@ -160,9 +162,8 @@ export default function RequestDetailPage() {
     );
   }
 
-  const cat = getCategory(categories, request.category as RequestCategory);
-  const Icon = cat.Icon;
-  const { data: fields = [] } = useCategoryFields(cat.id || undefined);
+  const catResolved = cat ?? getCategory(categories, request.category as RequestCategory);
+  const Icon = catResolved.Icon;
   const fieldValues = (request.field_values ?? {}) as Record<string, unknown>;
   const structured = fields
     .map((f) => ({ label: f.label, value: formatFieldValue(f, fieldValues[f.key]) }))
@@ -184,10 +185,10 @@ export default function RequestDetailPage() {
           <div className="mb-4 flex items-center gap-2">
             <span
               className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium"
-              style={{ backgroundColor: `${cat.color}20`, color: cat.color }}
+              style={{ backgroundColor: `${catResolved.color}20`, color: catResolved.color }}
             >
               <Icon className="h-3.5 w-3.5" />
-              {cat.label}
+              {catResolved.label}
             </span>
             <span className="flex items-center gap-1 text-sm text-muted-foreground">
               <MapPin className="h-3.5 w-3.5" />
