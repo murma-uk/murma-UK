@@ -185,10 +185,10 @@ export default function RequestDetailPage() {
           <div className="mb-4 flex items-center gap-2">
             <span
               className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium"
-              style={{ backgroundColor: `${cat.color}20`, color: cat.color }}
+              style={{ backgroundColor: `${catResolved.color}20`, color: catResolved.color }}
             >
               <Icon className="h-3.5 w-3.5" />
-              {cat.label}
+              {catResolved.label}
             </span>
             <span className="flex items-center gap-1 text-sm text-muted-foreground">
               <MapPin className="h-3.5 w-3.5" />
