@@ -10,6 +10,7 @@ import { buildRequestPath, parseRequestParam } from "@/lib/slug";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowBigUp, MapPin, ArrowLeft, Flag, Loader2, Send, Store } from "lucide-react";
+import ShareButton from "@/components/ShareButton";
 import { motion } from "framer-motion";
 
 export default function RequestDetailPage() {
