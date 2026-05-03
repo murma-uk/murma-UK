@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { buildRequestPath } from "@/lib/slug";
+import ShareButton from "./ShareButton";
 
 interface RequestCardProps {
   id: string;
@@ -103,6 +104,9 @@ export default function RequestCard({
               {commentCount}
             </span>
             <span>{new Date(createdAt).toLocaleDateString()}</span>
+            <span className="ml-auto" onClick={(e) => e.stopPropagation()}>
+              <ShareButton id={id} slug={slug} title={title} description={description} variant="icon" />
+            </span>
           </div>
         </div>
       </div>

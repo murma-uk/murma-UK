@@ -1,87 +1,45 @@
-## Plan: Admin-managed categories + per-category custom fields
+# Share Buttons for Requests
 
-Two related upgrades to the existing admin categories system:
+Add a share control on each request so people can spread the word across the channels that matter for community campaigns.
 
-1. **Categories** — let admins add new rows in the UI, with a clear note about the enum constraint (any new slug must be one of the existing enum values, or a developer adds a new enum value via migration first).
-2. **Custom fields** — replace the hardcoded per-category field blocks in `CreateRequestDialog` with a fully data-driven schema builder. Admins design the questions; the dialog renders them dynamically; answers are stored as JSONB on each request.
+## Where it appears
 
----
+- **Request detail page** — primary placement, next to the Upvote button. Full-size button labeled "Share".
+- **Request card** (Explore feed) — small icon-only share button in the bottom meta row, next to the date.
 
-### Database changes
+## Share options menu
 
-**New table `public.request_category_fields`**
+Tapping Share opens a popover with these options:
 
-| column | type | notes |
-|---|---|---|
-| `id` | uuid PK | `gen_random_uuid()` |
-| `category_id` | uuid NOT NULL | FK → `request_categories.id`, on delete cascade |
-| `key` | text NOT NULL | machine name, unique per category (e.g. `open_time`) |
-| `label` | text NOT NULL | shown to users |
-| `field_type` | text NOT NULL | one of `text`, `textarea`, `number`, `date`, `time`, `select`, `multiselect`, `days` |
-| `options` | jsonb | array of `{value,label}` for select/multiselect; null otherwise |
-| `placeholder` | text | optional |
-| `help_text` | text | optional |
-| `required` | bool NOT NULL DEFAULT false |
-| `sort_order` | int NOT NULL DEFAULT 0 |
-| `is_active` | bool NOT NULL DEFAULT true |
-| `created_at` / `updated_at` | timestamptz | trigger-managed |
+1. **Copy link** — copies the canonical pretty URL, shows a "Copied!" toast.
+2. **WhatsApp** — opens `https://wa.me/?text=...` with title + link.
+3. **Facebook** — opens Facebook share dialog with the link.
+4. **X (Twitter)** — opens tweet intent with title + link.
+5. **Email** — `mailto:` with prefilled subject (request title) and body (description excerpt + link).
+6. **Native share** — on mobile devices that support `navigator.share`, show a "More…" option that opens the OS share sheet (gives access to SMS, Instagram DM, Signal, etc.).
 
-Validation trigger (not CHECK) on `field_type` and on `options` shape when type is select/multiselect.
+The native share option is shown only when the API is available (mostly mobile / Safari). On desktop the menu shows the explicit channel list above.
 
-UNIQUE(`category_id`, `key`).
+## Shared link format
 
-**RLS**: public SELECT; admin-only INSERT/UPDATE/DELETE via `has_role(auth.uid(), 'admin')`.
+Use the canonical pretty URL built from `buildRequestPath(id, slug)` with the current origin, e.g. `https://app.example.com/request/later-library-hours-1c3b322b`. This already redirects legacy UUID links, so shared links stay stable.
 
-**`requests` table**: add `field_values jsonb NOT NULL DEFAULT '{}'::jsonb`. Existing rows default to `{}`.
+## Design
 
-**Seed**: migration inserts the current 5 categories' field definitions so behavior is unchanged on day one:
-- `opening_hours`: `open_time` (time), `close_time` (time), `days` (days)
-- `classes_sessions`: `class_type` (text), `skill_level` (select: beginner/intermediate/advanced/all)
-- `artist_visit`: `artist_name` (text), `event_date` (date), `audience_size` (number)
-- `new_branch`, `announcement`: no fields (description-only, as today)
+- Use the existing `Popover` + `Button` (ghost / outline variant on detail, ghost icon on the card).
+- Each option is a row with a Lucide icon + label, hover uses `bg-accent/10`.
+- Channel brand colors are used only for the icon tint (kept subtle to fit the design system); labels stay in `foreground`.
+- Toast confirmation on copy uses the existing `useToast` hook.
 
-### Frontend
+## Technical details
 
-**Dynamic form renderer**
-- New `src/components/DynamicFieldRenderer.tsx` — given a list of field definitions and a `values`/`onChange`, renders the right control per `field_type` (reuses existing Input/Textarea/Select; `days` reuses the day-pill pattern already in `CreateRequestDialog`).
-- New hook `src/lib/categoryFields.ts` → `useCategoryFields(categoryId)` (TanStack Query, keyed by category id, fetches active fields ordered by `sort_order`).
+New file:
 
-**`CreateRequestDialog` refactor**
-- Remove the hardcoded `openTime/closeTime/days/classType/...` state and the `renderCategoryFields` switch.
-- Hold a single `fieldValues: Record<string, unknown>` state.
-- When category changes, fetch its fields and render them via `DynamicFieldRenderer`.
-- On submit:
-  - Validate required fields client-side with zod built from the field definitions.
-  - Build the description preview by concatenating field key/value pairs (same UX as today) and also save the structured values to `requests.field_values`.
-- Update the draft (`RequestDraft`) saved to sessionStorage to use `fieldValues` instead of the old per-field props. Old drafts are ignored if shape doesn't match.
+- `src/components/ShareButton.tsx` — accepts `{ id, slug, title, description?, variant?: "full" | "icon" }`. Builds the absolute URL via `${window.location.origin}${buildRequestPath(id, slug)}`. Renders a `Popover` with the option list. Handles `navigator.clipboard.writeText`, `navigator.share` feature detection, and `window.open(..., "_blank", "noopener")` for the social intents.
 
-**`RequestDetailPage`**
-- If the request has `field_values`, render them as a small definition-list (label → value) above the description, looking up labels from the category's fields.
+Edits:
 
-**Admin UI** (`src/pages/AdminCategoriesPage.tsx`)
-- **Add category** button — opens a dialog asking for slug (dropdown of unused enum values: computed as `enum values – existing categories`), label, icon, color, sort order. If no enum values are available, the button is disabled with a tooltip explaining a developer needs to extend the enum first. This preserves the "keep current trade-off" decision while giving admins room to add a category whenever an enum slot is free.
-- **Manage fields** button per category row — opens a side panel listing that category's fields, with inline edit, drag-to-reorder (using `sort_order`), add/remove field, and a small preview that renders `DynamicFieldRenderer` against the current draft list.
-- Field editor controls: label, key (auto-slugified from label, editable), type (select), options editor (only for select/multiselect), placeholder, help text, required switch, active switch.
+- `src/pages/RequestDetailPage.tsx` — add `<ShareButton variant="full" .../>` in the action row beside the Upvote button.
+- `src/components/RequestCard.tsx` — add `<ShareButton variant="icon" .../>` in the meta row; wrap in a `span` with `onClick={(e) => e.stopPropagation()}` so it doesn't trigger card navigation.
 
-### Files
-
-**New**
-- migration: `request_category_fields` table + `requests.field_values` column + seed
-- `src/lib/categoryFields.ts`
-- `src/components/DynamicFieldRenderer.tsx`
-- `src/components/admin/CategoryFieldsPanel.tsx`
-- `src/components/admin/AddCategoryDialog.tsx`
-
-**Modified**
-- `src/components/CreateRequestDialog.tsx` — dynamic field rendering, JSONB submit, draft shape change
-- `src/pages/AdminCategoriesPage.tsx` — add-category + manage-fields entry points
-- `src/pages/RequestDetailPage.tsx` — render structured `field_values`
-- `src/integrations/supabase/types.ts` — auto-regenerated
-- `mem://features/categories` — document the new field schema and the enum-availability rule for adding categories
-
-### Non-goals
-
-- Not removing the `request_category` enum (per your "keep current trade-off" choice).
-- Not adding ALTER TYPE from the client.
-- Not migrating historical request descriptions back into structured `field_values` — only new submissions populate it.
-- No conditional/visibility logic between fields in v1.
+No backend changes, no new dependencies (Lucide already provides `Share2`, `Copy`, `Mail`, `MessageCircle`; we'll use `Share2` as the trigger icon and a simple text label for WhatsApp/Facebook/X to avoid adding a brand-icon library).
