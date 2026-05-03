@@ -10,6 +10,7 @@ import { buildRequestPath, parseRequestParam } from "@/lib/slug";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowBigUp, MapPin, ArrowLeft, Flag, Loader2, Send, Store } from "lucide-react";
+import ShareButton from "@/components/ShareButton";
 import { motion } from "framer-motion";
 
 export default function RequestDetailPage() {
@@ -225,7 +226,7 @@ export default function RequestDetailPage() {
             </div>
           )}
 
-          <div className="mt-6 flex items-center gap-4">
+          <div className="mt-6 flex flex-wrap items-center gap-3">
             <Button
               onClick={handleUpvote}
               variant={hasUpvoted ? "default" : "outline"}
@@ -235,6 +236,13 @@ export default function RequestDetailPage() {
               {hasUpvoted ? "Upvoted" : "Upvote"}
               <span className="ml-1 font-bold">{request.upvote_count}</span>
             </Button>
+            <ShareButton
+              id={request.id}
+              slug={(request as any).slug}
+              title={request.title}
+              description={request.description}
+              variant="full"
+            />
             <span className="text-sm text-muted-foreground">
               {new Date(request.created_at).toLocaleDateString("en-GB", {
                 day: "numeric", month: "long", year: "numeric",
