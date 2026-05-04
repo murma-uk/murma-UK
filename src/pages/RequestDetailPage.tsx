@@ -176,28 +176,32 @@ export default function RequestDetailPage() {
       <div className="container max-w-2xl py-8">
         <button
           onClick={() => navigate(-1)}
-          className="mb-6 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="mb-6 flex items-center gap-1 font-mono text-xs uppercase tracking-[0.15em] text-text-lo transition-colors hover:text-primary"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-3.5 w-3.5" />
           Back
         </button>
 
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="mb-4 flex items-center gap-2">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
             <span
-              className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium"
-              style={{ backgroundColor: `${catResolved.color}20`, color: catResolved.color }}
+              className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-mono text-[11px] uppercase tracking-[0.12em]"
+              style={{
+                borderColor: `${catResolved.color}40`,
+                backgroundColor: `${catResolved.color}14`,
+                color: catResolved.color,
+              }}
             >
-              <Icon className="h-3.5 w-3.5" />
+              <Icon className="h-3 w-3" />
               {catResolved.label}
             </span>
-            <span className="flex items-center gap-1 text-sm text-muted-foreground">
-              <MapPin className="h-3.5 w-3.5" />
+            <span className="flex items-center gap-1 font-mono text-xs uppercase tracking-[0.12em] text-text-lo">
+              <MapPin className="h-3 w-3" />
               {request.town}
             </span>
           </div>
 
-          <h1 className="font-heading text-2xl font-bold md:text-3xl">{request.title}</h1>
+          <h1 className="font-display text-4xl uppercase leading-[0.95] tracking-[0.02em] md:text-5xl">{request.title}</h1>
 
           {structured.length > 0 && (
             <dl className="mt-4 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1.5 rounded-lg border border-border bg-muted/30 p-3 text-sm">

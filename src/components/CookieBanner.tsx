@@ -34,14 +34,14 @@ export default function CookieBanner() {
       role="dialog"
       aria-live="polite"
       aria-label="Cookie consent"
-      className="fixed bottom-0 left-0 right-0 z-[1000] border-t border-border bg-card/95 backdrop-blur-md shadow-lg"
+      className="accent-strip accent-strip-civic fixed bottom-0 left-0 right-0 z-[1000] border-t-[1.5px] border-border bg-popover/95 shadow-card-hover backdrop-blur-md"
     >
       <div className="container flex flex-col gap-4 py-4 md:flex-row md:items-center md:justify-between">
         <div className="flex items-start gap-3">
-          <div className="hidden sm:flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-            <Cookie className="h-5 w-5 text-primary" />
+          <div className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-md bg-civic/10 text-civic sm:flex">
+            <Cookie className="h-5 w-5" />
           </div>
-          <div className="text-sm text-muted-foreground">
+          <div className="font-body text-sm text-muted-foreground">
             We use only essential cookies to keep you signed in. We do not use tracking or
             advertising cookies. Read our{" "}
             <Link to="/privacy" className="font-medium text-primary underline underline-offset-2">
@@ -50,7 +50,7 @@ export default function CookieBanner() {
             .
           </div>
         </div>
-        <div className="flex gap-2 shrink-0">
+        <div className="flex shrink-0 gap-2">
           <Button variant="outline" size="sm" onClick={() => setChoice("rejected")}>
             Reject non-essential
           </Button>
