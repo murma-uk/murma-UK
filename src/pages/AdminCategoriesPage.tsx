@@ -126,8 +126,9 @@ export default function AdminCategoriesPage() {
       <div className="container max-w-4xl py-8">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h1 className="font-heading text-2xl font-bold">Request Categories</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="section-heading mb-2">Admin · Taxonomy</p>
+            <h1 className="font-display text-4xl uppercase tracking-[0.02em] md:text-5xl">Request Categories</h1>
+            <p className="mt-2 font-body text-sm text-muted-foreground">
               Edit how categories appear across the app. Changes go live immediately.
             </p>
           </div>

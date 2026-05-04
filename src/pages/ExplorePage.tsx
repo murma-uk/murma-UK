@@ -168,8 +168,9 @@ export default function ExplorePage() {
         {/* Sidebar */}
         <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex relative w-full flex-col border-r border-border md:w-96 md:flex-shrink-0`}>
           <div className="border-b border-border p-4">
+            <p className="section-heading mb-2">Live Demand</p>
             <div className="mb-3 flex items-center justify-between gap-2">
-              <h2 className="font-heading text-lg font-bold">
+              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">
                 {viewMode === "businesses" ? "Businesses" : "Requests"}
               </h2>
               <div className="flex gap-1">
