@@ -9,13 +9,13 @@ export default function CategoryFilter({ selected, onSelect }: Props) {
   const { data: categories = [] } = useCategories();
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap gap-1.5">
       <button
         onClick={() => onSelect(null)}
-        className={`rounded-full px-3 py-1.5 text-xs font-medium font-heading transition-colors ${
+        className={`inline-flex items-center rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-[0.12em] transition-colors ${
           selected === null
-            ? "bg-foreground text-background"
-            : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+            ? "border-foreground bg-foreground text-background"
+            : "border-border bg-transparent text-text-lo hover:border-border-mid hover:text-foreground"
         }`}
       >
         All
@@ -27,12 +27,12 @@ export default function CategoryFilter({ selected, onSelect }: Props) {
           <button
             key={cat.slug}
             onClick={() => onSelect(isSelected ? null : cat.slug)}
-            className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium font-heading transition-colors ${
+            className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-[0.12em] transition-colors"
+            style={
               isSelected
-                ? "text-white"
-                : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-            }`}
-            style={isSelected ? { backgroundColor: cat.color } : {}}
+                ? { borderColor: cat.color, backgroundColor: cat.color, color: "white" }
+                : { borderColor: `${cat.color}40`, color: cat.color, backgroundColor: `${cat.color}10` }
+            }
           >
             <Icon className="h-3 w-3" />
             {cat.label}
