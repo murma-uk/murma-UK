@@ -58,43 +58,46 @@ export default function RequestCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="card-hover cursor-pointer rounded-lg border border-border bg-card p-4"
+      className="accent-strip card-hover relative cursor-pointer overflow-hidden rounded-md border-[1.5px] border-border bg-popover p-4 pl-5"
       onClick={() => navigate(buildRequestPath(id, slug))}
     >
       <div className="flex gap-3">
-        <div className="flex flex-col items-center gap-1">
-          <button
-            onClick={handleUpvote}
-            className={`flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${
-              hasUpvoted
-                ? "bg-primary text-primary-foreground"
-                : "bg-secondary text-muted-foreground hover:bg-primary/10 hover:text-primary"
-            } ${animating ? "animate-pulse-up" : ""}`}
-          >
-            <ArrowBigUp className="h-5 w-5" />
-          </button>
-          <span className={`text-sm font-bold font-heading ${hasUpvoted ? "text-primary" : "text-muted-foreground"}`}>
-            {upvoteCount}
-          </span>
-        </div>
+        <button
+          onClick={handleUpvote}
+          className={`flex flex-col items-center justify-center rounded-sm border-[1.5px] px-2.5 py-1.5 transition-all ${
+            hasUpvoted
+              ? "border-primary bg-primary/10 text-primary"
+              : "border-border-mid bg-surface-2 text-text-lo hover:border-primary hover:text-primary"
+          } ${animating ? "animate-pulse-up" : ""}`}
+          aria-label="Upvote"
+        >
+          <ArrowBigUp className="h-4 w-4" />
+          <span className="font-display text-base leading-none mt-0.5">{upvoteCount}</span>
+        </button>
 
-        <div className="flex-1 min-w-0">
-          <div className="mb-1.5 flex items-center gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="mb-1.5 flex items-center gap-1.5">
             <span
-              className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-medium"
-              style={{ backgroundColor: `${cat.color}20`, color: cat.color }}
+              className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em]"
+              style={{
+                borderColor: `${cat.color}40`,
+                backgroundColor: `${cat.color}14`,
+                color: cat.color,
+              }}
             >
               <Icon className="h-3 w-3" />
               {cat.label}
             </span>
           </div>
-          <h3 className="font-heading font-semibold text-card-foreground leading-tight">{title}</h3>
+          <h3 className="font-heading text-lg font-bold uppercase tracking-[0.03em] leading-tight text-card-foreground">
+            {title}
+          </h3>
           {description && (
-            <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{description}</p>
+            <p className="mt-1 line-clamp-2 font-body text-sm text-muted-foreground">{description}</p>
           )}
-          <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
+          <div className="mt-2.5 flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.1em] text-text-lo">
             <span className="flex items-center gap-1">
               <MapPin className="h-3 w-3" />
               {town}
@@ -103,7 +106,7 @@ export default function RequestCard({
               <MessageCircle className="h-3 w-3" />
               {commentCount}
             </span>
-            <span>{new Date(createdAt).toLocaleDateString()}</span>
+            <span>{new Date(createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
             <span className="ml-auto" onClick={(e) => e.stopPropagation()}>
               <ShareButton id={id} slug={slug} title={title} description={description} variant="icon" />
             </span>

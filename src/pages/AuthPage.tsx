@@ -2,11 +2,14 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Loader2, FileText } from "lucide-react";
+import { Loader2, FileText } from "lucide-react";
+import Wordmark from "@/components/brand/Wordmark";
+import LiveChip from "@/components/brand/LiveChip";
+import BrickStripe from "@/components/brand/BrickStripe";
 
 export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -50,62 +53,75 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
-            <MapPin className="h-6 w-6 text-primary-foreground" />
+    <div className="flex min-h-screen flex-col bg-background">
+      <BrickStripe />
+      <div className="flex flex-1 items-center justify-center p-4">
+        <div className="spray-hey w-full max-w-md rounded-md border-[1.5px] border-border bg-popover p-7 shadow-card">
+          <div className="mb-6 text-center">
+            <Wordmark size="lg" className="block" />
+            <div className="mt-3 inline-flex">
+              <LiveChip>{isSignUp ? "Create account" : "Sign in"}</LiveChip>
+            </div>
           </div>
-          <CardTitle className="font-heading text-2xl">{isSignUp ? "Create Account" : "Welcome Back"}</CardTitle>
-          <CardDescription>
-            {isSignUp ? "Join your community" : "Sign in to Hey, Open Up"}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+
           {hasPendingDraft && (
-            <Alert className="mb-4 border-primary/30 bg-primary/5">
+            <Alert className="mb-5 border-primary/30 bg-primary/5">
               <FileText className="h-4 w-4 text-primary" />
-              <AlertDescription className="text-xs">
+              <AlertDescription className="font-mono text-xs">
                 Your request draft is saved — {isSignUp ? "sign up and confirm your email" : "sign in"} to post it.
               </AlertDescription>
             </Alert>
           )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
+              <div className="space-y-1.5">
+                <Label htmlFor="display-name">Display name</Label>
+                <Input
+                  id="display-name"
+                  placeholder="e.g. Jordan from SE15"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+            <div className="space-y-1.5">
+              <Label htmlFor="email">Email</Label>
               <Input
-                placeholder="Display name"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
-            )}
-            <Input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
-            <Button type="submit" className="w-full font-heading font-medium" disabled={loading}>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="6+ characters"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+              />
+            </div>
+            <Button type="submit" className="w-full" size="lg" disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : isSignUp ? "Sign Up" : "Sign In"}
             </Button>
           </form>
+
           <button
             onClick={() => setIsSignUp(!isSignUp)}
-            className="mt-4 w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="mt-5 w-full text-center font-mono text-xs uppercase tracking-[0.15em] text-text-lo transition-colors hover:text-primary"
           >
             {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
           </button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

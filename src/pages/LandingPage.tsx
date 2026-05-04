@@ -1,21 +1,19 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, MapPin, ArrowBigUp, Users, Building2, Landmark } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowRight, Users, Building2, Landmark } from "lucide-react";
 import { useCategories } from "@/lib/categories";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-
-const stats = [
-  { label: "Active Requests", value: "—", icon: MapPin },
-  { label: "Upvotes Cast", value: "—", icon: ArrowBigUp },
-  { label: "Towns Covered", value: "—", icon: Building2 },
-];
+import LiveChip from "@/components/brand/LiveChip";
+import SectionHeading from "@/components/brand/SectionHeading";
 
 const audiences = [
   {
     title: "For People",
     icon: Users,
+    tone: "primary",
     points: [
       "Request new opening hours",
       "Ask for new branches or venues",
@@ -26,6 +24,7 @@ const audiences = [
   {
     title: "For Businesses",
     icon: Building2,
+    tone: "accent",
     points: [
       "Prove market demand with real signals",
       "Find where to open your next branch",
@@ -36,6 +35,7 @@ const audiences = [
   {
     title: "For Authorities",
     icon: Landmark,
+    tone: "civic",
     points: [
       "See demand across towns in real-time",
       "Support investment decisions with data",
@@ -43,7 +43,7 @@ const audiences = [
       "Drive evidence-based planning",
     ],
   },
-];
+] as const;
 
 export default function LandingPage() {
   const { data: categories = [] } = useCategories();
@@ -51,115 +51,154 @@ export default function LandingPage() {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="hero-gradient absolute inset-0 opacity-5" />
-        <div className="container relative py-20 md:py-32">
+      {/* Hero — paste-up paper with spray stencil */}
+      <section className="spray-hey border-b border-border bg-popover">
+        <div className="container py-16 md:py-24">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="max-w-2xl"
+            transition={{ duration: 0.5 }}
+            className="max-w-3xl"
           >
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary">
-              <MapPin className="h-4 w-4" />
-              Community-powered demand signals
+            <div className="mb-6 flex flex-wrap items-center gap-3">
+              <LiveChip>Light Mode · v0.1</LiveChip>
+              <span className="eyebrow">Community-powered demand signals</span>
             </div>
-            <h1 className="font-heading text-4xl font-bold tracking-tight md:text-6xl">
-              Tell your town
+
+            <h1 className="font-display text-[clamp(52px,9vw,112px)] leading-[0.88] tracking-[0.02em] uppercase">
+              HEY! <span className="text-primary">OPEN</span>
               <br />
-              <span className="text-primary">what you need.</span>
+              <span className="text-transparent" style={{ WebkitTextStroke: "1.5px hsl(var(--border-mid))" }}>
+                UP YOUR TOWN
+              </span>
             </h1>
-            <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
+
+            <p className="mt-7 max-w-xl font-body text-lg leading-relaxed text-muted-foreground">
               Request new services, opening hours, or venues in your area.
-              Upvote what matters most. Help businesses and councils make better decisions.
+              Upvote what matters. Help businesses and councils evidence unmet need.
             </p>
+
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/explore">
-                <Button size="lg" className="gap-2 font-heading font-semibold text-base">
-                  Explore the Map
+                <Button size="lg" className="gap-2">
+                  View Demand Map
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
               <Link to="/auth">
-                <Button variant="outline" size="lg" className="font-heading font-semibold text-base">
+                <Button variant="outline" size="lg">
                   Get Started
                 </Button>
               </Link>
+            </div>
+
+            <div className="mt-10 flex flex-wrap gap-6 font-mono text-xs uppercase tracking-[0.15em] text-text-lo">
+              <span>SIGNALS · Real-time</span>
+              <span>·</span>
+              <span>BOROUGHS · 333 UK areas</span>
+              <span>·</span>
+              <span>AUDIENCE · People + Business + Council</span>
             </div>
           </motion.div>
         </div>
       </section>
 
-      {/* Category pills */}
-      <section className="border-y border-border bg-card/50">
-        <div className="container py-8">
-          <div className="flex flex-wrap justify-center gap-3">
-            {categories.map((cat) => {
-              const Icon = cat.Icon;
-              return (
-                <div
-                  key={cat.slug}
-                  className="flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium"
-                  style={{ color: cat.color }}
-                >
-                  <Icon className="h-4 w-4" />
-                  {cat.label}
-                </div>
-              );
-            })}
+      {/* Category strip */}
+      {categories.length > 0 && (
+        <section className="border-b border-border bg-card">
+          <div className="container py-7">
+            <SectionHeading className="mb-4">Live Categories</SectionHeading>
+            <div className="flex flex-wrap gap-2">
+              {categories.map((cat) => {
+                const Icon = cat.Icon;
+                return (
+                  <span
+                    key={cat.slug}
+                    className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 font-mono text-[11px] uppercase tracking-[0.12em]"
+                    style={{
+                      borderColor: `${cat.color}40`,
+                      backgroundColor: `${cat.color}14`,
+                      color: cat.color,
+                    }}
+                  >
+                    <Icon className="h-3 w-3" />
+                    {cat.label}
+                  </span>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Audiences */}
       <section className="container py-20">
-        <motion.h2
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="mb-12 text-center font-heading text-3xl font-bold"
-        >
-          Built for everyone in the community
-        </motion.h2>
-        <div className="grid gap-6 md:grid-cols-3">
-          {audiences.map((aud, i) => (
-            <motion.div
-              key={aud.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="card-hover rounded-xl border border-border bg-card p-6"
-            >
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                <aud.icon className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="mb-3 font-heading text-xl font-semibold">{aud.title}</h3>
-              <ul className="space-y-2">
-                {aud.points.map((p) => (
-                  <li key={p} className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                    {p}
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          ))}
+        <SectionHeading className="mb-3">Built for the whole community</SectionHeading>
+        <h2 className="mb-12 font-display text-4xl uppercase tracking-[0.02em] md:text-5xl">
+          Three sides. <span className="text-primary">One signal.</span>
+        </h2>
+        <div className="grid gap-5 md:grid-cols-3">
+          {audiences.map((aud, i) => {
+            const accent =
+              aud.tone === "accent" ? "accent" : aud.tone === "civic" ? "civic" : "primary";
+            const tint =
+              aud.tone === "accent"
+                ? "bg-accent/10 text-accent"
+                : aud.tone === "civic"
+                  ? "bg-civic/10 text-civic"
+                  : "bg-primary/10 text-primary";
+            return (
+              <motion.div
+                key={aud.title}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.08 }}
+                className={`accent-strip ${accent === "accent" ? "accent-strip-demand" : accent === "civic" ? "accent-strip-civic" : ""} card-hover relative overflow-hidden rounded-md border-[1.5px] border-border bg-popover p-5 pl-6`}
+              >
+                <div className={`mb-4 flex h-11 w-11 items-center justify-center rounded-md ${tint}`}>
+                  <aud.icon className="h-5 w-5" />
+                </div>
+                <h3 className="mb-3 font-heading text-2xl font-bold uppercase tracking-[0.04em]">{aud.title}</h3>
+                <ul className="space-y-2">
+                  {aud.points.map((p) => (
+                    <li key={p} className="flex items-start gap-2 font-mono text-xs text-muted-foreground">
+                      <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-primary" />
+                      {p}
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-4">
+                  <Badge variant={accent === "accent" ? "demand" : accent === "civic" ? "civic" : "open"}>
+                    {accent === "civic" ? "Council Tier" : accent === "accent" ? "Business Tier" : "Public Tier"}
+                  </Badge>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </section>
 
       {/* CTA */}
-      <section className="border-t border-border">
-        <div className="container py-16 text-center">
-          <h2 className="font-heading text-2xl font-bold">Ready to shape your town?</h2>
-          <p className="mt-2 text-muted-foreground">Sign up and start making requests today.</p>
-          <Link to="/auth">
-            <Button size="lg" className="mt-6 gap-2 font-heading font-semibold">
-              Get Started Free
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
+      <section className="border-t border-border bg-popover">
+        <div className="container py-16">
+          <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
+            <div>
+              <SectionHeading className="mb-3">Join the signal</SectionHeading>
+              <h2 className="font-display text-4xl uppercase tracking-[0.02em] md:text-5xl">
+                Ready to <span className="text-primary">open up</span> your town?
+              </h2>
+              <p className="mt-3 max-w-md font-body text-base text-muted-foreground">
+                Post your first request in under a minute. Free for residents, always.
+              </p>
+            </div>
+            <Link to="/auth">
+              <Button size="lg" className="gap-2">
+                Get Started Free
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
 
