@@ -6,7 +6,7 @@ export default function Footer() {
     <footer className="border-t border-border bg-popover/60">
       <div className="container py-10">
         <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
-          <Wordmark size="md" tone="muted" />
+          <Wordmark size="md" tone="muted" withMark />
 
           <nav className="flex flex-wrap gap-x-6 gap-y-2 font-mono text-xs uppercase tracking-[0.15em] text-muted-foreground">
             <Link to="/explore" className="hover:text-primary transition-colors">Explore</Link>
