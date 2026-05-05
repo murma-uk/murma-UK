@@ -1,38 +1,46 @@
-## Add the "Open Door" logo across the app
+## Remove comments + add request stats (live time, views, shares, upvotes)
 
-The uploaded SVG is a presentation sheet showing 4 variants of a single brand mark — a stylized open-door panel ("opening up"). I'll extract the mark as a reusable component, pair it with the existing `HEY! OPEN UP` wordmark, and place it in the natural lockup spots: navbar, footer, auth page, and favicon/social.
+### Database (migration)
+- **Drop** `public.comments` table (CASCADE — removes its 3 RLS policies).
+- **Add to `public.requests`**: `view_count int NOT NULL DEFAULT 0`, `share_count int NOT NULL DEFAULT 0`.
+- **Functions** (SECURITY DEFINER, granted to anon + authenticated):
+  - `increment_request_view(_request_id uuid)` → `UPDATE requests SET view_count = view_count + 1`
+  - `increment_request_share(_request_id uuid)` → same for `share_count`
 
-### What I'll build
+(`upvote_count` already exists; "live time" derives from `created_at`.)
 
-1. **`src/components/brand/LogoMark.tsx`** — React component rendering just the door mark (frame + ajar panel + knob + light spill + hinge pips), no sheet/labels/grain.
-   - Props: `variant: "light" | "dark" | "solidGreen" | "ink"` (default `"light"`), `size` (px), `className`.
-   - Pure SVG, color-aware (uses brand tokens via inline fills mapped to the chosen variant).
+### Frontend
 
-2. **Update `src/components/brand/Wordmark.tsx`** — add an optional `withMark?: boolean` prop. When true, renders `LogoMark` (size matched to the wordmark size) immediately to the left of the text, forming the standard lockup.
+**Remove comments**
+- `RequestDetailPage.tsx` — drop the entire Comments section, all comment state/handlers, and the `comments`/`profiles` fetch block.
+- `RequestCard.tsx` — drop the `commentCount` prop and the `<MessageCircle>` count chip.
+- `PrivacyPage.tsx` — remove "comments" from two policy sentences.
 
-3. **Placements**
-   - **Navbar** (`src/components/Navbar.tsx`) — Wordmark gets `withMark` (light variant) so the door sits before "HEY! OPEN UP".
-   - **Footer** (`src/components/Footer.tsx`) — Wordmark gets `withMark` (light, muted tone).
-   - **AuthPage** (`src/pages/AuthPage.tsx`) — large centered LogoMark above the form (solid-green variant for emphasis).
-   - **LandingPage hero** — small LogoMark chip near the "Live · v0.1" eyebrow row (light variant). The big spray "HEY! OPEN UP YOUR TOWN" headline stays as-is.
-   - **NotFound page** — small mark above the 404 text.
+**Stats panel on `RequestDetailPage`**
+A compact 4-tile row under the title (mono labels, Bebas Neue numbers):
 
-4. **Favicon + social**
-   - Generate `public/favicon.svg` containing only the ink variant of the mark (square, 64×64 viewBox).
-   - Update `index.html` `<link rel="icon">` to point at `/favicon.svg` and remove the default `favicon.ico` reference.
-   - (OG image stays untouched — out of scope unless you want a regenerated one.)
-
-### Variant → use map
 ```text
-light       → navbar, footer, landing chip   (paper bg)
-solidGreen  → auth hero                       (signal accent)
-ink         → favicon                         (high contrast, small)
-dark        → kept available, not placed yet
+┌──────────┬──────────┬──────────┬──────────┐
+│  LIVE    │  VIEWS   │  SHARES  │ UPVOTES  │
+│  3 days  │   142    │    18    │    27    │
+└──────────┴──────────┴──────────┴──────────┘
 ```
 
-### Out of scope
-- Replacing the spray "HEY!" stencil in the landing hero.
-- Regenerating OG/Twitter share images.
-- Any copy or layout changes beyond inserting the mark.
+- "Live" formatted as `Xh`, `Xd`, `Xw`, `Xmo` from `created_at`.
+- Numbers come straight from the new columns + existing `upvote_count`.
 
-Approve and I'll implement.
+**View tracking**
+- On `RequestDetailPage` mount, after a request resolves, call `supabase.rpc('increment_request_view', { _request_id })` once per page-load (guard with a `useRef` so React StrictMode double-mount doesn't double-count).
+
+**Share tracking**
+- `ShareButton.tsx` — fire `supabase.rpc('increment_request_share', { _request_id: id })` whenever the user picks any share action (copy / WhatsApp / Facebook / X / Email / native). Add an optional `onShared` callback so the detail page can refresh its stat tile.
+
+### Files touched
+- new migration (drop comments, add counters + RPCs)
+- `src/pages/RequestDetailPage.tsx` — strip comments, add stats row, view tracking
+- `src/components/RequestCard.tsx` — remove commentCount prop/UI
+- `src/components/ShareButton.tsx` — call share RPC, accept request id (already has it) + `onShared`
+- `src/pages/ExplorePage.tsx` — drop any `commentCount` prop passed to cards
+- `src/pages/PrivacyPage.tsx` — copy edit
+
+Approve and I'll apply.

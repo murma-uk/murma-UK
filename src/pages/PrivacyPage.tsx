@@ -23,7 +23,7 @@ export default function PrivacyPage() {
             <h2 className="font-heading text-xl font-semibold mb-2">2. What data we collect</h2>
             <ul className="list-disc pl-6 text-muted-foreground space-y-1">
               <li>Account data: email address, display name, hashed password.</li>
-              <li>Content you submit: requests, comments, upvotes, business links, location data (town/coordinates) you choose to attach.</li>
+              <li>Content you submit: requests, upvotes, business links, location data (town/coordinates) you choose to attach.</li>
               <li>Technical data: minimal session data needed to keep you signed in.</li>
             </ul>
             <p className="text-muted-foreground mt-2">
@@ -44,7 +44,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="font-heading text-xl font-semibold mb-2">4. How we share data</h2>
             <p className="text-muted-foreground">
-              Public content (requests, comments, upvotes, display name) is visible to other users.
+              Public content (requests, upvotes, display name) is visible to other users.
               Account data is stored on our backend infrastructure (Lovable Cloud / Supabase, EU
               region). We do not sell your personal data.
             </p>

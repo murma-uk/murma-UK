@@ -50,41 +50,6 @@ export type Database = {
         }
         Relationships: []
       }
-      comments: {
-        Row: {
-          content: string
-          created_at: string
-          flagged: boolean
-          id: string
-          request_id: string
-          user_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          flagged?: boolean
-          id?: string
-          request_id: string
-          user_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          flagged?: boolean
-          id?: string
-          request_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "comments_request_id_fkey"
-            columns: ["request_id"]
-            isOneToOne: false
-            referencedRelation: "requests"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           created_at: string
@@ -212,6 +177,7 @@ export type Database = {
           id_short: string | null
           lat: number
           lng: number
+          share_count: number
           slug: string | null
           status: string
           title: string
@@ -219,6 +185,7 @@ export type Database = {
           updated_at: string
           upvote_count: number
           user_id: string
+          view_count: number
         }
         Insert: {
           business_id?: string | null
@@ -230,6 +197,7 @@ export type Database = {
           id_short?: string | null
           lat: number
           lng: number
+          share_count?: number
           slug?: string | null
           status?: string
           title: string
@@ -237,6 +205,7 @@ export type Database = {
           updated_at?: string
           upvote_count?: number
           user_id: string
+          view_count?: number
         }
         Update: {
           business_id?: string | null
@@ -248,6 +217,7 @@ export type Database = {
           id_short?: string | null
           lat?: number
           lng?: number
+          share_count?: number
           slug?: string | null
           status?: string
           title?: string
@@ -255,6 +225,7 @@ export type Database = {
           updated_at?: string
           upvote_count?: number
           user_id?: string
+          view_count?: number
         }
         Relationships: [
           {
@@ -324,6 +295,14 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_request_share: {
+        Args: { _request_id: string }
+        Returns: undefined
+      }
+      increment_request_view: {
+        Args: { _request_id: string }
+        Returns: undefined
       }
       slugify: { Args: { input: string }; Returns: string }
     }

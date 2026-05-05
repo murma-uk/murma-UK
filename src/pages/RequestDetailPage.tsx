@@ -1,39 +1,61 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import { useCategories, getCategory, type RequestCategory } from "@/lib/categories";
 import { useCategoryFields, formatFieldValue } from "@/lib/categoryFields";
 import { buildRequestPath, parseRequestParam } from "@/lib/slug";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { ArrowBigUp, MapPin, ArrowLeft, Flag, Loader2, Send, Store } from "lucide-react";
+import { ArrowBigUp, MapPin, ArrowLeft, Loader2, Store } from "lucide-react";
 import ShareButton from "@/components/ShareButton";
 import { motion } from "framer-motion";
+
+function formatLiveSince(iso: string): string {
+  const created = new Date(iso).getTime();
+  const diffMs = Date.now() - created;
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 60) return `${Math.max(1, mins)}m`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days < 14) return `${days}d`;
+  const weeks = Math.floor(days / 7);
+  if (weeks < 9) return `${weeks}w`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo`;
+  return `${Math.floor(days / 365)}y`;
+}
+
+function StatTile({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-md border-[1.5px] border-border bg-popover px-2 py-3 text-center">
+      <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-text-lo">{label}</span>
+      <span className="mt-1 font-display text-2xl leading-none tracking-[0.02em] text-foreground">{value}</span>
+      {sub && (
+        <span className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.15em] text-text-lo">{sub}</span>
+      )}
+    </div>
+  );
+}
 
 export default function RequestDetailPage() {
   const { id: routeParam } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
   const [request, setRequest] = useState<any>(null);
   const [business, setBusiness] = useState<any>(null);
-  const [comments, setComments] = useState<any[]>([]);
   const [hasUpvoted, setHasUpvoted] = useState(false);
-  const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(true);
-  const [posting, setPosting] = useState(false);
   const { data: categories } = useCategories();
   const cat = request ? getCategory(categories, request.category as RequestCategory) : null;
   const { data: fields = [] } = useCategoryFields(cat?.id || undefined);
+  const viewedRef = useRef<string | null>(null);
 
   const fetchData = useCallback(async () => {
     if (!routeParam) return;
     const { uuid, shortId } = parseRequestParam(routeParam);
 
-    // Resolve the request: by full UUID (legacy) or by id_short (pretty URL).
     let reqQuery = supabase.from("requests").select("*");
     if (uuid) {
       reqQuery = reqQuery.eq("id", uuid);
@@ -56,18 +78,10 @@ export default function RequestDetailPage() {
       return;
     }
 
-    // Canonicalise the URL: if user landed via legacy UUID or mismatched slug,
-    // replace the URL with the pretty one (no history entry).
     const canonical = buildRequestPath(reqData.id, (reqData as any).slug);
     if (canonical !== `/request/${routeParam}`) {
       navigate(canonical, { replace: true });
     }
-
-    const { data: comData } = await supabase
-      .from("comments")
-      .select("*")
-      .eq("request_id", reqData.id)
-      .order("created_at", { ascending: true });
 
     if (reqData.business_id) {
       const { data: bizData } = await supabase
@@ -80,19 +94,6 @@ export default function RequestDetailPage() {
       setBusiness(null);
     }
 
-    if (comData && comData.length > 0) {
-      const userIds = [...new Set(comData.map((c: any) => c.user_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, display_name")
-        .in("user_id", userIds);
-      const profileMap = new Map(profiles?.map((p: any) => [p.user_id, p.display_name]) ?? []);
-      comData.forEach((c: any) => {
-        c.display_name = profileMap.get(c.user_id) ?? "Anonymous";
-      });
-    }
-    setComments(comData ?? []);
-
     if (user) {
       const { data } = await supabase
         .from("upvotes")
@@ -102,6 +103,17 @@ export default function RequestDetailPage() {
         .maybeSingle();
       setHasUpvoted(!!data);
     }
+
+    // Track a view exactly once per page-load.
+    if (viewedRef.current !== reqData.id) {
+      viewedRef.current = reqData.id;
+      supabase.rpc("increment_request_view", { _request_id: reqData.id }).then(() => {
+        setRequest((prev: any) =>
+          prev && prev.id === reqData.id ? { ...prev, view_count: (prev.view_count ?? 0) + 1 } : prev,
+        );
+      });
+    }
+
     setLoading(false);
   }, [routeParam, user, navigate]);
 
@@ -118,27 +130,8 @@ export default function RequestDetailPage() {
     fetchData();
   };
 
-  const handleComment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user || !request?.id || !newComment.trim()) return;
-    setPosting(true);
-    const { error } = await supabase.from("comments").insert({
-      request_id: request.id,
-      user_id: user.id,
-      content: newComment.trim(),
-    });
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      setNewComment("");
-      fetchData();
-    }
-    setPosting(false);
-  };
-
-  const handleFlag = async (commentId: string) => {
-    toast({ title: "Flagged", description: "This comment has been flagged for review." });
-    // In production, this would update the flagged field via an admin endpoint
+  const handleShared = () => {
+    setRequest((prev: any) => (prev ? { ...prev, share_count: (prev.share_count ?? 0) + 1 } : prev));
   };
 
   if (loading) {
@@ -203,6 +196,14 @@ export default function RequestDetailPage() {
 
           <h1 className="font-display text-4xl uppercase leading-[0.95] tracking-[0.02em] md:text-5xl">{request.title}</h1>
 
+          {/* Stats */}
+          <div className="mt-5 grid grid-cols-4 gap-2">
+            <StatTile label="Live" value={formatLiveSince(request.created_at)} />
+            <StatTile label="Views" value={request.view_count ?? 0} />
+            <StatTile label="Shares" value={request.share_count ?? 0} />
+            <StatTile label="Upvotes" value={request.upvote_count ?? 0} />
+          </div>
+
           {structured.length > 0 && (
             <dl className="mt-4 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1.5 rounded-lg border border-border bg-muted/30 p-3 text-sm">
               {structured.map((s) => (
@@ -246,73 +247,15 @@ export default function RequestDetailPage() {
               title={request.title}
               description={request.description}
               variant="full"
+              onShared={handleShared}
             />
-            <span className="text-sm text-muted-foreground">
-              {new Date(request.created_at).toLocaleDateString("en-GB", {
-                day: "numeric", month: "long", year: "numeric",
+            <span className="font-mono text-xs uppercase tracking-[0.15em] text-text-lo">
+              Posted {new Date(request.created_at).toLocaleDateString("en-GB", {
+                day: "numeric", month: "short", year: "numeric",
               })}
             </span>
           </div>
         </motion.div>
-
-        {/* Comments */}
-        <div className="mt-10">
-          <h2 className="mb-4 font-heading text-lg font-semibold">
-            Comments ({comments.length})
-          </h2>
-
-          {user ? (
-            <form onSubmit={handleComment} className="mb-6 flex gap-2">
-              <Textarea
-                placeholder="Add a comment..."
-                value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
-                rows={2}
-                className="flex-1"
-              />
-              <Button type="submit" size="icon" disabled={posting || !newComment.trim()}>
-                {posting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-              </Button>
-            </form>
-          ) : (
-            <p className="mb-6 text-sm text-muted-foreground">
-              <button onClick={() => navigate("/auth")} className="text-primary hover:underline">
-                Sign in
-              </button>{" "}
-              to join the conversation.
-            </p>
-          )}
-
-          <div className="space-y-4">
-            {comments.map((c) => (
-              <div key={c.id} className="rounded-lg border border-border bg-card p-4">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-sm font-medium font-heading">
-                    {c.display_name ?? "Anonymous"}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(c.created_at).toLocaleDateString()}
-                    </span>
-                    {user && (
-                      <button
-                        onClick={() => handleFlag(c.id)}
-                        className="text-muted-foreground hover:text-destructive transition-colors"
-                        title="Flag comment"
-                      >
-                        <Flag className="h-3.5 w-3.5" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-                <p className="text-sm text-card-foreground">{c.content}</p>
-              </div>
-            ))}
-            {comments.length === 0 && (
-              <p className="text-center text-sm text-muted-foreground py-4">No comments yet.</p>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   );
