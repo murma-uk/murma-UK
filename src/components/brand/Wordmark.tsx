@@ -1,9 +1,11 @@
 import { cn } from "@/lib/utils";
+import LogoMark from "./LogoMark";
 
 interface WordmarkProps {
   className?: string;
   size?: "sm" | "md" | "lg" | "xl";
   tone?: "dark" | "light" | "muted";
+  withMark?: boolean;
 }
 
 const sizeMap = {
@@ -13,19 +15,33 @@ const sizeMap = {
   xl: "text-5xl md:text-6xl",
 };
 
-export default function Wordmark({ className, size = "md", tone = "dark" }: WordmarkProps) {
+const markPxMap = {
+  sm: 22,
+  md: 30,
+  lg: 44,
+  xl: 72,
+};
+
+export default function Wordmark({
+  className,
+  size = "md",
+  tone = "dark",
+  withMark = false,
+}: WordmarkProps) {
   const toneClass =
     tone === "light" ? "text-page" : tone === "muted" ? "text-text-lo" : "text-foreground";
   return (
-    <span
-      className={cn(
-        "font-display tracking-[0.1em] leading-none whitespace-nowrap",
-        sizeMap[size],
-        toneClass,
-        className,
-      )}
-    >
-      HEY! <span className="text-primary">OPEN</span> UP
+    <span className={cn("inline-flex items-center gap-2", className)}>
+      {withMark && <LogoMark variant="light" size={markPxMap[size]} />}
+      <span
+        className={cn(
+          "font-display tracking-[0.1em] leading-none whitespace-nowrap",
+          sizeMap[size],
+          toneClass,
+        )}
+      >
+        HEY! <span className="text-primary">OPEN</span> UP
+      </span>
     </span>
   );
 }

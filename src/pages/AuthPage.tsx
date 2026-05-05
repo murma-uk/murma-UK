@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, FileText } from "lucide-react";
 import Wordmark from "@/components/brand/Wordmark";
+import LogoMark from "@/components/brand/LogoMark";
 import LiveChip from "@/components/brand/LiveChip";
 import BrickStripe from "@/components/brand/BrickStripe";
 
@@ -57,8 +58,9 @@ export default function AuthPage() {
       <BrickStripe />
       <div className="flex flex-1 items-center justify-center p-4">
         <div className="spray-hey w-full max-w-md rounded-md border-[1.5px] border-border bg-popover p-7 shadow-card">
-          <div className="mb-6 text-center">
-            <Wordmark size="lg" className="block" />
+          <div className="mb-6 flex flex-col items-center text-center">
+            <LogoMark variant="solidGreen" size={72} className="mb-4 rounded-md shadow-card" />
+            <Wordmark size="lg" />
             <div className="mt-3 inline-flex">
               <LiveChip>{isSignUp ? "Create account" : "Sign in"}</LiveChip>
             </div>
