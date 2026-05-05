@@ -18,7 +18,7 @@ export default function Navbar() {
       <div className="border-b border-border">
         <div className="container flex h-16 items-center justify-between gap-4">
           <Link to="/" className="flex items-center gap-3">
-            <Wordmark size="md" />
+            <Wordmark size="md" withMark />
             <span className="hidden md:inline-flex">
               <LiveChip>Live · Demand Signal</LiveChip>
             </span>
