@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowBigUp, MessageCircle, MapPin } from "lucide-react";
+import { ArrowBigUp, MapPin } from "lucide-react";
 import { useCategories, getCategory, type RequestCategory } from "@/lib/categories";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +17,6 @@ interface RequestCardProps {
   category: RequestCategory;
   town: string;
   upvoteCount: number;
-  commentCount?: number;
   hasUpvoted: boolean;
   createdAt: string;
   onUpvoteChange?: () => void;
@@ -25,7 +24,7 @@ interface RequestCardProps {
 
 export default function RequestCard({
   id, slug, title, description, category, town, upvoteCount,
-  commentCount = 0, hasUpvoted, createdAt, onUpvoteChange,
+  hasUpvoted, createdAt, onUpvoteChange,
 }: RequestCardProps) {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -101,10 +100,6 @@ export default function RequestCard({
             <span className="flex items-center gap-1">
               <MapPin className="h-3 w-3" />
               {town}
-            </span>
-            <span className="flex items-center gap-1">
-              <MessageCircle className="h-3 w-3" />
-              {commentCount}
             </span>
             <span>{new Date(createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
             <span className="ml-auto" onClick={(e) => e.stopPropagation()}>

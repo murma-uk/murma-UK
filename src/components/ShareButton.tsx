@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/hooks/use-toast";
 import { buildRequestPath } from "@/lib/slug";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ShareButtonProps {
   id: string;
@@ -11,9 +12,10 @@ interface ShareButtonProps {
   title: string;
   description?: string | null;
   variant?: "full" | "icon";
+  onShared?: () => void;
 }
 
-export default function ShareButton({ id, slug, title, description, variant = "full" }: ShareButtonProps) {
+export default function ShareButton({ id, slug, title, description, variant = "full", onShared }: ShareButtonProps) {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -24,6 +26,10 @@ export default function ShareButton({ id, slug, title, description, variant = "f
 
   const stop = (e: React.MouseEvent) => e.stopPropagation();
 
+  const trackShare = () => {
+    supabase.rpc("increment_request_share", { _request_id: id }).then(() => onShared?.());
+  };
+
   const handleCopy = async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
@@ -31,6 +37,7 @@ export default function ShareButton({ id, slug, title, description, variant = "f
       setCopied(true);
       toast({ title: "Link copied", description: "Share it anywhere you like." });
       setTimeout(() => setCopied(false), 1500);
+      trackShare();
     } catch {
       toast({ title: "Couldn't copy", description: "Please copy the link manually.", variant: "destructive" });
     }
@@ -39,6 +46,7 @@ export default function ShareButton({ id, slug, title, description, variant = "f
   const openWindow = (href: string) => {
     window.open(href, "_blank", "noopener,noreferrer");
     setOpen(false);
+    trackShare();
   };
 
   const handleWhatsApp = (e: React.MouseEvent) => {
@@ -61,6 +69,7 @@ export default function ShareButton({ id, slug, title, description, variant = "f
     const body = `${description ? description.slice(0, 280) + "\n\n" : ""}${url}`;
     window.location.href = `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}`;
     setOpen(false);
+    trackShare();
   };
 
   const handleNative = async (e: React.MouseEvent) => {
@@ -68,6 +77,7 @@ export default function ShareButton({ id, slug, title, description, variant = "f
     try {
       await (navigator as any).share({ title, text: shareText, url });
       setOpen(false);
+      trackShare();
     } catch {
       // user cancelled
     }
