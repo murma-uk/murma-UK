@@ -1,46 +1,80 @@
-## Remove comments + add request stats (live time, views, shares, upvotes)
+## User Dashboard — `/me`
 
-### Database (migration)
-- **Drop** `public.comments` table (CASCADE — removes its 3 RLS policies).
-- **Add to `public.requests`**: `view_count int NOT NULL DEFAULT 0`, `share_count int NOT NULL DEFAULT 0`.
-- **Functions** (SECURITY DEFINER, granted to anon + authenticated):
-  - `increment_request_view(_request_id uuid)` → `UPDATE requests SET view_count = view_count + 1`
-  - `increment_request_share(_request_id uuid)` → same for `share_count`
+A personal home for anyone signed in. Shows their identity, headline metrics across all the requests they've posted, and a manageable list of those requests.
 
-(`upvote_count` already exists; "live time" derives from `created_at`.)
-
-### Frontend
-
-**Remove comments**
-- `RequestDetailPage.tsx` — drop the entire Comments section, all comment state/handlers, and the `comments`/`profiles` fetch block.
-- `RequestCard.tsx` — drop the `commentCount` prop and the `<MessageCircle>` count chip.
-- `PrivacyPage.tsx` — remove "comments" from two policy sentences.
-
-**Stats panel on `RequestDetailPage`**
-A compact 4-tile row under the title (mono labels, Bebas Neue numbers):
+### Page layout
 
 ```text
-┌──────────┬──────────┬──────────┬──────────┐
-│  LIVE    │  VIEWS   │  SHARES  │ UPVOTES  │
-│  3 days  │   142    │    18    │    27    │
-└──────────┴──────────┴──────────┴──────────┘
+┌─────────────────────────────────────────────────────┐
+│  HEY!  Jane Doe                                     │
+│  joined Mar 2026 · 12 requests live                 │
+│  [Edit display name]   [New request]                │
+├─────────────────────────────────────────────────────┤
+│  TOTALS  (4 stat tiles, brand StatTile style)       │
+│  [Upvotes] [Views] [Shares] [Live requests]         │
+├─────────────────────────────────────────────────────┤
+│  YOUR REQUESTS                                      │
+│  Tabs: Active · Closed · All       Sort: New/Top    │
+│                                                     │
+│  ┌─ Request row ──────────────────────────────────┐ │
+│  │ category chip · title                          │ │
+│  │ town · live for 3d · 24 ▲ · 180 views · 6 ◔   │ │
+│  │ [Open] [Share] [Close] [Delete]                │ │
+│  └────────────────────────────────────────────────┘ │
+│  …                                                  │
+└─────────────────────────────────────────────────────┘
 ```
 
-- "Live" formatted as `Xh`, `Xd`, `Xw`, `Xmo` from `created_at`.
-- Numbers come straight from the new columns + existing `upvote_count`.
+### Routing & access
+- New route `/me` → `ProfilePage`, gated: if not signed in, redirect to `/auth?next=/me`.
+- Add a "Profile" link/avatar button to `Navbar` (signed-in only) pointing to `/me`. Replace the lone sign-out icon with a small dropdown: My profile / Sign out.
 
-**View tracking**
-- On `RequestDetailPage` mount, after a request resolves, call `supabase.rpc('increment_request_view', { _request_id })` once per page-load (guard with a `useRef` so React StrictMode double-mount doesn't double-count).
+### Sections
 
-**Share tracking**
-- `ShareButton.tsx` — fire `supabase.rpc('increment_request_share', { _request_id: id })` whenever the user picks any share action (copy / WhatsApp / Facebook / X / Email / native). Add an optional `onShared` callback so the detail page can refresh its stat tile.
+1. **Header card**
+   - Display name (editable inline → updates `profiles.display_name`).
+   - Member since (from `auth.user.created_at`).
+   - Quick actions: New Request, Sign out.
+   - Brand: paper card, BrickStripe accent, Wordmark-free.
 
-### Files touched
-- new migration (drop comments, add counters + RPCs)
-- `src/pages/RequestDetailPage.tsx` — strip comments, add stats row, view tracking
-- `src/components/RequestCard.tsx` — remove commentCount prop/UI
-- `src/components/ShareButton.tsx` — call share RPC, accept request id (already has it) + `onShared`
-- `src/pages/ExplorePage.tsx` — drop any `commentCount` prop passed to cards
-- `src/pages/PrivacyPage.tsx` — copy edit
+2. **Totals row** — 4 StatTiles, summed across the user's requests:
+   - Total upvotes (sum `upvote_count`)
+   - Total views (sum `view_count`)
+   - Total shares (sum `share_count`)
+   - Live requests (count where `status = 'active'`)
 
-Approve and I'll apply.
+3. **My requests list**
+   - Query: `requests` where `user_id = auth.uid()`, ordered by `created_at desc`.
+   - Tabs filter by status; sort toggles created_at vs upvote_count.
+   - Each row shows category chip, title, town, live-since, and per-request metrics (upvotes / views / shares) using the same `formatLiveSince` helper from RequestDetailPage.
+   - Row actions:
+     - **Open** → navigate to request detail.
+     - **Share** → reuse `ShareButton`.
+     - **Close / Reopen** → updates `requests.status` between `active` and `closed` (RLS already allows owner update).
+     - **Delete** → confirm dialog, deletes the row (RLS already allows owner delete).
+   - Empty state: paper card with "No requests yet" + CTA to create one.
+
+4. **Recently upvoted** (secondary section, collapsible)
+   - Shows the 5 most recent rows from `upvotes` joined to `requests` for this user, so people can find things they've supported.
+
+### Technical details
+- New file `src/pages/ProfilePage.tsx`. Register in `src/App.tsx` at `/me`.
+- New small components:
+  - `src/components/profile/ProfileHeader.tsx`
+  - `src/components/profile/ProfileTotals.tsx` (reuses the StatTile pattern from RequestDetailPage — extract it to `src/components/brand/StatTile.tsx` so both pages share it).
+  - `src/components/profile/MyRequestRow.tsx`
+- Data fetching with `@tanstack/react-query`:
+  - `useMyRequests()` → `requests` filtered by `user_id`.
+  - `useMyUpvotes()` → `upvotes` join `requests`.
+  - Totals derived client-side from `useMyRequests` (no extra query needed).
+- Mutations:
+  - Update display name → `supabase.from('profiles').update({ display_name }).eq('user_id', user.id)`.
+  - Toggle status → `supabase.from('requests').update({ status }).eq('id', ...)`.
+  - Delete → `supabase.from('requests').delete().eq('id', ...)`; invalidate `useMyRequests`.
+- No schema changes required; existing RLS on `requests`, `upvotes`, `profiles` already covers everything.
+- Auth gating handled in-component via `useAuth()` + `<Navigate to="/auth?next=/me" />` when `!loading && !user`.
+
+### Out of scope (call out, not built)
+- Notifications / email digests.
+- Public profile pages for other users.
+- Avatar uploads (no storage bucket configured).

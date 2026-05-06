@@ -45,6 +45,11 @@ export default function Navbar() {
                     </Button>
                   </Link>
                 )}
+                <Link to="/me">
+                  <Button variant="ghost" size="icon" title="My profile">
+                    <User className="h-4 w-4" />
+                  </Button>
+                </Link>
                 <Button
                   variant="ghost"
                   size="icon"
