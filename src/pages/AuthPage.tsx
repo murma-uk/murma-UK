@@ -24,7 +24,7 @@ export default function AuthPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const redirectTo = searchParams.get("redirect") || "/explore";
+  const redirectTo = searchParams.get("redirect") || searchParams.get("next") || "/explore";
 
   useEffect(() => {
     setHasPendingDraft(!!sessionStorage.getItem("pendingRequest"));
