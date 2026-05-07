@@ -15,6 +15,14 @@ import {
   type CategoryField,
 } from "@/lib/categoryFields";
 import DynamicFieldRenderer from "./DynamicFieldRenderer";
+import NewBranchFields, {
+  defaultNewBranchValue,
+  isNewBranchValid,
+  composeNewBranchTitle,
+  composeNewBranchDescription,
+  RADIUS_OPTIONS,
+  type NewBranchValue,
+} from "./request/NewBranchFields";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -36,6 +44,7 @@ export interface RequestDraft {
   lng?: number;
   selectedBusiness?: BusinessResult | null;
   fieldValues?: Record<string, unknown>;
+  newBranch?: NewBranchValue;
 }
 
 interface Props {
@@ -73,17 +82,22 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
   const [town, setTown] = useState("");
   const [selectedBusiness, setSelectedBusiness] = useState<BusinessResult | null>(null);
   const [fieldValues, setFieldValues] = useState<Record<string, unknown>>({});
+  const [newBranch, setNewBranch] = useState<NewBranchValue>(defaultNewBranchValue());
+
+  const isNewBranch = category === "new_branch";
 
   const selectedCategory = useMemo(
     () => categories.find((c) => c.slug === category),
     [categories, category],
   );
-  const { data: fields = [] } = useCategoryFields(selectedCategory?.id);
+  const { data: fields = [] } = useCategoryFields(
+    isNewBranch ? undefined : selectedCategory?.id,
+  );
 
-  // Prefill town from dropped pin
+  // Prefill town from dropped pin (non-new-branch flow)
   useEffect(() => {
-    if (pinLocation?.town && !town) setTown(pinLocation.town);
-  }, [pinLocation]);
+    if (!isNewBranch && pinLocation?.town && !town) setTown(pinLocation.town);
+  }, [pinLocation, isNewBranch]);
 
   // Prefill town from selected business
   useEffect(() => {
@@ -99,12 +113,14 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
     if (initialDraft.town) setTown(initialDraft.town);
     if (initialDraft.selectedBusiness) setSelectedBusiness(initialDraft.selectedBusiness);
     if (initialDraft.fieldValues) setFieldValues(initialDraft.fieldValues);
+    if (initialDraft.newBranch) setNewBranch(initialDraft.newBranch);
   }, [initialDraft, open]);
 
   const reset = () => {
     setTitle(""); setDescription(""); setCategory(""); setTown("");
     setSelectedBusiness(null);
     setFieldValues({});
+    setNewBranch(defaultNewBranchValue());
   };
 
   const updateField = (key: string, value: unknown) => {
@@ -115,13 +131,91 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
     e.preventDefault();
     if (!category) return;
 
+    // ---- New Branch flow ----
+    if (isNewBranch) {
+      if (!isNewBranchValid(newBranch)) {
+        toast({
+          title: "Missing info",
+          description: "Pick a business type or brand and tell us where.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!user) {
+        const draft: RequestDraft = {
+          title, description, category, town: newBranch.town,
+          lat: pinLocation?.lat, lng: pinLocation?.lng,
+          newBranch,
+        };
+        try { sessionStorage.setItem("pendingRequest", JSON.stringify(draft)); } catch {}
+        toast({ title: "Draft saved", description: "Sign in to post your request — we'll bring you back here." });
+        onOpenChange(false);
+        navigate("/auth?redirect=/explore&resume=request");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        let lat = pinLocation?.lat ?? 51.5074;
+        let lng = pinLocation?.lng ?? -0.1278;
+
+        // If no pin, geocode the town
+        if (!pinLocation && newBranch.town) {
+          const geoRes = await fetch(
+            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(newBranch.town)}&format=json&limit=1&countrycodes=gb,ie`
+          );
+          const geoData = await geoRes.json();
+          if (geoData.length > 0) {
+            lat = parseFloat(geoData[0].lat);
+            lng = parseFloat(geoData[0].lon);
+          }
+        }
+
+        const finalTitle = title.trim() || composeNewBranchTitle(newBranch);
+        const finalDescription = composeNewBranchDescription(newBranch);
+        const radius_m =
+          newBranch.locationMode === "radius"
+            ? Math.round(newBranch.radiusMiles * 1609.344)
+            : null;
+
+        const { error } = await supabase.from("requests").insert({
+          title: finalTitle,
+          description: finalDescription,
+          category,
+          town: newBranch.town,
+          lat,
+          lng,
+          user_id: user.id,
+          field_values: {} as any,
+          business_kind: newBranch.kind,
+          business_type_slug: newBranch.kind === "type" ? newBranch.typeSlug : null,
+          brand_name: newBranch.kind === "brand" ? newBranch.brandName.trim() : null,
+          brand_website: newBranch.kind === "brand" ? newBranch.brandWebsite || null : null,
+          radius_m,
+        } as any);
+
+        if (error) throw error;
+
+        toast({ title: "Request created!", description: "Your request is now live on the map." });
+        reset();
+        onOpenChange(false);
+        onCreated?.();
+      } catch (err: any) {
+        toast({ title: "Error", description: err.message, variant: "destructive" });
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+
+    // ---- Other categories (existing flow) ----
     const validationError = validateFieldValues(fields, fieldValues);
     if (validationError) {
       toast({ title: "Missing info", description: validationError, variant: "destructive" });
       return;
     }
 
-    // Guest: save draft to sessionStorage and redirect to auth
     if (!user) {
       const draft: RequestDraft = {
         title, description, category, town,
@@ -129,11 +223,7 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
         selectedBusiness,
         fieldValues,
       };
-      try {
-        sessionStorage.setItem("pendingRequest", JSON.stringify(draft));
-      } catch {
-        // ignore storage errors
-      }
+      try { sessionStorage.setItem("pendingRequest", JSON.stringify(draft)); } catch {}
       toast({ title: "Draft saved", description: "Sign in to post your request — we'll bring you back here." });
       onOpenChange(false);
       navigate("/auth?redirect=/explore&resume=request");
@@ -202,12 +292,17 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
 
   const isGuest = !user;
 
+  const submitDisabled =
+    loading ||
+    !category ||
+    (isNewBranch ? !isNewBranchValid(newBranch) : !title || !town);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-xl">New Request</DialogTitle>
-          {selectedBusiness ? (
+          {!isNewBranch && selectedBusiness ? (
             <DialogDescription className="flex items-center gap-1.5 text-xs">
               <MapPin className="h-3.5 w-3.5 text-primary" />
               Location set from {selectedBusiness.name}
@@ -254,76 +349,107 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
             </Select>
           </div>
 
-          <div>
-            <Label className="text-xs">Title</Label>
-            <Input
-              placeholder="e.g. 'Later opening hours for the library'"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-              maxLength={120}
-            />
-          </div>
-
-          <DynamicFieldRenderer fields={fields} values={fieldValues} onChange={updateField} />
-
-          <div>
-            <Label className="text-xs">Town or city</Label>
-            <Input
-              placeholder="Town or city"
-              value={town}
-              onChange={(e) => setTown(e.target.value)}
-              required
-            />
-          </div>
-
-          <div>
-            <Label className="text-xs">Existing business (optional)</Label>
-            <BusinessSearch
-              town={town}
-              selected={selectedBusiness}
-              onSelect={setSelectedBusiness}
-            />
-          </div>
-
-          <div>
-            <Label className="text-xs">More details (optional)</Label>
-            <Textarea
-              placeholder="Anything else you'd like to add..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-            />
-          </div>
-
-          {!selectedBusiness && !pinLocation && onRequestPin && (
-            <div className="rounded-lg border border-dashed border-border bg-muted/30 p-3 space-y-2">
-              <p className="text-xs text-muted-foreground">
-                Pick a business above or drop a pin on the map to set a precise location.
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-full gap-1.5"
-                onClick={() =>
-                  onRequestPin({
-                    title, description, category, town,
-                    selectedBusiness, fieldValues,
-                  })
+          {isNewBranch ? (
+            <>
+              <NewBranchFields
+                value={newBranch}
+                onChange={setNewBranch}
+                pinLocation={pinLocation}
+                onRequestPin={
+                  onRequestPin
+                    ? () =>
+                        onRequestPin({
+                          title, description, category,
+                          town: newBranch.town,
+                          newBranch,
+                        })
+                    : undefined
                 }
-              >
-                <MapPin className="h-3.5 w-3.5" />
-                Drop pin on map
-              </Button>
-            </div>
+              />
+              <div>
+                <Label className="text-xs">Title (optional — we'll write one for you)</Label>
+                <Input
+                  placeholder={composeNewBranchTitle(newBranch) || "e.g. 'New bakery in Hackney'"}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  maxLength={120}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <Label className="text-xs">Title</Label>
+                <Input
+                  placeholder="e.g. 'Later opening hours for the library'"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                  maxLength={120}
+                />
+              </div>
+
+              <DynamicFieldRenderer fields={fields} values={fieldValues} onChange={updateField} />
+
+              <div>
+                <Label className="text-xs">Town or city</Label>
+                <Input
+                  placeholder="Town or city"
+                  value={town}
+                  onChange={(e) => setTown(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs">Existing business (optional)</Label>
+                <BusinessSearch
+                  town={town}
+                  selected={selectedBusiness}
+                  onSelect={setSelectedBusiness}
+                />
+              </div>
+
+              <div>
+                <Label className="text-xs">More details (optional)</Label>
+                <Textarea
+                  placeholder="Anything else you'd like to add..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={3}
+                />
+              </div>
+
+              {!selectedBusiness && !pinLocation && onRequestPin && (
+                <div className="rounded-lg border border-dashed border-border bg-muted/30 p-3 space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    Pick a business above or drop a pin on the map to set a precise location.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-1.5"
+                    onClick={() =>
+                      onRequestPin({
+                        title, description, category, town,
+                        selectedBusiness, fieldValues,
+                      })
+                    }
+                  >
+                    <MapPin className="h-3.5 w-3.5" />
+                    Drop pin on map
+                  </Button>
+                </div>
+              )}
+            </>
           )}
 
           <div className="space-y-1.5">
             <Button
               type="submit"
               className="w-full font-heading font-medium gap-2"
-              disabled={loading || !category || !title || !town}
+              disabled={submitDisabled}
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
