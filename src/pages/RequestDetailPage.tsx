@@ -204,6 +204,31 @@ export default function RequestDetailPage() {
             </div>
           )}
 
+          {request.brand_name && (
+            <div className="mt-4 flex items-center gap-2 rounded-lg border border-civic/30 bg-civic/5 p-3">
+              <Store className="h-4 w-4 text-civic shrink-0" />
+              <div className="min-w-0">
+                <p className="text-sm font-medium">{request.brand_name}</p>
+                {request.brand_website && (
+                  <a
+                    href={request.brand_website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-xs text-civic hover:underline truncate block"
+                  >
+                    {request.brand_website.replace(/^https?:\/\/(www\.)?/, "")}
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
+
+          {request.radius_m && (
+            <p className="mt-3 font-mono text-xs uppercase tracking-[0.12em] text-text-lo">
+              Within {(request.radius_m / 1609.344).toFixed(2).replace(/\.?0+$/, "")} mi of {request.town}
+            </p>
+          )}
+
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Button
               onClick={handleUpvote}
