@@ -168,7 +168,11 @@ export type Database = {
       }
       requests: {
         Row: {
+          brand_name: string | null
+          brand_website: string | null
           business_id: string | null
+          business_kind: string | null
+          business_type_slug: string | null
           category: Database["public"]["Enums"]["request_category"]
           created_at: string
           description: string | null
@@ -177,6 +181,7 @@ export type Database = {
           id_short: string | null
           lat: number
           lng: number
+          radius_m: number | null
           share_count: number
           slug: string | null
           status: string
@@ -188,7 +193,11 @@ export type Database = {
           view_count: number
         }
         Insert: {
+          brand_name?: string | null
+          brand_website?: string | null
           business_id?: string | null
+          business_kind?: string | null
+          business_type_slug?: string | null
           category: Database["public"]["Enums"]["request_category"]
           created_at?: string
           description?: string | null
@@ -197,6 +206,7 @@ export type Database = {
           id_short?: string | null
           lat: number
           lng: number
+          radius_m?: number | null
           share_count?: number
           slug?: string | null
           status?: string
@@ -208,7 +218,11 @@ export type Database = {
           view_count?: number
         }
         Update: {
+          brand_name?: string | null
+          brand_website?: string | null
           business_id?: string | null
+          business_kind?: string | null
+          business_type_slug?: string | null
           category?: Database["public"]["Enums"]["request_category"]
           created_at?: string
           description?: string | null
@@ -217,6 +231,7 @@ export type Database = {
           id_short?: string | null
           lat?: number
           lng?: number
+          radius_m?: number | null
           share_count?: number
           slug?: string | null
           status?: string
