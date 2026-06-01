@@ -299,7 +299,7 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100vw-2rem)] max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="font-heading text-xl">New Request</DialogTitle>
           {!isNewBranch && selectedBusiness ? (
@@ -366,15 +366,6 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
                     : undefined
                 }
               />
-              <div>
-                <Label className="text-xs">Title (optional — we'll write one for you)</Label>
-                <Input
-                  placeholder={composeNewBranchTitle(newBranch) || "e.g. 'New bakery in Hackney'"}
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  maxLength={120}
-                />
-              </div>
             </>
           ) : (
             <>

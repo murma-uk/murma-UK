@@ -104,7 +104,7 @@ function BusinessTypeCombobox({
           }}
         >
           <CommandInput placeholder="Start typing… bakery, gym, ramen" />
-          <CommandList>
+          <CommandList className="max-h-64 overflow-y-auto">
             <CommandEmpty>No matching type.</CommandEmpty>
             <CommandGroup>
               {BUSINESS_TYPES.map((t: BusinessType) => {
