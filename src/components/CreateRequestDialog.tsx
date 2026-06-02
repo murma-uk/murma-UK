@@ -160,15 +160,14 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
         let lat = pinLocation?.lat ?? 51.5074;
         let lng = pinLocation?.lng ?? -0.1278;
 
-        // If no pin, geocode the town
+        // If no pin, geocode the town via Google
         if (!pinLocation && newBranch.town) {
-          const geoRes = await fetch(
-            `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(newBranch.town)}&format=json&limit=1&countrycodes=gb,ie`
-          );
-          const geoData = await geoRes.json();
-          if (geoData.length > 0) {
-            lat = parseFloat(geoData[0].lat);
-            lng = parseFloat(geoData[0].lon);
+          const { data: geo } = await supabase.functions.invoke("geocode", {
+            body: { mode: "forward", query: newBranch.town },
+          });
+          if (geo && typeof (geo as any).lat === "number") {
+            lat = (geo as any).lat;
+            lng = (geo as any).lng;
           }
         }
 
@@ -253,13 +252,12 @@ export default function CreateRequestDialog({ open, onOpenChange, onCreated, pin
         if (!linkData?.business_id) throw new Error("Could not link business");
         businessId = linkData.business_id as string;
       } else if (!pinLocation) {
-        const geoRes = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(town)}&format=json&limit=1&countrycodes=gb,ie`
-        );
-        const geoData = await geoRes.json();
-        if (geoData.length > 0) {
-          lat = parseFloat(geoData[0].lat);
-          lng = parseFloat(geoData[0].lon);
+        const { data: geo } = await supabase.functions.invoke("geocode", {
+          body: { mode: "forward", query: town },
+        });
+        if (geo && typeof (geo as any).lat === "number") {
+          lat = (geo as any).lat;
+          lng = (geo as any).lng;
         }
       }
 
