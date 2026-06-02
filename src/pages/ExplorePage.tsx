@@ -112,14 +112,13 @@ export default function ExplorePage() {
 
   const handleMapClick = useCallback(async (lat: number, lng: number) => {
     setPinMode(false);
-    // Reverse geocode to get a town name
+    // Reverse geocode via Google
     let town = "";
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=12&addressdetails=1`
-      );
-      const data = await res.json();
-      town = data?.address?.city || data?.address?.town || data?.address?.village || data?.address?.suburb || data?.address?.county || "";
+      const { data } = await supabase.functions.invoke("geocode", {
+        body: { mode: "reverse", lat, lng },
+      });
+      town = (data as any)?.town ?? "";
     } catch {
       // ignore
     }
