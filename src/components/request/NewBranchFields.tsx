@@ -31,6 +31,7 @@ import {
   normaliseWebsiteUrl,
   displayHostname,
 } from "@/lib/brandWebsite";
+import PlaceAutocomplete from "@/components/PlaceAutocomplete";
 
 export type LocationMode = "town" | "pin" | "radius";
 export type BusinessKind = "type" | "brand";
