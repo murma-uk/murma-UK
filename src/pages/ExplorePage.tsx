@@ -12,6 +12,7 @@ import { buildRequestPath } from "@/lib/slug";
 import { Loader2, Store, List, Map as MapIcon, MapPin, X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import SEO from "@/components/SEO";
 
 export default function ExplorePage() {
   const { user } = useAuth();
@@ -145,6 +146,12 @@ export default function ExplorePage() {
 
   return (
     <div className="flex h-screen flex-col bg-background">
+      <SEO
+        title="Explore Local Demand — Hey, Open Up"
+        description="Browse live community requests and businesses on a map of your area. Upvote the services, branches, and venues your town needs next."
+        path="/explore"
+      />
+      <h1 className="sr-only">Explore Local Demand</h1>
       <Navbar />
 
       {/* Mobile Map/List toggle */}
@@ -308,7 +315,7 @@ export default function ExplorePage() {
               <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-card/95 border border-primary/40 px-3 py-2 shadow-lg backdrop-blur">
                 <MapPin className="h-4 w-4 text-primary animate-pulse" />
                 <span className="text-sm font-medium">Tap the map to drop a pin</span>
-                <Button size="sm" variant="ghost" className="h-7 px-2" onClick={() => setPinMode(false)}>
+                <Button size="sm" variant="ghost" className="h-7 px-2" aria-label="Cancel pin drop" onClick={() => setPinMode(false)}>
                   <X className="h-3.5 w-3.5" />
                 </Button>
               </div>
