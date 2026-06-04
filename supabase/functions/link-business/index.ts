@@ -128,12 +128,14 @@ Deno.serve(async (req) => {
       })
       .select("id")
       .single();
-    if (insErr) return json({ error: insErr.message }, 500);
+    if (insErr) {
+      console.error("link-business DB insert error:", insErr);
+      return json({ error: "Failed to save business record." }, 500);
+    }
 
     return json({ business_id: inserted.id });
   } catch (err) {
     console.error("link-business error:", err);
-    const message = err instanceof Error ? err.message : "Unknown error";
-    return json({ error: message }, 500);
+    return json({ error: "Internal server error." }, 500);
   }
 });
