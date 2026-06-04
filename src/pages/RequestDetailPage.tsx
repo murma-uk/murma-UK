@@ -11,6 +11,7 @@ import { ArrowBigUp, MapPin, ArrowLeft, Loader2, Store } from "lucide-react";
 import ShareButton from "@/components/ShareButton";
 import StatTile, { formatLiveSince } from "@/components/brand/StatTile";
 import { motion } from "framer-motion";
+import SEO from "@/components/SEO";
 
 export default function RequestDetailPage() {
   const { id: routeParam } = useParams<{ id: string }>();
@@ -138,6 +139,21 @@ export default function RequestDetailPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title={`${request.title} — Hey, Open Up`}
+        description={(request.description || `Community request in ${request.town}. Upvote to add your voice.`).slice(0, 158)}
+        path={buildRequestPath(request.id, (request as any).slug)}
+        type="article"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Article",
+          headline: request.title,
+          description: (request.description || "").slice(0, 200),
+          datePublished: request.created_at,
+          articleSection: catResolved?.label,
+          locationCreated: request.town ? { "@type": "Place", name: request.town } : undefined,
+        }}
+      />
       <Navbar />
       <div className="container max-w-2xl py-8">
         <button

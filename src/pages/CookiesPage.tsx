@@ -1,9 +1,15 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 
 export default function CookiesPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
+      <SEO
+        title="Cookie Policy — Hey, Open Up"
+        description="Which cookies and storage technologies Hey, Open Up uses, and how to manage your choices."
+        path="/cookies"
+      />
       <Navbar />
       <main className="container max-w-3xl py-12">
         <h1 className="font-heading text-4xl font-bold mb-2">Cookie Policy</h1>

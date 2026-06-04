@@ -1,9 +1,15 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 
 export default function TermsPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
+      <SEO
+        title="Terms of Service — Hey, Open Up"
+        description="The terms that govern your use of the Hey, Open Up community demand platform."
+        path="/terms"
+      />
       <Navbar />
       <main className="container max-w-3xl py-12">
         <h1 className="font-heading text-4xl font-bold mb-2">Terms of Service</h1>
