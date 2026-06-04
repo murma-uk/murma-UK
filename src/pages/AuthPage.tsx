@@ -11,6 +11,7 @@ import Wordmark from "@/components/brand/Wordmark";
 import LogoMark from "@/components/brand/LogoMark";
 import LiveChip from "@/components/brand/LiveChip";
 import BrickStripe from "@/components/brand/BrickStripe";
+import SEO from "@/components/SEO";
 
 export default function AuthPage() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -55,12 +56,20 @@ export default function AuthPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
+      <SEO
+        title={isSignUp ? "Create an account — Hey, Open Up" : "Sign in — Hey, Open Up"}
+        description="Sign in or create an account to post requests, upvote demand, and help shape what your town gets next."
+        path="/auth"
+      />
       <BrickStripe />
       <div className="flex flex-1 items-center justify-center p-4">
         <div className="spray-hey w-full max-w-md rounded-md border-[1.5px] border-border bg-popover p-7 shadow-card">
           <div className="mb-6 flex flex-col items-center text-center">
             <LogoMark variant="solidGreen" size={72} className="mb-4 rounded-md shadow-card" />
             <Wordmark size="lg" />
+            <h1 className="mt-4 font-display text-3xl uppercase tracking-[0.02em]">
+              {isSignUp ? "Create your account" : "Sign in to Hey, Open Up"}
+            </h1>
             <div className="mt-3 inline-flex">
               <LiveChip>{isSignUp ? "Create account" : "Sign in"}</LiveChip>
             </div>
