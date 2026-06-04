@@ -54,7 +54,7 @@ export default function BusinessSearch({ town, selected, onSelect }: Props) {
           <p className="text-sm font-medium truncate">{selected.name}</p>
           <p className="text-xs text-muted-foreground capitalize">{selected.business_type.replace(/_/g, " ")}</p>
         </div>
-        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => onSelect(null)}>
+        <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" aria-label="Clear selected business" onClick={() => onSelect(null)}>
           <X className="h-3.5 w-3.5" />
         </Button>
       </div>
@@ -75,6 +75,7 @@ export default function BusinessSearch({ town, selected, onSelect }: Props) {
           type="button"
           variant="outline"
           size="icon"
+          aria-label="Search businesses"
           onClick={searchBusinesses}
           disabled={loading || !town.trim()}
         >
