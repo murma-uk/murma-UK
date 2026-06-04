@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import LiveChip from "@/components/brand/LiveChip";
 import SectionHeading from "@/components/brand/SectionHeading";
+import SEO from "@/components/SEO";
 
 const audiences = [
   {
@@ -49,6 +50,11 @@ export default function LandingPage() {
   const { data: categories = [] } = useCategories();
   return (
     <div className="min-h-screen bg-background">
+      <SEO
+        title="Hey, Open Up — Tell Your Town What You Need"
+        description="Request new services, opening hours, branches, or venues in your area. Upvote what matters. Help businesses and councils make better decisions."
+        path="/"
+      />
       <Navbar />
 
       {/* Hero — paste-up paper with spray stencil */}

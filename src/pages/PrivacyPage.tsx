@@ -1,9 +1,15 @@
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import SEO from "@/components/SEO";
 
 export default function PrivacyPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
+      <SEO
+        title="Privacy Policy — Hey, Open Up"
+        description="How Hey, Open Up collects, uses, and protects your personal data under UK GDPR."
+        path="/privacy"
+      />
       <Navbar />
       <main className="container max-w-3xl py-12">
         <h1 className="font-heading text-4xl font-bold mb-2">Privacy Policy</h1>
