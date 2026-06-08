@@ -100,6 +100,7 @@ interface MapViewProps {
   onMarkerClick?: (id: string) => void;
   onBusinessClick?: (id: string) => void;
   onMapClick?: (lat: number, lng: number) => void;
+  onCenterChange?: (lat: number, lng: number, zoom: number) => void;
   pinMode?: boolean;
   droppedPin?: { lat: number; lng: number } | null;
   center?: [number, number];
