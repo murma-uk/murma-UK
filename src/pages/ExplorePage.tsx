@@ -356,6 +356,7 @@ export default function ExplorePage() {
           sessionStorage.removeItem("pendingRequest");
         }}
         pinLocation={droppedPin}
+        mapCenter={mapCenter}
         initialDraft={initialDraft}
         onRequestPin={(draft) => {
           setInitialDraft(draft);
