@@ -31,6 +31,7 @@ export default function ExplorePage() {
   const [pinMode, setPinMode] = useState(false);
   const [droppedPin, setDroppedPin] = useState<{ lat: number; lng: number; town: string } | null>(null);
   const [initialDraft, setInitialDraft] = useState<any | null>(null);
+  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number; town?: string } | null>(null);
 
   const fetchRequests = useCallback(async () => {
     let query = supabase.from("requests").select("*").eq("status", "active").order("upvote_count", { ascending: false }) as any;
@@ -305,6 +306,7 @@ export default function ExplorePage() {
             }}
             onBusinessClick={(id) => pinMode ? undefined : handleBusinessClick(id)}
             onMapClick={handleMapClick}
+            onCenterChange={(lat, lng) => setMapCenter({ lat, lng })}
             pinMode={pinMode}
             droppedPin={droppedPin}
           />
@@ -354,6 +356,7 @@ export default function ExplorePage() {
           sessionStorage.removeItem("pendingRequest");
         }}
         pinLocation={droppedPin}
+        mapCenter={mapCenter}
         initialDraft={initialDraft}
         onRequestPin={(draft) => {
           setInitialDraft(draft);

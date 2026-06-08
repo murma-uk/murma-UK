@@ -100,6 +100,7 @@ interface MapViewProps {
   onMarkerClick?: (id: string) => void;
   onBusinessClick?: (id: string) => void;
   onMapClick?: (lat: number, lng: number) => void;
+  onCenterChange?: (lat: number, lng: number, zoom: number) => void;
   pinMode?: boolean;
   droppedPin?: { lat: number; lng: number } | null;
   center?: [number, number];
@@ -113,6 +114,7 @@ export default function MapView({
   onMarkerClick,
   onBusinessClick,
   onMapClick,
+  onCenterChange,
   pinMode = false,
   droppedPin = null,
   center = DEFAULT_CENTER,
@@ -125,6 +127,8 @@ export default function MapView({
   const pinMarkerRef = useRef<L.Marker | null>(null);
   const onMapClickRef = useRef(onMapClick);
   onMapClickRef.current = onMapClick;
+  const onCenterChangeRef = useRef(onCenterChange);
+  onCenterChangeRef.current = onCenterChange;
   const pinModeRef = useRef(pinMode);
   pinModeRef.current = pinMode;
 
@@ -157,6 +161,12 @@ export default function MapView({
       if (pinModeRef.current && onMapClickRef.current) {
         onMapClickRef.current(e.latlng.lat, e.latlng.lng);
       }
+    });
+
+    map.on("moveend", () => {
+      if (!onCenterChangeRef.current) return;
+      const c = map.getCenter();
+      onCenterChangeRef.current(c.lat, c.lng, map.getZoom());
     });
 
     // Watch container size — Leaflet needs invalidateSize() when its container
