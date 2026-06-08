@@ -329,6 +329,10 @@ export type Database = {
         | "classes_sessions"
         | "artist_visit"
         | "announcement"
+        | "nature_outdoors"
+        | "culture_art"
+        | "community_service"
+        | "wild_idea"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -463,6 +467,10 @@ export const Constants = {
         "classes_sessions",
         "artist_visit",
         "announcement",
+        "nature_outdoors",
+        "culture_art",
+        "community_service",
+        "wild_idea",
       ],
     },
   },
