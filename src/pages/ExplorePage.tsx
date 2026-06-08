@@ -306,6 +306,7 @@ export default function ExplorePage() {
             }}
             onBusinessClick={(id) => pinMode ? undefined : handleBusinessClick(id)}
             onMapClick={handleMapClick}
+            onCenterChange={(lat, lng) => setMapCenter({ lat, lng })}
             pinMode={pinMode}
             droppedPin={droppedPin}
           />
