@@ -50,6 +50,50 @@ export type Database = {
         }
         Relationships: []
       }
+      merge_suggestions: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          id: string
+          proposed_body: string | null
+          proposed_category: Database["public"]["Enums"]["request_category"]
+          proposed_title: string
+          status: string
+          suggester_id: string
+          target_request_id: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          id?: string
+          proposed_body?: string | null
+          proposed_category: Database["public"]["Enums"]["request_category"]
+          proposed_title: string
+          status?: string
+          suggester_id: string
+          target_request_id: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          id?: string
+          proposed_body?: string | null
+          proposed_category?: Database["public"]["Enums"]["request_category"]
+          proposed_title?: string
+          status?: string
+          suggester_id?: string
+          target_request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merge_suggestions_target_request_id_fkey"
+            columns: ["target_request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -166,6 +210,76 @@ export type Database = {
           },
         ]
       }
+      request_comments: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          kind: string
+          request_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          kind?: string
+          request_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          request_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_comments_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      request_cosigners: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          request_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          request_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          request_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_cosigners_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       requests: {
         Row: {
           brand_name: string | null
@@ -174,6 +288,7 @@ export type Database = {
           business_kind: string | null
           business_type_slug: string | null
           category: Database["public"]["Enums"]["request_category"]
+          cosigner_count: number
           created_at: string
           description: string | null
           field_values: Json
@@ -199,6 +314,7 @@ export type Database = {
           business_kind?: string | null
           business_type_slug?: string | null
           category: Database["public"]["Enums"]["request_category"]
+          cosigner_count?: number
           created_at?: string
           description?: string | null
           field_values?: Json
@@ -224,6 +340,7 @@ export type Database = {
           business_kind?: string | null
           business_type_slug?: string | null
           category?: Database["public"]["Enums"]["request_category"]
+          cosigner_count?: number
           created_at?: string
           description?: string | null
           field_values?: Json
@@ -304,6 +421,31 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_merge_suggestion: { Args: { _id: string }; Returns: undefined }
+      find_similar_requests: {
+        Args: {
+          _category: Database["public"]["Enums"]["request_category"]
+          _lat: number
+          _limit?: number
+          _lng: number
+          _text: string
+        }
+        Returns: {
+          category: Database["public"]["Enums"]["request_category"]
+          cosigner_count: number
+          description: string
+          distance_km: number
+          id: string
+          lat: number
+          lng: number
+          score: number
+          slug: string
+          title: string
+          town: string
+          trgm_score: number
+          upvote_count: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -319,6 +461,8 @@ export type Database = {
         Args: { _request_id: string }
         Returns: undefined
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       slugify: { Args: { input: string }; Returns: string }
     }
     Enums: {

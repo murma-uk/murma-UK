@@ -12,6 +12,8 @@ import ShareButton from "@/components/ShareButton";
 import StatTile, { formatLiveSince } from "@/components/brand/StatTile";
 import { motion } from "framer-motion";
 import SEO from "@/components/SEO";
+import RequestEngagement from "@/components/request/RequestEngagement";
+
 
 export default function RequestDetailPage() {
   const { id: routeParam } = useParams<{ id: string }>();
@@ -186,12 +188,13 @@ export default function RequestDetailPage() {
           <h1 className="font-display text-4xl uppercase leading-[0.95] tracking-[0.02em] md:text-5xl">{request.title}</h1>
 
           {/* Stats */}
-          <div className="mt-5 grid grid-cols-4 gap-2">
+          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
             <StatTile label="Live" value={formatLiveSince(request.created_at)} />
-            <StatTile label="Views" value={request.view_count ?? 0} />
-            <StatTile label="Shares" value={request.share_count ?? 0} />
             <StatTile label="Upvotes" value={request.upvote_count ?? 0} />
+            <StatTile label="Co-signers" value={(request as any).cosigner_count ?? 0} />
+            <StatTile label="Views" value={request.view_count ?? 0} />
           </div>
+
 
           {structured.length > 0 && (
             <dl className="mt-4 grid grid-cols-[max-content_1fr] gap-x-4 gap-y-1.5 rounded-lg border border-border bg-muted/30 p-3 text-sm">
@@ -270,7 +273,10 @@ export default function RequestDetailPage() {
             </span>
           </div>
         </motion.div>
+
+        <RequestEngagement requestId={request.id} ownerId={request.user_id} />
       </div>
     </div>
   );
 }
+
