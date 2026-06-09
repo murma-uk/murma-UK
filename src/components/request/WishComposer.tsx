@@ -115,6 +115,16 @@ export default function WishComposer({
   const locationReady = !!location && (!!location.town || location.lat != null);
   const canSubmit = wishReady && locationReady && !!effectiveCategory && !loading;
 
+  // Live similarity search
+  const { results: similar, loading: similarLoading } = useSimilarRequests({
+    text: wish,
+    category: effectiveCategory ?? null,
+    lat: location?.lat ?? null,
+    lng: location?.lng ?? null,
+    enabled: wishReady && locationReady && !similarDismissed,
+  });
+
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit || !effectiveCategory || !location) return;
