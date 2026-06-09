@@ -203,6 +203,17 @@ export default function WishComposer({
         </div>
       )}
 
+      {/* Similar wishes nearby — surfaced once we have wish + location */}
+      {wishReady && locationReady && !similarDismissed && (similarLoading || similar.length > 0) && (
+        <SimilarRequestsPanel
+          results={similar}
+          loading={similarLoading}
+          onJoin={(t) => setJoinTarget(t)}
+          onDismiss={() => setSimilarDismissed(true)}
+        />
+      )}
+
+
       {/* Optional details */}
       {wishReady && locationReady && (
         <div className="rounded-md border border-dashed border-border">
