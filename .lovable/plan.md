@@ -1,101 +1,88 @@
-# Frictionless Request Composer
+## Goal
 
-Make posting a request feel like writing a wish on a postcard: one sentence, one place, one tap to file it. Everything else fades in only if it's useful.
+When someone is about to post a wish that already exists nearby, the app should *help them join an existing movement* rather than fragment it. Detection happens live as they type and again right after posting, and "joining" can be as light as an upvote or as committed as becoming a named co-signer.
 
-## The new flow (one screen, progressive reveal)
+## User journey
 
 ```text
-┌──────────────────────────────────────────────┐
-│  I wish there was…                           │  ← big input, autofocus
-│  ┌────────────────────────────────────────┐  │
-│  │ a ramen shop near the station          │  │
-│  └────────────────────────────────────────┘  │
-│                                              │
-│  ▸ suggestions appear as they type:          │
-│    • a bakery   • bat boxes in the park      │
-│    • a poetry night   • later library hours  │
-│                                              │
-│  ── reveals once sentence has substance ──   │
-│  📍 Where?  [ this map view ▾ ]              │
-│       └ town autocomplete · drop a pin       │
-│                                              │
-│  ── reveals once location is set ──          │
-│  🏷  File under  [ auto-guessed ▾ ]          │
-│       └ chips: Food · Nature · Culture …     │
-│                                              │
-│  [ Post wish ]   (disabled until 3 fields)   │
-└──────────────────────────────────────────────┘
+TYPE WISH ──► (≥10 chars, debounced)
+                │
+                ▼
+        Similar wishes panel appears under the input
+        "3 people near you already wished for this"
+        ├─ [Card] Late-night bookshop · 0.8km · 42 backers   [Back this instead]
+        ├─ [Card] Indie bookstore in town · 2.1km · 18 backers
+        └─ [Show 1 more]
+                │
+   ┌────────────┴────────────┐
+   ▼                         ▼
+Back this instead       Keep writing mine
+ (upvote + optional      │
+  "add your angle"       ▼
+  comment, dialog        POST WISH
+  closes with toast)         │
+                             ▼
+                   Confirmation screen
+                   "Looks similar to these — want to combine forces?"
+                   ├─ Suggest merge into "Late-night bookshop" (owner approves)
+                   ├─ Become a co-signer on "Indie bookstore" (instant)
+                   └─ Keep mine separate
 ```
 
-Only three required inputs: **wish**, **where**, **category**. Everything else (brand site, radius, opening hours, dynamic fields) becomes an optional "Add detail" chip that expands inline.
+## Detection
 
-## Categories — expand to cover the full spectrum
+Three cheap signals combined into a single ranked list — no AI/embeddings in this pass:
 
-Current 5 are commerce-heavy. Add 4 positive-only buckets:
+1. **Geo** — same category, within 5 km of the wish's location.
+2. **Title fuzzy match** — Postgres trigram similarity on `title` (and `description` when short). Requires `pg_trgm` + a GIN index.
+3. **Keyword / brand overlap** — re-use the existing `classifyWish` hints (brand name, business-type slug, category keywords) to boost matches that mention the same thing.
 
-| Slug | Label | Examples |
-| --- | --- | --- |
-| `nature_outdoors` | Nature & outdoors | wildflower meadow, bat boxes, tree planting, river clean-up |
-| `culture_art` | Culture & art | murals, gigs, poetry nights, exhibitions, artist visits |
-| `community_service` | Community & service | repair café, swap shop, community fridge, language exchange |
-| `wild_idea` | Wild idea | sublime / whimsical asks with no template |
+Scoring: `0.5 * trigram + 0.3 * keyword + 0.2 * proximity`. Show up to 3 matches scoring ≥ 0.35. All ranking happens in a single SQL function so the client makes one call.
 
-Reorder so the most uplifting/broad live above the commerce-specific ones. Keep existing 5 but rename `announcement` → `Good news / Announcement` to enforce the positive-only tone.
+## Join actions
 
-## Smart auto-guess
+Three ways to combine forces, in increasing commitment:
 
-A small client-side classifier maps the sentence to a category before the user touches the chip row:
+- **Upvote + optional comment** — the lightest join. Reuses existing `upvotes` table; comment goes into a new `request_comments` row tagged `kind = 'angle'` so it renders distinctly on the request page.
+- **Co-signer with own note** — a named, visible endorsement. New `request_cosigners` table with a short note (≤200 chars). Cosigners appear as chips on the request page and count toward a "X people backing this" number alongside upvotes.
+- **Merge request (owner approves)** — when the user has already typed a substantive wish and chooses "Suggest merge", their draft is saved as a `merge_suggestions` row pointing at the target request. The original author sees an inbox badge; on accept, the suggester is added as a co-signer and any extra detail is appended as an angle comment. On reject, the suggester is offered to post separately.
 
-- keyword map (e.g. `bakery|gym|shop|store|restaurant|café` → existing types; `mural|gig|exhibition` → culture; `meadow|trees|bats|river` → nature; `repair|swap|fridge|exchange` → community; fallback → wild idea)
-- if the sentence names a known business type or brand, we auto-set `new_branch` and pre-fill those sub-fields silently
-- the chip row is always visible so the user can override in one tap
+No auto-merge in this pass — too risky for false positives.
 
-## Location, simplified
+## Scope of this pass
 
-Three quiet options on a single popover, defaulted intelligently:
+In:
+- Live duplicate suggestions panel in `WishComposer` (debounced, dismissible per session).
+- Post-submit "combine forces" sheet on the success path.
+- Co-signer + comment + merge-suggestion data model with full RLS.
+- Request detail page surfaces co-signers and angle comments, plus an inbox for merge suggestions for the owner.
 
-1. **This map view** — uses the current `ExplorePage` viewport centre and reverse-geocodes for a town label. Default when the composer is opened from the map.
-2. **A town/city** — `PlaceAutocomplete` (already built).
-3. **Drop a pin** — opens map pin-drop mode (existing `onRequestPin`).
-
-No radius selector by default. Hidden behind "Add detail" for the few categories that need it (`new_branch`).
-
-## Positive-only guardrails
-
-- Placeholder cycles uplifting prompts: "I wish there was…", "Wouldn't it be lovely if…", "This town needs…".
-- Lightweight client-side filter flags negative phrasings ("ban", "shut down", "get rid of", "stop") and shows a gentle nudge: "Hey, Open Up is for things you'd love to see. Try rephrasing as a wish." Not a hard block — just guidance.
-- Microcopy on the submit button: **Post wish** instead of "Submit request".
-
-## Files & changes
-
-### New
-- `src/components/request/WishComposer.tsx` — the new one-screen composer. Replaces the body of `CreateRequestDialog` for all categories.
-- `src/components/request/CategoryChips.tsx` — horizontal scroll of category chips (uses existing `useCategories` + icon registry).
-- `src/components/request/LocationPicker.tsx` — popover with three modes, defaulting to "this map view".
-- `src/lib/wishClassifier.ts` — keyword map + `classifyWish(text): { category, hints }`.
-- `src/lib/positivityCheck.ts` — `flagNegativePhrasing(text): string | null`.
-
-### Edit
-- `src/components/CreateRequestDialog.tsx` — slim wrapper that mounts `WishComposer`; keeps the existing draft-resume + auth-redirect logic.
-- `src/components/request/NewBranchFields.tsx` — collapse into an inline "Add detail" panel (brand site, radius), no longer a standalone flow.
-- `src/pages/ExplorePage.tsx` — pass map viewport centre + town to the composer so "this map view" works.
-
-### Database (one migration)
-- Insert 4 new rows into `request_categories` with icons + brand colours.
-- Add the same 4 values to the `request_category` enum (required because `requests.category` is `enum`).
-- Optional: rename `announcement` label to `Good news`.
-- No schema column changes; existing dynamic-fields tables keep working for categories that want them later.
+Out:
+- AI / semantic similarity (revisit once we see how trigram performs).
+- Cross-town merging (only suggest within 5 km).
+- Automatic merging without owner consent.
+- Notifications outside the app (email/push).
 
 ## Technical details
 
-- `WishComposer` is a single controlled form; sections render conditionally based on `wish.length >= 8`, `location != null`, etc. No multi-step state.
-- The auto-guess runs in a `useMemo` over `wish`; the user's manual chip pick wins and locks the override.
-- "This map view" reads `mapCenter` from `ExplorePage` via a new prop on `CreateRequestDialog`; reverse geocode uses the existing `geocode` edge function (`mode: "reverse"`).
-- For `new_branch`, the composer detects business-type/brand keywords and auto-fills `business_kind`/`typeSlug`/`brandName` so the user never sees the dedicated branch UI unless they tap "Add detail".
-- Dynamic per-category fields (`request_category_fields`) stay supported but render inside the same "Add detail" expander — never as required up-front friction.
-- All copy + chips use existing brand tokens (Signal green CTA, Bebas/Barlow type, paper surfaces).
+**Database migration** (single migration, with grants + RLS on every new table):
 
-## Out of scope
+- `CREATE EXTENSION IF NOT EXISTS pg_trgm;`
+- Index: `CREATE INDEX requests_title_trgm_idx ON requests USING gin (title gin_trgm_ops);`
+- `request_comments(id, request_id, user_id, body, kind text check in ('angle','comment'), created_at)` — RLS: anyone authenticated can read, only author can insert/update/delete their own.
+- `request_cosigners(id, request_id, user_id, note, created_at, unique(request_id, user_id))` — same RLS shape. Add `cosigner_count` denormalised onto `requests` with insert/delete triggers (mirrors existing `upvote_count` pattern).
+- `merge_suggestions(id, target_request_id, suggester_id, proposed_title, proposed_body, proposed_category, status text check in ('pending','accepted','rejected'), decided_at, created_at)` — RLS: suggester can read/insert/cancel their own; target request owner can read and update status.
+- SECURITY DEFINER function `public.find_similar_requests(_text text, _category request_category, _lat double precision, _lng double precision, _limit int)` returning ranked candidates using the scoring above. Granted to `authenticated` and `anon` (lookup is safe — only reads public-readable fields).
+- SECURITY DEFINER function `public.accept_merge_suggestion(_id uuid)` that, when called by the target owner, inserts a cosigner row + an angle comment and flips status to `accepted`.
 
-- Voice input, AI rewriting of the wish, image attachments — can layer on later without touching this structure.
-- Changing how requests are displayed on the map or in lists.
+**Frontend**:
+
+- `src/lib/similarRequests.ts` — debounced hook `useSimilarRequests(wish, category, location)` calling the new SQL function.
+- `src/components/request/SimilarRequestsPanel.tsx` — appears inside `WishComposer` below the wish textarea once `wish.length ≥ 10` and a location is set; renders compact cards with **Back this** and **View** actions; dismissible per draft.
+- `src/components/request/JoinRequestDialog.tsx` — sheet used by both "Back this" (light) and the post-submit step (heavier). Modes: `upvote`, `cosign`, `suggest_merge`.
+- `src/components/CreateRequestDialog.tsx` — after a successful insert, if there are remaining matches with score ≥ 0.5 not already actioned, replace the success toast with the `JoinRequestDialog` in `suggest_merge` / `cosign` mode targeting the top match.
+- `src/components/RequestDetail*` — new sections: **Co-signers** (chip row with notes on hover/expand), **Angles** (comments tagged `angle` rendered above generic comments), and an **Owner inbox** card when `merge_suggestions.status = 'pending'` exists for a request you own, with Accept / Reject buttons.
+- `src/pages/ProfilePage.tsx` — small "Suggestions you sent" list so suggesters can see status.
+
+**Non-goals reminder**: no schema changes to `requests` beyond adding `cosigner_count`; no changes to the map, categories, or auth.
+
