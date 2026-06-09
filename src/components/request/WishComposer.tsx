@@ -264,6 +264,20 @@ export default function WishComposer({
           </p>
         )}
       </div>
+
+      <JoinRequestDialog
+        open={!!joinTarget}
+        onOpenChange={(v) => !v && setJoinTarget(null)}
+        target={joinTarget}
+        defaultMode="upvote"
+        draft={{
+          title: wish.trim(),
+          body: extra.trim() || wish.trim(),
+          category: effectiveCategory ?? null,
+        }}
+        onJoined={() => setJoinTarget(null)}
+      />
     </form>
   );
 }
+
