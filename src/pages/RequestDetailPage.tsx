@@ -12,6 +12,8 @@ import ShareButton from "@/components/ShareButton";
 import StatTile, { formatLiveSince } from "@/components/brand/StatTile";
 import { motion } from "framer-motion";
 import SEO from "@/components/SEO";
+import RequestEngagement from "@/components/request/RequestEngagement";
+
 
 export default function RequestDetailPage() {
   const { id: routeParam } = useParams<{ id: string }>();
