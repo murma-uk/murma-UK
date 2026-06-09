@@ -273,7 +273,10 @@ export default function RequestDetailPage() {
             </span>
           </div>
         </motion.div>
+
+        <RequestEngagement requestId={request.id} ownerId={request.user_id} />
       </div>
     </div>
   );
 }
+
