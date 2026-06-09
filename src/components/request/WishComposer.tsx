@@ -10,6 +10,10 @@ import { classifyWish, suggestTitleAndDescription, type WishHints } from "@/lib/
 import { flagNegativePhrasing } from "@/lib/positivityCheck";
 import CategoryChips from "./CategoryChips";
 import LocationPicker, { type ResolvedLocation } from "./LocationPicker";
+import SimilarRequestsPanel from "./SimilarRequestsPanel";
+import JoinRequestDialog from "./JoinRequestDialog";
+import { useSimilarRequests, type SimilarRequest } from "@/lib/similarRequests";
+
 
 const PLACEHOLDERS = [
   "I wish there was a ramen shop near the station…",
@@ -57,7 +61,10 @@ export default function WishComposer({
   const [location, setLocation] = useState<ResolvedLocation | null>(initialLocation);
   const [extraOpen, setExtraOpen] = useState(false);
   const [extra, setExtra] = useState(initialExtra);
+  const [similarDismissed, setSimilarDismissed] = useState(false);
+  const [joinTarget, setJoinTarget] = useState<SimilarRequest | null>(null);
   const wishRef = useRef<HTMLTextAreaElement>(null);
+
 
   // Cycle placeholders for a bit of life
   const [placeholderIdx, setPlaceholderIdx] = useState(() => Math.floor(Math.random() * PLACEHOLDERS.length));
@@ -107,6 +114,16 @@ export default function WishComposer({
   const wishReady = wish.trim().length >= 6;
   const locationReady = !!location && (!!location.town || location.lat != null);
   const canSubmit = wishReady && locationReady && !!effectiveCategory && !loading;
+
+  // Live similarity search
+  const { results: similar, loading: similarLoading } = useSimilarRequests({
+    text: wish,
+    category: effectiveCategory ?? null,
+    lat: location?.lat ?? null,
+    lng: location?.lng ?? null,
+    enabled: wishReady && locationReady && !similarDismissed,
+  });
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -186,6 +203,17 @@ export default function WishComposer({
         </div>
       )}
 
+      {/* Similar wishes nearby — surfaced once we have wish + location */}
+      {wishReady && locationReady && !similarDismissed && (similarLoading || similar.length > 0) && (
+        <SimilarRequestsPanel
+          results={similar}
+          loading={similarLoading}
+          onJoin={(t) => setJoinTarget(t)}
+          onDismiss={() => setSimilarDismissed(true)}
+        />
+      )}
+
+
       {/* Optional details */}
       {wishReady && locationReady && (
         <div className="rounded-md border border-dashed border-border">
@@ -236,6 +264,20 @@ export default function WishComposer({
           </p>
         )}
       </div>
+
+      <JoinRequestDialog
+        open={!!joinTarget}
+        onOpenChange={(v) => !v && setJoinTarget(null)}
+        target={joinTarget}
+        defaultMode="upvote"
+        draft={{
+          title: wish.trim(),
+          body: extra.trim() || wish.trim(),
+          category: effectiveCategory ?? null,
+        }}
+        onJoined={() => setJoinTarget(null)}
+      />
     </form>
   );
 }
+
