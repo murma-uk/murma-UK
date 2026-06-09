@@ -10,6 +10,10 @@ import { classifyWish, suggestTitleAndDescription, type WishHints } from "@/lib/
 import { flagNegativePhrasing } from "@/lib/positivityCheck";
 import CategoryChips from "./CategoryChips";
 import LocationPicker, { type ResolvedLocation } from "./LocationPicker";
+import SimilarRequestsPanel from "./SimilarRequestsPanel";
+import JoinRequestDialog from "./JoinRequestDialog";
+import { useSimilarRequests, type SimilarRequest } from "@/lib/similarRequests";
+
 
 const PLACEHOLDERS = [
   "I wish there was a ramen shop near the station…",
