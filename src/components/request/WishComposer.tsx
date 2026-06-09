@@ -61,7 +61,10 @@ export default function WishComposer({
   const [location, setLocation] = useState<ResolvedLocation | null>(initialLocation);
   const [extraOpen, setExtraOpen] = useState(false);
   const [extra, setExtra] = useState(initialExtra);
+  const [similarDismissed, setSimilarDismissed] = useState(false);
+  const [joinTarget, setJoinTarget] = useState<SimilarRequest | null>(null);
   const wishRef = useRef<HTMLTextAreaElement>(null);
+
 
   // Cycle placeholders for a bit of life
   const [placeholderIdx, setPlaceholderIdx] = useState(() => Math.floor(Math.random() * PLACEHOLDERS.length));
