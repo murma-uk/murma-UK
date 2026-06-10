@@ -7,12 +7,13 @@ import { useCategories, getCategory, type RequestCategory } from "@/lib/categori
 import { useCategoryFields, formatFieldValue } from "@/lib/categoryFields";
 import { buildRequestPath, parseRequestParam } from "@/lib/slug";
 import { Button } from "@/components/ui/button";
-import { ArrowBigUp, MapPin, ArrowLeft, Loader2, Store } from "lucide-react";
+import { ArrowBigUp, MapPin, ArrowLeft, Loader2, Store, Flag, EyeOff } from "lucide-react";
 import ShareButton from "@/components/ShareButton";
 import StatTile, { formatLiveSince } from "@/components/brand/StatTile";
 import { motion } from "framer-motion";
 import SEO from "@/components/SEO";
 import RequestEngagement from "@/components/request/RequestEngagement";
+import FlagDialog from "@/components/moderation/FlagDialog";
 
 
 export default function RequestDetailPage() {
@@ -23,6 +24,7 @@ export default function RequestDetailPage() {
   const [business, setBusiness] = useState<any>(null);
   const [hasUpvoted, setHasUpvoted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [flagOpen, setFlagOpen] = useState(false);
   const { data: categories } = useCategories();
   const cat = request ? getCategory(categories, request.category as RequestCategory) : null;
   const { data: fields = [] } = useCategoryFields(cat?.id || undefined);
@@ -248,6 +250,22 @@ export default function RequestDetailPage() {
             </p>
           )}
 
+          {request.status && request.status !== "active" && (
+            <div className="mt-4 flex items-start gap-2 rounded-md border border-accent/40 bg-accent/5 p-3 text-sm">
+              <EyeOff className="h-4 w-4 text-accent shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium text-accent">
+                  {request.status === "hidden" ? "Hidden pending review" : "Removed by moderators"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {request.status === "hidden"
+                    ? "This post received multiple flags and is awaiting a moderator. Only you, admins, and trusted reviewers can see it."
+                    : "This post was taken down. Only you, admins, and trusted reviewers can still see it."}
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <Button
               onClick={handleUpvote}
@@ -266,6 +284,17 @@ export default function RequestDetailPage() {
               variant="full"
               onShared={handleShared}
             />
+            {user && user.id !== request.user_id && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setFlagOpen(true)}
+                className="gap-1.5 text-muted-foreground hover:text-accent"
+              >
+                <Flag className="h-3.5 w-3.5" />
+                Flag
+              </Button>
+            )}
             <span className="font-mono text-xs uppercase tracking-[0.15em] text-text-lo">
               Posted {new Date(request.created_at).toLocaleDateString("en-GB", {
                 day: "numeric", month: "short", year: "numeric",
@@ -275,6 +304,12 @@ export default function RequestDetailPage() {
         </motion.div>
 
         <RequestEngagement requestId={request.id} ownerId={request.user_id} />
+        <FlagDialog
+          open={flagOpen}
+          onOpenChange={setFlagOpen}
+          requestId={request.id}
+          requestTitle={request.title}
+        />
       </div>
     </div>
   );
