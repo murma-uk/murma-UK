@@ -99,6 +99,7 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          is_trusted: boolean
           updated_at: string
           user_id: string
         }
@@ -106,6 +107,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_trusted?: boolean
           updated_at?: string
           user_id: string
         }
@@ -113,6 +115,7 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          is_trusted?: boolean
           updated_at?: string
           user_id?: string
         }
@@ -273,6 +276,76 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "request_cosigners_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      request_flags: {
+        Row: {
+          created_at: string
+          id: string
+          note: string | null
+          reason: Database["public"]["Enums"]["flag_reason"]
+          request_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          reason: Database["public"]["Enums"]["flag_reason"]
+          request_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note?: string | null
+          reason?: Database["public"]["Enums"]["flag_reason"]
+          request_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_flags_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      request_moderation: {
+        Row: {
+          action: Database["public"]["Enums"]["moderation_action"]
+          actor_id: string | null
+          created_at: string
+          id: string
+          note: string | null
+          request_id: string
+        }
+        Insert: {
+          action: Database["public"]["Enums"]["moderation_action"]
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          request_id: string
+        }
+        Update: {
+          action?: Database["public"]["Enums"]["moderation_action"]
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_moderation_request_id_fkey"
             columns: ["request_id"]
             isOneToOne: false
             referencedRelation: "requests"
@@ -461,10 +534,28 @@ export type Database = {
         Args: { _request_id: string }
         Returns: undefined
       }
+      is_trusted: { Args: { _user_id: string }; Returns: boolean }
+      moderate_request: {
+        Args: {
+          _action: Database["public"]["Enums"]["moderation_action"]
+          _note?: string
+          _request_id: string
+        }
+        Returns: undefined
+      }
+      refresh_trusted_status: { Args: { _user_id: string }; Returns: undefined }
       slugify: { Args: { input: string }; Returns: string }
     }
     Enums: {
       app_role: "user" | "business" | "authority" | "admin"
+      flag_reason:
+        | "spam"
+        | "off_topic"
+        | "hateful"
+        | "duplicate"
+        | "illegal"
+        | "other"
+      moderation_action: "hide" | "restore" | "remove"
       request_category:
         | "opening_hours"
         | "new_branch"
@@ -603,6 +694,15 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["user", "business", "authority", "admin"],
+      flag_reason: [
+        "spam",
+        "off_topic",
+        "hateful",
+        "duplicate",
+        "illegal",
+        "other",
+      ],
+      moderation_action: ["hide", "restore", "remove"],
       request_category: [
         "opening_hours",
         "new_branch",
