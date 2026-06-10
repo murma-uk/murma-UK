@@ -7,12 +7,13 @@ import { useCategories, getCategory, type RequestCategory } from "@/lib/categori
 import { useCategoryFields, formatFieldValue } from "@/lib/categoryFields";
 import { buildRequestPath, parseRequestParam } from "@/lib/slug";
 import { Button } from "@/components/ui/button";
-import { ArrowBigUp, MapPin, ArrowLeft, Loader2, Store } from "lucide-react";
+import { ArrowBigUp, MapPin, ArrowLeft, Loader2, Store, Flag, EyeOff } from "lucide-react";
 import ShareButton from "@/components/ShareButton";
 import StatTile, { formatLiveSince } from "@/components/brand/StatTile";
 import { motion } from "framer-motion";
 import SEO from "@/components/SEO";
 import RequestEngagement from "@/components/request/RequestEngagement";
+import FlagDialog from "@/components/moderation/FlagDialog";
 
 
 export default function RequestDetailPage() {
