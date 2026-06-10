@@ -10,7 +10,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { LogOut, Plus, User, Shield, Compass, UserCircle2 } from "lucide-react";
+import { useIsTrusted } from "@/hooks/useIsTrusted";
+import { LogOut, Plus, User, Shield, Compass, UserCircle2, ShieldCheck } from "lucide-react";
 import Wordmark from "@/components/brand/Wordmark";
 import BrickStripe from "@/components/brand/BrickStripe";
 import LiveChip from "@/components/brand/LiveChip";
@@ -18,6 +19,7 @@ import LiveChip from "@/components/brand/LiveChip";
 export default function Navbar() {
   const { user, signOut } = useAuth();
   const { data: isAdmin } = useIsAdmin();
+  const { data: isTrusted } = useIsTrusted();
   const navigate = useNavigate();
 
   return (
@@ -73,6 +75,12 @@ export default function Navbar() {
                       <UserCircle2 className="mr-2 h-4 w-4" />
                       My profile
                     </DropdownMenuItem>
+                    {(isAdmin || isTrusted) && (
+                      <DropdownMenuItem onClick={() => navigate("/admin/moderation")}>
+                        <ShieldCheck className="mr-2 h-4 w-4" />
+                        Moderation
+                      </DropdownMenuItem>
+                    )}
                     {isAdmin && (
                       <DropdownMenuItem onClick={() => navigate("/admin/categories")}>
                         <Shield className="mr-2 h-4 w-4" />
