@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowBigUp, MapPin } from "lucide-react";
+import { ArrowBigUp, MapPin, Flag } from "lucide-react";
 import { useCategories, getCategory, type RequestCategory } from "@/lib/categories";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { buildRequestPath } from "@/lib/slug";
 import ShareButton from "./ShareButton";
+import FlagDialog from "./moderation/FlagDialog";
 
 interface RequestCardProps {
   id: string;
@@ -30,6 +31,7 @@ export default function RequestCard({
   const { toast } = useToast();
   const navigate = useNavigate();
   const [animating, setAnimating] = useState(false);
+  const [flagOpen, setFlagOpen] = useState(false);
   const { data: categories } = useCategories();
   const cat = getCategory(categories, category);
   const Icon = cat.Icon;
@@ -102,12 +104,24 @@ export default function RequestCard({
               {town}
             </span>
             <span>{new Date(createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
-            <span className="ml-auto" onClick={(e) => e.stopPropagation()}>
+            <span className="ml-auto flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+              {user && (
+                <button
+                  type="button"
+                  onClick={() => setFlagOpen(true)}
+                  className="rounded-sm p-1 text-text-lo hover:text-accent"
+                  title="Flag this post"
+                  aria-label="Flag this post"
+                >
+                  <Flag className="h-3 w-3" />
+                </button>
+              )}
               <ShareButton id={id} slug={slug} title={title} description={description} variant="icon" />
             </span>
           </div>
         </div>
       </div>
+      <FlagDialog open={flagOpen} onOpenChange={setFlagOpen} requestId={id} requestTitle={title} />
     </motion.div>
   );
 }
