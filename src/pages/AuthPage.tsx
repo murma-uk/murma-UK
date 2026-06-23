@@ -57,8 +57,8 @@ export default function AuthPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SEO
-        title={isSignUp ? "Create an account — Hey, Open Up" : "Sign in — Hey, Open Up"}
-        description="Sign in or create an account to post requests, upvote demand, and help shape what your town gets next."
+        title={isSignUp ? "Create an account — Murma" : "Sign in — Murma"}
+        description="Sign in or create an account to add murmas, add your voice, and help shape what your town gets next."
         path="/auth"
       />
       <BrickStripe />
