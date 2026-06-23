@@ -16,11 +16,11 @@ import { useSimilarRequests, type SimilarRequest } from "@/lib/similarRequests";
 
 
 const PLACEHOLDERS = [
-  "I wish there was a ramen shop near the station…",
-  "Wouldn't it be lovely if the park had bat boxes?",
+  "I'd like a ramen shop near the station…",
+  "A bat box in the park would be great…",
   "This town needs a late-night bookshop…",
-  "Imagine a wildflower meadow by the canal…",
-  "A poetry night at the old chapel would be magic…",
+  "A wildflower meadow by the canal…",
+  "A poetry night at the old chapel…",
 ];
 
 export interface WishComposerSubmit {
@@ -139,10 +139,10 @@ export default function WishComposer({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Step 1 — the wish */}
+      {/* Step 1 — the murma */}
       <div className="space-y-1.5">
         <Label className="flex items-center gap-1.5 text-xs uppercase tracking-[0.12em] font-mono text-muted-foreground">
-          <Sparkles className="h-3 w-3 text-primary" /> Your wish
+          <Sparkles className="h-3 w-3 text-primary" /> Your murma
         </Label>
         <Textarea
           ref={wishRef}
@@ -203,7 +203,7 @@ export default function WishComposer({
         </div>
       )}
 
-      {/* Similar wishes nearby — surfaced once we have wish + location */}
+      {/* Similar murmas nearby — surfaced once we have murma + location */}
       {wishReady && locationReady && !similarDismissed && (similarLoading || similar.length > 0) && (
         <SimilarRequestsPanel
           results={similar}
@@ -255,7 +255,7 @@ export default function WishComposer({
               <ArrowRight className="h-4 w-4" />
             </>
           ) : (
-            "Post wish"
+            "Add your murma"
           )}
         </Button>
         {isGuest && wishReady && (

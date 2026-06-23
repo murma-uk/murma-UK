@@ -164,7 +164,7 @@ export default function RequestEngagement({ requestId, ownerId }: Props) {
             {suggestions.length} merge {suggestions.length === 1 ? "suggestion" : "suggestions"}
           </h3>
           <p className="mt-1 text-xs text-muted-foreground">
-            Someone wrote a similar wish nearby. Accept to add them as a co-signer.
+            Someone wrote a similar murma nearby. Accept to add them as a co-signer.
           </p>
           <ul className="mt-3 space-y-2">
             {suggestions.map((s) => (
