@@ -361,7 +361,7 @@ export default function ProfilePage() {
                     <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[10px] uppercase tracking-[0.12em] text-text-lo">
                       <span>Live {formatLiveSince(r.created_at)}</span>
                       <span className="flex items-center gap-1">
-                        <ArrowBigUp className="h-3 w-3" /> {r.upvote_count} upvotes
+                        <ArrowBigUp className="h-3 w-3" /> {r.upvote_count} voices
                       </span>
                       <span>{r.view_count} views</span>
                       <span>{r.share_count} shares</span>
@@ -385,9 +385,9 @@ export default function ProfilePage() {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete this request?</AlertDialogTitle>
+                            <AlertDialogTitle>Delete this murma?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              "{r.title}" will be removed permanently along with all its upvotes. This can't be undone.
+                              "{r.title}" will be removed permanently along with all its voices. This can't be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
