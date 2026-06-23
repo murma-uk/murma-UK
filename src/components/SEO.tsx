@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 
-const SITE_URL = import.meta.env.VITE_SITE_URL || "https://your-domain.com";
+const SITE_URL = import.meta.env.VITE_SITE_URL || "https://murma.uk";
 
 interface SEOProps {
   title: string;

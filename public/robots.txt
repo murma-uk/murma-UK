@@ -15,4 +15,4 @@ Allow: /
 Disallow: /admin/
 Disallow: /me
 
-Sitemap: https://your-domain.com/sitemap.xml
+Sitemap: https://murma.uk/sitemap.xml
