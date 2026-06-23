@@ -48,7 +48,7 @@ export default function JoinRequestDialog({
 
   const requireAuth = () => {
     if (!user) {
-      toast({ title: "Sign in to join", description: "You need an account to back wishes." });
+      toast({ title: "Sign in to join", description: "You need an account to add your voice." });
       navigate("/auth?redirect=" + encodeURIComponent(window.location.pathname));
       return false;
     }
@@ -72,7 +72,7 @@ export default function JoinRequestDialog({
           .insert({ request_id: target.id, user_id: user!.id, body: angle, kind: "angle" });
         if (cErr) throw cErr;
       }
-      toast({ title: "Voice added", description: `You're backing "${target.title}".` });
+      toast({ title: "Murma added", description: `You've backed "${target.title}".` });
       onJoined?.();
       onOpenChange(false);
     } catch (e: any) {
@@ -91,7 +91,7 @@ export default function JoinRequestDialog({
         .from("request_cosigners")
         .insert({ request_id: target.id, user_id: user!.id, note: trimmed || null });
       if (error && !/duplicate|unique/i.test(error.message)) throw error;
-      toast({ title: "Co-signed ✨", description: "You're on the record as backing this wish." });
+      toast({ title: "Co-signed ✨", description: "You're on the record as backing this murma." });
       onJoined?.();
       onOpenChange(false);
     } catch (e: any) {
@@ -104,7 +104,7 @@ export default function JoinRequestDialog({
   const handleMerge = async () => {
     if (!requireAuth()) return;
     if (!draft?.title || !draft?.category) {
-      toast({ title: "Nothing to merge", description: "Write your wish first.", variant: "destructive" });
+      toast({ title: "Nothing to merge", description: "Write your murma first.", variant: "destructive" });
       return;
     }
     setBusy(true);
@@ -135,12 +135,12 @@ export default function JoinRequestDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="font-display text-2xl uppercase tracking-[0.02em]">
-            Join forces
+            Join the murmur
           </DialogTitle>
           <DialogDescription>
             <span className="font-medium text-foreground">{target.title}</span>
             <span className="block text-xs text-muted-foreground mt-0.5">
-              {target.town} · {target.distance_km < 0.1 ? "<0.1" : target.distance_km.toFixed(1)} km · {target.upvote_count} upvotes
+              {target.town} · {target.distance_km < 0.1 ? "<0.1" : target.distance_km.toFixed(1)} km · {target.upvote_count} voices
             </span>
           </DialogDescription>
         </DialogHeader>
@@ -148,7 +148,7 @@ export default function JoinRequestDialog({
         <Tabs value={mode} onValueChange={(v) => setMode(v as JoinMode)}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="upvote" className="gap-1.5 text-xs">
-              <ArrowBigUp className="h-3.5 w-3.5" /> Back
+              <ArrowBigUp className="h-3.5 w-3.5" /> Add voice
             </TabsTrigger>
             <TabsTrigger value="cosign" className="gap-1.5 text-xs">
               <Users className="h-3.5 w-3.5" /> Co-sign
@@ -160,7 +160,7 @@ export default function JoinRequestDialog({
 
           <TabsContent value="upvote" className="space-y-3 pt-3">
             <p className="text-xs text-muted-foreground">
-              Add your upvote. Optionally leave an "angle" — a short note on why this matters to you.
+              Add your voice. Optionally leave an angle — a short note on why this matters to you.
             </p>
             <div className="space-y-1.5">
               <Label className="text-xs">Your angle (optional)</Label>
@@ -174,13 +174,13 @@ export default function JoinRequestDialog({
             </div>
             <Button onClick={handleUpvote} disabled={busy} className="w-full gap-2">
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowBigUp className="h-4 w-4" />}
-              Back this wish
+              Add your voice
             </Button>
           </TabsContent>
 
           <TabsContent value="cosign" className="space-y-3 pt-3">
             <p className="text-xs text-muted-foreground">
-              Become a named co-signer. Your endorsement appears publicly on the request.
+              Become a named co-signer. Your name appears publicly with this murma.
             </p>
             <div className="space-y-1.5">
               <Label className="text-xs">Note (optional, max 200 chars)</Label>
@@ -194,13 +194,13 @@ export default function JoinRequestDialog({
             </div>
             <Button onClick={handleCosign} disabled={busy} className="w-full gap-2">
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Users className="h-4 w-4" />}
-              Co-sign this wish
+              Co-sign this murma
             </Button>
           </TabsContent>
 
           <TabsContent value="suggest_merge" className="space-y-3 pt-3">
             <p className="text-xs text-muted-foreground">
-              Suggest merging your wish into this one. The original poster decides — if accepted,
+              Suggest merging your murma into this one. The original poster decides — if accepted,
               you become a co-signer and your angle is added.
             </p>
             <div className="space-y-1.5">
@@ -227,7 +227,7 @@ export default function JoinRequestDialog({
             rel="noopener noreferrer"
             className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground"
           >
-            View full wish →
+            View full murma →
           </a>
         </div>
       </DialogContent>

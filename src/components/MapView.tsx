@@ -273,7 +273,7 @@ export default function MapView({
       marker.bindPopup(`
         <div class="font-heading">
           <strong>${escapeHtml(req.title)}</strong><br />
-          <span class="text-sm">${escapeHtml(req.town)} · ${req.upvote_count} votes</span>
+          <span class="text-sm">${escapeHtml(req.town)} · ${req.upvote_count} voices</span>
         </div>
       `);
 

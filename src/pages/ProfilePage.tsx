@@ -264,17 +264,17 @@ export default function ProfilePage() {
         <section className="mt-6">
           <SectionHeading>Totals</SectionHeading>
           <div className="mt-2 grid grid-cols-2 gap-2 md:grid-cols-4">
-            <StatTile label="Upvotes" value={totals.upvotes} />
+            <StatTile label="Voices" value={totals.upvotes} />
             <StatTile label="Views" value={totals.views} />
             <StatTile label="Shares" value={totals.shares} />
-            <StatTile label="Live requests" value={totals.live} sub={`of ${myRequests.length}`} />
+            <StatTile label="Live murmas" value={totals.live} sub={`of ${myRequests.length}`} />
           </div>
         </section>
 
-        {/* My requests */}
+        {/* My murmas */}
         <section className="mt-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <SectionHeading>Your requests</SectionHeading>
+            <SectionHeading>Your murmas</SectionHeading>
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex rounded-sm border-[1.5px] border-border bg-popover p-0.5 font-mono text-[10px] uppercase tracking-[0.12em]">
                 {(["active", "closed", "all"] as StatusFilter[]).map((s) => (
@@ -311,13 +311,13 @@ export default function ProfilePage() {
             </div>
           ) : filteredSorted.length === 0 ? (
             <div className="mt-4 rounded-md border-[1.5px] border-dashed border-border bg-popover p-8 text-center">
-              <p className="font-heading text-lg uppercase tracking-[0.04em]">No requests yet</p>
+              <p className="font-heading text-lg uppercase tracking-[0.04em]">No murmas yet</p>
               <p className="mt-1 font-mono text-xs uppercase tracking-[0.12em] text-text-lo">
-                Spark a demand signal in your town.
+                Be impossible to ignore.
               </p>
               <Link to="/explore?create=true" className="mt-4 inline-block">
                 <Button className="gap-1.5">
-                  <Plus className="h-4 w-4" /> Create your first request
+                  <Plus className="h-4 w-4" /> Add your first murma
                 </Button>
               </Link>
             </div>
@@ -361,7 +361,7 @@ export default function ProfilePage() {
                     <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-[10px] uppercase tracking-[0.12em] text-text-lo">
                       <span>Live {formatLiveSince(r.created_at)}</span>
                       <span className="flex items-center gap-1">
-                        <ArrowBigUp className="h-3 w-3" /> {r.upvote_count} upvotes
+                        <ArrowBigUp className="h-3 w-3" /> {r.upvote_count} voices
                       </span>
                       <span>{r.view_count} views</span>
                       <span>{r.share_count} shares</span>
@@ -385,9 +385,9 @@ export default function ProfilePage() {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Delete this request?</AlertDialogTitle>
+                            <AlertDialogTitle>Delete this murma?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              "{r.title}" will be removed permanently along with all its upvotes. This can't be undone.
+                              "{r.title}" will be removed permanently along with all its voices. This can't be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>

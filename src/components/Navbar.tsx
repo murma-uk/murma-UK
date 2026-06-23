@@ -30,7 +30,7 @@ export default function Navbar() {
           <Link to="/" className="flex min-w-0 items-center gap-3">
             <Wordmark size="md" withMark />
             <span className="hidden lg:inline-flex">
-              <LiveChip>Live · Demand Signal</LiveChip>
+              <LiveChip>Live · The Signal</LiveChip>
             </span>
           </Link>
 
@@ -47,15 +47,15 @@ export default function Navbar() {
 
             {user ? (
               <>
-                {/* New Request: full on sm+, icon on mobile */}
+                {/* Add Murma: full on sm+, icon on mobile */}
                 <Link to="/explore?create=true" className="hidden sm:block">
                   <Button size="sm" className="gap-1.5">
                     <Plus className="h-4 w-4" />
-                    New Request
+                    Add Murma
                   </Button>
                 </Link>
                 <Link to="/explore?create=true" className="sm:hidden">
-                  <Button size="icon" title="New Request" aria-label="New Request">
+                  <Button size="icon" title="Add Murma" aria-label="Add Murma">
                     <Plus className="h-4 w-4" />
                   </Button>
                 </Link>

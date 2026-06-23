@@ -108,7 +108,7 @@ export default function ModerationQueuePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <SEO title="Moderation queue — Hey, Open Up" description="Review flagged posts" path="/admin/moderation" />
+      <SEO title="Moderation queue — Murma" description="Review flagged posts" path="/admin/moderation" />
       <Navbar />
       <div className="container max-w-3xl py-8">
         <div className="mb-6 flex items-center gap-2">

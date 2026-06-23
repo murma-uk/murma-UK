@@ -6,8 +6,8 @@ export default function PrivacyPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SEO
-        title="Privacy Policy — Hey, Open Up"
-        description="How Hey, Open Up collects, uses, and protects your personal data under UK GDPR."
+        title="Privacy Policy — Murma"
+        description="How Murma collects, uses, and protects your personal data under UK GDPR."
         path="/privacy"
       />
       <Navbar />
