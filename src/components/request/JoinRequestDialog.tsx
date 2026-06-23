@@ -48,7 +48,7 @@ export default function JoinRequestDialog({
 
   const requireAuth = () => {
     if (!user) {
-      toast({ title: "Sign in to join", description: "You need an account to back wishes." });
+      toast({ title: "Sign in to join", description: "You need an account to add your voice." });
       navigate("/auth?redirect=" + encodeURIComponent(window.location.pathname));
       return false;
     }
@@ -91,7 +91,7 @@ export default function JoinRequestDialog({
         .from("request_cosigners")
         .insert({ request_id: target.id, user_id: user!.id, note: trimmed || null });
       if (error && !/duplicate|unique/i.test(error.message)) throw error;
-      toast({ title: "Co-signed ✨", description: "You're on the record as backing this wish." });
+      toast({ title: "Co-signed ✨", description: "You're on the record as backing this murma." });
       onJoined?.();
       onOpenChange(false);
     } catch (e: any) {
@@ -104,7 +104,7 @@ export default function JoinRequestDialog({
   const handleMerge = async () => {
     if (!requireAuth()) return;
     if (!draft?.title || !draft?.category) {
-      toast({ title: "Nothing to merge", description: "Write your wish first.", variant: "destructive" });
+      toast({ title: "Nothing to merge", description: "Write your murma first.", variant: "destructive" });
       return;
     }
     setBusy(true);

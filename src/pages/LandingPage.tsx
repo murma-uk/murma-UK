@@ -54,8 +54,8 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Hey, Open Up — Tell Your Town What You Need"
-        description="Request new services, opening hours, branches, or venues in your area. Upvote what matters. Help businesses and councils make better decisions."
+        title="Murma — Be Impossible to Ignore"
+        description="Add your murma. See what your community needs. Help businesses and councils understand what matters. Make your voice heard."
         path="/"
       />
       <Navbar />
