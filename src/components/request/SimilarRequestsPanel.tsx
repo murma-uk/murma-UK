@@ -13,7 +13,7 @@ interface Props {
 }
 
 /**
- * Inline panel that surfaces similar existing wishes nearby and lets the
+ * Inline panel that surfaces similar existing murmas nearby and lets the
  * user back one instead of posting a new one.
  */
 export default function SimilarRequestsPanel({ results, loading, onJoin, onDismiss }: Props) {
@@ -22,7 +22,7 @@ export default function SimilarRequestsPanel({ results, loading, onJoin, onDismi
   if (loading && results.length === 0) {
     return (
       <div className="rounded-md border border-dashed border-border bg-muted/30 p-3 text-[11px] font-mono uppercase tracking-[0.12em] text-muted-foreground">
-        Checking for similar wishes nearby…
+        Checking for similar murmas nearby…
       </div>
     );
   }
@@ -32,8 +32,8 @@ export default function SimilarRequestsPanel({ results, loading, onJoin, onDismi
   const top = results[0];
   const headline =
     results.length === 1
-      ? "1 similar wish nearby"
-      : `${results.length} similar wishes nearby`;
+      ? "1 similar murma nearby"
+      : `${results.length} similar murmas nearby`;
 
   return (
     <div className="rounded-md border-[1.5px] border-civic/40 bg-civic/5 p-3 space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
@@ -43,7 +43,7 @@ export default function SimilarRequestsPanel({ results, loading, onJoin, onDismi
             {headline}
           </p>
           <p className="text-[11px] text-muted-foreground">
-            Joining forces makes the signal louder than posting separately.
+            Joining forces makes the murmur louder than posting separately.
           </p>
         </div>
         {onDismiss && (
@@ -51,7 +51,7 @@ export default function SimilarRequestsPanel({ results, loading, onJoin, onDismi
             type="button"
             onClick={onDismiss}
             className="text-muted-foreground hover:text-foreground"
-            aria-label="Dismiss similar wishes"
+            aria-label="Dismiss similar murmas"
           >
             <X className="h-3.5 w-3.5" />
           </button>
@@ -98,7 +98,7 @@ export default function SimilarRequestsPanel({ results, loading, onJoin, onDismi
               className="h-7 px-2 text-[11px]"
               onClick={() => onJoin(r)}
             >
-              Back this
+              Join
             </Button>
           </li>
         ))}

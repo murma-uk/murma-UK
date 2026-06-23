@@ -192,7 +192,7 @@ export default function RequestDetailPage() {
           {/* Stats */}
           <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
             <StatTile label="Live" value={formatLiveSince(request.created_at)} />
-            <StatTile label="Upvotes" value={request.upvote_count ?? 0} />
+            <StatTile label="Voices" value={request.upvote_count ?? 0} />
             <StatTile label="Co-signers" value={(request as any).cosigner_count ?? 0} />
             <StatTile label="Views" value={request.view_count ?? 0} />
           </div>
@@ -273,7 +273,7 @@ export default function RequestDetailPage() {
               className="gap-2 font-heading font-medium"
             >
               <ArrowBigUp className="h-5 w-5" />
-              {hasUpvoted ? "Upvoted" : "Upvote"}
+              {hasUpvoted ? "Voice added" : "Add your voice"}
               <span className="ml-1 font-bold">{request.upvote_count}</span>
             </Button>
             <ShareButton
