@@ -148,8 +148,8 @@ export default function ExplorePage() {
   return (
     <div className="flex h-screen flex-col bg-background">
       <SEO
-        title="Explore Local Demand — Hey, Open Up"
-        description="Browse live community requests and businesses on a map of your area. Upvote the services, branches, and venues your town needs next."
+        title="The Signal — Explore Murmas in Your Area"
+        description="Browse what your community needs. Add your voice to murmas that matter. Help businesses and councils understand local demand."
         path="/explore"
       />
       <h1 className="sr-only">Explore Local Demand</h1>
