@@ -15,4 +15,4 @@ Allow: /
 Disallow: /admin/
 Disallow: /me
 
-Sitemap: https://hey-open-up.lovable.app/sitemap.xml
+Sitemap: https://murma.uk/sitemap.xml
