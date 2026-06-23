@@ -6,8 +6,8 @@ export default function CookiesPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SEO
-        title="Cookie Policy — Hey, Open Up"
-        description="Which cookies and storage technologies Hey, Open Up uses, and how to manage your choices."
+        title="Cookie Policy — Murma"
+        description="Which cookies and storage technologies Murma uses, and how to manage your choices."
         path="/cookies"
       />
       <Navbar />

@@ -144,8 +144,8 @@ export default function RequestDetailPage() {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title={`${request.title} — Hey, Open Up`}
-        description={(request.description || `Community request in ${request.town}. Upvote to add your voice.`).slice(0, 158)}
+        title={`${request.title} — Murma`}
+        description={(request.description || `Community murma in ${request.town}. Add your voice.`).slice(0, 158)}
         path={buildRequestPath(request.id, (request as any).slug)}
         type="article"
         jsonLd={{
