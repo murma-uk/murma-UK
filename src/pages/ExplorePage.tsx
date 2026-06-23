@@ -148,8 +148,8 @@ export default function ExplorePage() {
   return (
     <div className="flex h-screen flex-col bg-background">
       <SEO
-        title="Explore Local Demand — Hey, Open Up"
-        description="Browse live community requests and businesses on a map of your area. Upvote the services, branches, and venues your town needs next."
+        title="The Signal — Explore Murmas in Your Area"
+        description="Browse what your community needs. Add your voice to murmas that matter. Help businesses and councils understand local demand."
         path="/explore"
       />
       <h1 className="sr-only">Explore Local Demand</h1>
@@ -175,10 +175,10 @@ export default function ExplorePage() {
         {/* Sidebar */}
         <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex relative w-full flex-col border-r border-border md:w-96 md:flex-shrink-0`}>
           <div className="border-b border-border p-4">
-            <p className="section-heading mb-2">Live Demand</p>
+            <p className="section-heading mb-2">The Signal</p>
             <div className="mb-3 flex items-center justify-between gap-2">
               <h2 className="font-display text-2xl uppercase tracking-[0.04em]">
-                {viewMode === "businesses" ? "Businesses" : "Requests"}
+                {viewMode === "businesses" ? "Businesses" : "Murmas"}
               </h2>
               <div className="flex gap-1">
                 <Button
@@ -197,7 +197,7 @@ export default function ExplorePage() {
                   onClick={() => { setViewMode("requests"); setSelectedBusinessId(null); }}
                 >
                   <List className="h-3.5 w-3.5" />
-                  Requests
+                  Murmas
                 </Button>
               </div>
             </div>
@@ -229,7 +229,7 @@ export default function ExplorePage() {
             ) : viewMode === "businesses" ? (
               businesses.length === 0 ? (
                 <div className="py-12 text-center text-sm text-muted-foreground">
-                  No businesses with requests yet. Create a request and link a business!
+                  No businesses with murmas yet. Add a murma and link a business!
                 </div>
               ) : (
                 businesses.map((b) => (

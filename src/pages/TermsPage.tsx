@@ -6,8 +6,8 @@ export default function TermsPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <SEO
-        title="Terms of Service — Hey, Open Up"
-        description="The terms that govern your use of the Hey, Open Up community demand platform."
+        title="Terms of Service — Murma"
+        description="The terms that govern your use of Murma, the community voice platform."
         path="/terms"
       />
       <Navbar />

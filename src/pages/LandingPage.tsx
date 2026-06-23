@@ -12,36 +12,39 @@ import SEO from "@/components/SEO";
 
 const audiences = [
   {
-    title: "For People",
+    title: "Murmua",
+    subtitle: "For Voices",
     icon: Users,
     tone: "primary",
     points: [
-      "Request new opening hours",
-      "Ask for new branches or venues",
-      "Request classes & sessions",
-      "Invite artists to your town",
+      "Add your murma to things you need",
+      "See what your community cares about",
+      "Support ideas you love",
+      "Make your town impossible to ignore",
     ],
   },
   {
-    title: "For Businesses",
+    title: "Murma Signals",
+    subtitle: "For Businesses",
     icon: Building2,
     tone: "accent",
     points: [
-      "Prove market demand with real signals",
-      "Find where to open your next branch",
-      "Understand customer needs by area",
-      "Make announcements to your community",
+      "Buy the signal from the noise",
+      "See where real demand exists",
+      "Make smarter expansion decisions",
+      "Hear your customers clearly",
     ],
   },
   {
-    title: "For Authorities",
+    title: "Murmur Civic",
+    subtitle: "For Councils",
     icon: Landmark,
     tone: "civic",
     points: [
-      "See demand across towns in real-time",
-      "Support investment decisions with data",
-      "Understand community priorities",
-      "Drive evidence-based planning",
+      "See murmuration patterns in real-time",
+      "Make policy grounded in evidence",
+      "Understand what your community needs",
+      "Plan with confidence",
     ],
   },
 ] as const;
@@ -51,8 +54,8 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background">
       <SEO
-        title="Hey, Open Up — Tell Your Town What You Need"
-        description="Request new services, opening hours, branches, or venues in your area. Upvote what matters. Help businesses and councils make better decisions."
+        title="Murma — Be Impossible to Ignore"
+        description="Add your murma. See what your community needs. Help businesses and councils understand what matters. Make your voice heard."
         path="/"
       />
       <Navbar />
@@ -68,42 +71,42 @@ export default function LandingPage() {
           >
             <div className="mb-6 flex flex-wrap items-center gap-3">
               <LiveChip>Light Mode · v0.1</LiveChip>
-              <span className="eyebrow">Community-powered demand signals</span>
+              <span className="eyebrow">Whisper → Murma → Signal → Crescendo → Change</span>
             </div>
 
             <h1 className="font-display text-[clamp(52px,9vw,112px)] leading-[0.88] tracking-[0.02em] uppercase">
-              HEY! <span className="text-primary">OPEN</span>
+              Be <span className="text-primary">Impossible</span>
               <br />
               <span className="text-transparent" style={{ WebkitTextStroke: "1.5px hsl(var(--border-mid))" }}>
-                UP YOUR TOWN
+                TO IGNORE
               </span>
             </h1>
 
             <p className="mt-7 max-w-xl font-body text-lg leading-relaxed text-muted-foreground">
-              Request new services, opening hours, or venues in your area.
-              Upvote what matters. Help businesses and councils evidence unmet need.
+              Add your murma. Others add theirs. A pattern emerges. A business listens. Something opens.
+              The community was heard.
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to="/explore">
                 <Button size="lg" className="gap-2">
-                  View Demand Map
+                  View the Pattern
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
               <Link to="/auth">
                 <Button variant="outline" size="lg">
-                  Get Started
+                  Add Your Murma
                 </Button>
               </Link>
             </div>
 
             <div className="mt-10 flex flex-wrap gap-6 font-mono text-xs uppercase tracking-[0.15em] text-text-lo">
-              <span>SIGNALS · Real-time</span>
+              <span>THE SIGNAL · Real-time</span>
               <span>·</span>
               <span>BOROUGHS · 333 UK areas</span>
               <span>·</span>
-              <span>AUDIENCE · People + Business + Council</span>
+              <span>VOICES · People + Business + Council</span>
             </div>
           </motion.div>
         </div>
@@ -139,9 +142,9 @@ export default function LandingPage() {
 
       {/* Audiences */}
       <section className="container py-20">
-        <SectionHeading className="mb-3">Built for the whole community</SectionHeading>
+        <SectionHeading className="mb-3">One platform, three voices</SectionHeading>
         <h2 className="mb-12 font-display text-4xl uppercase tracking-[0.02em] md:text-5xl">
-          Three sides. <span className="text-primary">One signal.</span>
+          Whisper into <span className="text-primary">Murmuration.</span>
         </h2>
         <div className="grid gap-5 md:grid-cols-3">
           {audiences.map((aud, i) => {
@@ -165,7 +168,8 @@ export default function LandingPage() {
                 <div className={`mb-4 flex h-11 w-11 items-center justify-center rounded-md ${tint}`}>
                   <aud.icon className="h-5 w-5" />
                 </div>
-                <h3 className="mb-3 font-heading text-2xl font-bold uppercase tracking-[0.04em]">{aud.title}</h3>
+                <h3 className="mb-1 font-heading text-2xl font-bold uppercase tracking-[0.04em]">{aud.title}</h3>
+                <p className="mb-3 text-xs text-muted-foreground font-mono tracking-[0.08em]">{(aud as any).subtitle}</p>
                 <ul className="space-y-2">
                   {aud.points.map((p) => (
                     <li key={p} className="flex items-start gap-2 font-mono text-xs text-muted-foreground">
@@ -176,7 +180,7 @@ export default function LandingPage() {
                 </ul>
                 <div className="mt-4">
                   <Badge variant={accent === "accent" ? "demand" : accent === "civic" ? "civic" : "open"}>
-                    {accent === "civic" ? "Council Tier" : accent === "accent" ? "Business Tier" : "Public Tier"}
+                    {accent === "civic" ? "Murmur Civic" : accent === "accent" ? "Murma Signals" : "Murmua"}
                   </Badge>
                 </div>
               </motion.div>
@@ -190,17 +194,17 @@ export default function LandingPage() {
         <div className="container py-16">
           <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
             <div>
-              <SectionHeading className="mb-3">Join the signal</SectionHeading>
+              <SectionHeading className="mb-3">Be impossible to ignore</SectionHeading>
               <h2 className="font-display text-4xl uppercase tracking-[0.02em] md:text-5xl">
-                Ready to <span className="text-primary">open up</span> your town?
+                Add your <span className="text-primary">murma</span> today.
               </h2>
               <p className="mt-3 max-w-md font-body text-base text-muted-foreground">
-                Post your first request in under a minute. Free for residents, always.
+                One sentence. One minute. Free forever. Make your voice heard.
               </p>
             </div>
             <Link to="/auth">
               <Button size="lg" className="gap-2">
-                Get Started Free
+                Start Now
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
