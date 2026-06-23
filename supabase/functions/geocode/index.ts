@@ -1,8 +1,6 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3.23.8";
 
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_maps";
-
 const BodySchema = z.discriminatedUnion("mode", [
   z.object({ mode: z.literal("forward"), query: z.string().min(1).max(200) }),
   z.object({
@@ -28,10 +26,9 @@ function pickTown(components: any[] = []): string {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
-  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY");
-  if (!LOVABLE_API_KEY || !GOOGLE_MAPS_API_KEY) {
-    return new Response(JSON.stringify({ error: "Google Maps connector not configured" }), {
+  if (!GOOGLE_MAPS_API_KEY) {
+    return new Response(JSON.stringify({ error: "Google Maps API key not configured" }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -63,12 +60,9 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const res = await fetch(`${GATEWAY_URL}/maps/api/geocode/json?${params.toString()}`, {
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "X-Connection-Api-Key": GOOGLE_MAPS_API_KEY,
-      },
-    });
+    const res = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?key=${GOOGLE_MAPS_API_KEY}&${params.toString()}`
+    );
     const data = await res.json();
     if (!res.ok || data.status !== "OK" || !data.results?.length) {
       return new Response(
