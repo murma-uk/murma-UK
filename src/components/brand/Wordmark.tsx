@@ -40,7 +40,7 @@ export default function Wordmark({
           toneClass,
         )}
       >
-        HEY! <span className="text-primary">OPEN</span> UP
+        mURMA <span className="text-primary">uk</span>
       </span>
     </span>
   );
