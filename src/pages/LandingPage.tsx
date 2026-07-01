@@ -12,7 +12,7 @@ import SEO from "@/components/SEO";
 
 const audiences = [
   {
-    title: "Murmua",
+    title: "MURMA",
     subtitle: "For Voices",
     icon: Users,
     tone: "primary",
