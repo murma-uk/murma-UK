@@ -12,7 +12,7 @@ import SEO from "@/components/SEO";
 
 const audiences = [
   {
-    title: "Murmua",
+    title: "Murma",
     subtitle: "For Voices",
     icon: Users,
     tone: "primary",
@@ -180,7 +180,7 @@ export default function LandingPage() {
                 </ul>
                 <div className="mt-4">
                   <Badge variant={accent === "accent" ? "demand" : accent === "civic" ? "civic" : "open"}>
-                    {accent === "civic" ? "Murmur Civic" : accent === "accent" ? "Murma Signals" : "Murmua"}
+                    {accent === "civic" ? "Murmur Civic" : accent === "accent" ? "Murma Signals" : "Murma"}
                   </Badge>
                 </div>
               </motion.div>
