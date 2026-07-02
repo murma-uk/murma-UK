@@ -89,7 +89,11 @@ export default function PrivacyPage() {
               <li>Lodge a complaint with the Information Commissioner's Office (ICO) at <a href="https://ico.org.uk" className="text-primary underline" target="_blank" rel="noopener noreferrer">ico.org.uk</a></li>
             </ul>
             <p className="text-muted-foreground mt-2">
-              To exercise these rights, contact us via the email associated with your account.
+              To exercise these rights, contact us at{" "}
+              <a href="mailto:murma@atomicmail.io" className="text-primary underline">
+                murma@atomicmail.io
+              </a>
+              .
             </p>
           </section>
 

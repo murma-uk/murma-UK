@@ -68,7 +68,7 @@ export default function AuthPage() {
             <LogoMark variant="solidGreen" size={72} className="mb-4 rounded-md shadow-card" />
             <Wordmark size="lg" />
             <h1 className="mt-4 font-display text-3xl uppercase tracking-[0.02em]">
-              {isSignUp ? "Create your account" : "Sign in to Hey, Open Up"}
+              {isSignUp ? "Create your account" : "Sign in to Murma"}
             </h1>
             <div className="mt-3 inline-flex">
               <LiveChip>{isSignUp ? "Create account" : "Sign in"}</LiveChip>
