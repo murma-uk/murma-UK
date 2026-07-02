@@ -18,14 +18,14 @@ const C = {
 };
 
 /**
- * "Open Door" brand mark for Hey, Open Up.
+ * "Open Door" brand mark for Murma.
  * Door frame with an ajar panel and a knob (signal green) — the gesture of "opening up".
  */
 export default function LogoMark({
   variant = "light",
   size = 40,
   className,
-  title = "Hey, Open Up",
+  title = "Murma",
 }: LogoMarkProps) {
   // Each variant defines: bg (or none), frame, panel, knob, inset stroke, spill, pip
   const v = (() => {

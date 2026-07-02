@@ -17,7 +17,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-8 flex flex-col gap-2 border-t border-border pt-6 font-mono text-[10px] uppercase tracking-[0.15em] text-text-lo md:flex-row md:items-center md:justify-between">
-          <p>© {new Date().getFullYear()} Hey, Open Up · All rights reserved</p>
+          <p>© {new Date().getFullYear()} Murma · All rights reserved</p>
           <p>Made in the UK · UK GDPR &amp; PECR compliant</p>
         </div>
       </div>

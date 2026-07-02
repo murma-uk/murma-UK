@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Cookie } from "lucide-react";
 
-const STORAGE_KEY = "houp-cookie-consent";
+const STORAGE_KEY = "murma-cookie-consent";
 
 export type ConsentValue = "accepted" | "rejected";
 

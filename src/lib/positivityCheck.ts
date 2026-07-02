@@ -14,7 +14,7 @@ export function flagNegativePhrasing(text: string): string | null {
   if (!text || text.length < 4) return null;
   for (const { pattern } of NEGATIVE_PATTERNS) {
     if (pattern.test(text)) {
-      return "Hey, Open Up is for things you'd love to see. Try rephrasing as a wish — what would you like instead?";
+      return "Murma is for things you'd love to see. Try rephrasing as a wish — what would you like instead?";
     }
   }
   return null;

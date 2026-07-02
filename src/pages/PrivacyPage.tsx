@@ -19,9 +19,12 @@ export default function PrivacyPage() {
           <section>
             <h2 className="font-heading text-xl font-semibold mb-2">1. Who we are</h2>
             <p className="text-muted-foreground">
-              Hey, Open Up ("we", "us") operates this community platform. We are the data
-              controller of personal data processed via this service, in accordance with the UK GDPR
-              and the Data Protection Act 2018.
+              Murma ("we", "us") operates this community platform at{" "}
+              <a href="https://murma.uk" className="text-primary underline" target="_blank" rel="noopener noreferrer">
+                murma.uk
+              </a>
+              . We are the data controller of personal data processed via this service, in
+              accordance with the UK GDPR and the Data Protection Act 2018.
             </p>
           </section>
 
@@ -31,6 +34,7 @@ export default function PrivacyPage() {
               <li>Account data: email address, display name, hashed password.</li>
               <li>Content you submit: requests, upvotes, business links, location data (town/coordinates) you choose to attach.</li>
               <li>Technical data: minimal session data needed to keep you signed in.</li>
+              <li>Location search data: if you use the address/place search, your query text and approximate location are sent to Google Maps Platform to return autocomplete suggestions.</li>
             </ul>
             <p className="text-muted-foreground mt-2">
               We do not use advertising cookies, third-party analytics that profile users, or
@@ -50,9 +54,17 @@ export default function PrivacyPage() {
           <section>
             <h2 className="font-heading text-xl font-semibold mb-2">4. How we share data</h2>
             <p className="text-muted-foreground">
-              Public content (requests, upvotes, display name) is visible to other users.
-              Account data is stored on our backend infrastructure (Lovable Cloud / Supabase, EU
-              region). We do not sell your personal data.
+              Public content (requests, upvotes, display name) is visible to other users. We use a
+              small number of infrastructure providers to run the service, each acting as our data
+              processor:
+            </p>
+            <ul className="list-disc pl-6 text-muted-foreground space-y-1 mt-2">
+              <li><strong>Supabase</strong> — hosts our database, authentication, and file storage (EU region).</li>
+              <li><strong>Vercel</strong> — hosts and serves the website (frontend and edge infrastructure).</li>
+              <li><strong>Google Maps Platform</strong> — provides address/place autocomplete when you search for a location.</li>
+            </ul>
+            <p className="text-muted-foreground mt-2">
+              We do not sell your personal data.
             </p>
           </section>
 
@@ -77,7 +89,11 @@ export default function PrivacyPage() {
               <li>Lodge a complaint with the Information Commissioner's Office (ICO) at <a href="https://ico.org.uk" className="text-primary underline" target="_blank" rel="noopener noreferrer">ico.org.uk</a></li>
             </ul>
             <p className="text-muted-foreground mt-2">
-              To exercise these rights, contact us via the email associated with your account.
+              To exercise these rights, contact us at{" "}
+              <a href="mailto:murma@atomicmail.io" className="text-primary underline">
+                murma@atomicmail.io
+              </a>
+              .
             </p>
           </section>
 

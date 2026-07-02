@@ -21,7 +21,7 @@ export default function ShareButton({ id, slug, title, description, variant = "f
   const [copied, setCopied] = useState(false);
 
   const url = `${typeof window !== "undefined" ? window.location.origin : ""}${buildRequestPath(id, slug)}`;
-  const shareText = `${title} — Hey, Open Up`;
+  const shareText = `${title} — Murma`;
   const canNativeShare = typeof navigator !== "undefined" && typeof (navigator as any).share === "function";
 
   const stop = (e: React.MouseEvent) => e.stopPropagation();
