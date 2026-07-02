@@ -32,7 +32,7 @@ export default function CookiesPage() {
             </p>
             <ul className="list-disc pl-6 text-muted-foreground space-y-1">
               <li><strong>Authentication tokens</strong> — keep you signed in (stored in browser local storage by our backend).</li>
-              <li><strong>Consent preference</strong> (<code>houp-cookie-consent</code>) — remembers your choice on the cookie banner.</li>
+              <li><strong>Consent preference</strong> (<code>murma-cookie-consent</code>) — remembers your choice on the cookie banner.</li>
             </ul>
           </section>
 
