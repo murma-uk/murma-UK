@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Users, Building2, Landmark } from "lucide-react";
 import { useCategories } from "@/lib/categories";
+import { useAuth } from "@/hooks/useAuth";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import LiveChip from "@/components/brand/LiveChip";
@@ -51,6 +52,7 @@ const audiences = [
 
 export default function LandingPage() {
   const { data: categories = [] } = useCategories();
+  const { user } = useAuth();
   return (
     <div className="min-h-screen bg-background">
       <SEO
@@ -94,7 +96,7 @@ export default function LandingPage() {
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </Link>
-              <Link to="/auth">
+              <Link to={user ? "/explore?create=true" : "/auth"}>
                 <Button variant="outline" size="lg">
                   Add Your Murma
                 </Button>
@@ -202,7 +204,7 @@ export default function LandingPage() {
                 One sentence. One minute. Free forever. Make your voice heard.
               </p>
             </div>
-            <Link to="/auth">
+            <Link to={user ? "/explore?create=true" : "/auth"}>
               <Button size="lg" className="gap-2">
                 Start Now
                 <ArrowRight className="h-4 w-4" />
