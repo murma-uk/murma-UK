@@ -357,7 +357,7 @@ export default function NewBranchFields({ value, onChange, pinLocation, onReques
           <PlaceAutocomplete
             value={value.town}
             placeholder="Town or city"
-            types={["locality", "postal_town"]}
+            types={["locality", "postal_town", "sublocality"]}
             onChange={(t) => set({ town: t })}
             onSelect={(p) => set({ town: p.primaryText })}
           />
