@@ -21,7 +21,7 @@ export default function SimilarRequestsPanel({ results, loading, onJoin, onDismi
 
   if (loading && results.length === 0) {
     return (
-      <div className="rounded-md border border-dashed border-border bg-muted/30 p-3 text-[11px] font-mono uppercase tracking-[0.12em] text-muted-foreground">
+      <div className="rounded-lg border border-dashed border-border bg-muted/30 p-3 text-[11px] font-mono uppercase tracking-[0.12em] text-muted-foreground">
         Checking for similar murmas nearby…
       </div>
     );
@@ -36,10 +36,10 @@ export default function SimilarRequestsPanel({ results, loading, onJoin, onDismi
       : `${results.length} similar murmas nearby`;
 
   return (
-    <div className="rounded-md border-[1.5px] border-civic/40 bg-civic/5 p-3 space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+    <div className="rounded-lg border-[1.5px] border-civic/40 bg-civic/5 p-3 space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="font-heading text-sm font-semibold uppercase tracking-[0.04em] text-civic">
+          <p className="font-heading text-sm font-semibold tracking-[-0.01em] text-civic">
             {headline}
           </p>
           <p className="text-[11px] text-muted-foreground">

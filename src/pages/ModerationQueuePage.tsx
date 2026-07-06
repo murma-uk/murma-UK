@@ -81,7 +81,7 @@ export default function ModerationQueuePage() {
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="container max-w-xl py-16 text-center">
-          <h1 className="font-display text-3xl uppercase">Not authorized</h1>
+          <h1 className="font-display text-3xl tracking-[-0.02em]">Not authorized</h1>
           <p className="mt-2 text-muted-foreground">
             Moderation is available to admins and trusted reviewers.
           </p>
@@ -113,7 +113,7 @@ export default function ModerationQueuePage() {
       <div className="container max-w-3xl py-8">
         <div className="mb-6 flex items-center gap-2">
           <ShieldCheck className="h-5 w-5 text-primary" />
-          <h1 className="font-display text-3xl uppercase tracking-[0.02em]">Moderation queue</h1>
+          <h1 className="font-display text-3xl tracking-[-0.02em]">Moderation queue</h1>
         </div>
 
         {loading ? (
@@ -121,13 +121,13 @@ export default function ModerationQueuePage() {
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : items.length === 0 ? (
-          <p className="rounded-md border border-dashed border-border bg-surface-2 p-8 text-center text-muted-foreground">
+          <p className="rounded-lg border border-dashed border-border bg-surface-2 p-8 text-center text-muted-foreground">
             Nothing to review. Nice.
           </p>
         ) : (
           <ul className="space-y-3">
             {items.map((it) => (
-              <li key={it.id} className="rounded-md border-[1.5px] border-border bg-popover p-4">
+              <li key={it.id} className="rounded-lg border-[1.5px] border-border bg-popover p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="mb-1 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
@@ -137,7 +137,7 @@ export default function ModerationQueuePage() {
                       <span>{it.town}</span>
                       <span>· {it.category}</span>
                     </div>
-                    <h2 className="font-heading text-lg font-bold uppercase tracking-[0.03em] leading-tight">
+                    <h2 className="font-heading text-lg font-semibold tracking-[-0.01em] leading-tight">
                       {it.title}
                     </h2>
                     {it.description && (

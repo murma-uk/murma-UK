@@ -214,7 +214,7 @@ export default function ProfilePage() {
                       if (e.key === "Enter") saveName();
                       if (e.key === "Escape") setEditingName(false);
                     }}
-                    className="h-10 max-w-xs font-heading text-xl uppercase tracking-[0.02em]"
+                    className="h-10 max-w-xs font-heading text-xl tracking-[-0.01em]"
                   />
                   <Button size="icon" variant="default" onClick={saveName} aria-label="Save">
                     <Check className="h-4 w-4" />
@@ -224,7 +224,7 @@ export default function ProfilePage() {
                   </Button>
                 </div>
               ) : (
-                <h1 className="mt-1 flex items-center gap-2 font-display text-4xl uppercase leading-none tracking-[0.02em] md:text-5xl">
+                <h1 className="mt-1 flex items-center gap-2 font-display text-4xl leading-none tracking-[-0.02em] md:text-5xl">
                   {displayName}
                   <button
                     onClick={() => {
@@ -310,8 +310,8 @@ export default function ProfilePage() {
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : filteredSorted.length === 0 ? (
-            <div className="mt-4 rounded-md border-[1.5px] border-dashed border-border bg-popover p-8 text-center">
-              <p className="font-heading text-lg uppercase tracking-[0.04em]">No murmas yet</p>
+            <div className="mt-4 rounded-lg border-[1.5px] border-dashed border-border bg-popover p-8 text-center">
+              <p className="font-heading text-lg font-semibold tracking-[-0.01em]">No murmas yet</p>
               <p className="mt-1 font-mono text-xs uppercase tracking-[0.12em] text-text-lo">
                 Be impossible to ignore.
               </p>
@@ -330,7 +330,7 @@ export default function ProfilePage() {
                 return (
                   <li
                     key={r.id}
-                    className="rounded-md border-[1.5px] border-border bg-popover p-4"
+                    className="rounded-lg border-[1.5px] border-border bg-popover p-4"
                   >
                     <div className="flex flex-wrap items-center gap-2">
                       <span
@@ -353,7 +353,7 @@ export default function ProfilePage() {
 
                     <Link
                       to={buildRequestPath(r.id, r.slug)}
-                      className="mt-1.5 block font-heading text-lg font-bold uppercase tracking-[0.03em] leading-tight text-card-foreground hover:text-primary"
+                      className="mt-1.5 block font-heading text-lg font-semibold tracking-[-0.01em] leading-tight text-card-foreground hover:text-primary"
                     >
                       {r.title}
                     </Link>
@@ -408,7 +408,7 @@ export default function ProfilePage() {
         {(upvotedQuery.data?.length ?? 0) > 0 && (
           <section className="mt-8">
             <SectionHeading>Recently upvoted</SectionHeading>
-            <ul className="mt-2 divide-y divide-border rounded-md border-[1.5px] border-border bg-popover">
+            <ul className="mt-2 divide-y divide-border rounded-lg border-[1.5px] border-border bg-popover">
               {upvotedQuery.data!.map((u) => {
                 const cat = getCategory(categories, u.requests.category);
                 const Icon = cat.Icon;
@@ -419,7 +419,7 @@ export default function ProfilePage() {
                       className="flex items-center gap-3 px-4 py-2.5 hover:bg-muted/40"
                     >
                       <Icon className="h-4 w-4 shrink-0" style={{ color: cat.color }} />
-                      <span className="min-w-0 flex-1 truncate font-heading text-sm uppercase tracking-[0.03em]">
+                      <span className="min-w-0 flex-1 truncate font-heading text-sm font-medium tracking-[-0.01em]">
                         {u.requests.title}
                       </span>
                       <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-text-lo">

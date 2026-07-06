@@ -161,7 +161,7 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.08 }}
-                className={`accent-strip ${accent === "accent" ? "accent-strip-demand" : accent === "civic" ? "accent-strip-civic" : ""} card-hover relative overflow-hidden rounded-md border-[1.5px] border-border bg-popover p-5 pl-6`}
+                className={`accent-strip ${accent === "accent" ? "accent-strip-demand" : accent === "civic" ? "accent-strip-civic" : ""} card-hover relative overflow-hidden rounded-lg border-[1.5px] border-border bg-popover p-5 pl-6`}
               >
                 <div className={`mb-4 flex h-11 w-11 items-center justify-center rounded-md ${tint}`}>
                   <aud.icon className="h-5 w-5" />
