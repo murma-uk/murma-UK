@@ -46,7 +46,7 @@ export default function Wordmark({
           toneClass,
         )}
       >
-        Murma <span className="text-primary">UK</span>
+        <span className="text-primary">MURMA</span>
       </span>
     </span>
   );

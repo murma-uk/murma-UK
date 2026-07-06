@@ -76,7 +76,7 @@ export default function JoinRequestDialog({
       onJoined?.();
       onOpenChange(false);
     } catch (e: any) {
-      toast({ title: "Could not back wish", description: e.message, variant: "destructive" });
+      toast({ title: "Could not add voice", description: e.message, variant: "destructive" });
     } finally {
       setBusy(false);
     }

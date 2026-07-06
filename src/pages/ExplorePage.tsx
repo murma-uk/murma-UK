@@ -284,11 +284,11 @@ export default function ExplorePage() {
               onClick={() => setCreateOpen(true)}
             >
               <Plus className="h-4 w-4" />
-              New request
+              Add murma
             </Button>
             {!user && (
               <span className="pointer-events-auto rounded-full bg-card/95 border border-border px-2.5 py-0.5 text-[11px] text-muted-foreground shadow-sm backdrop-blur">
-                Plan now — sign in required to post
+                Plan now — sign in required to add murmas
               </span>
             )}
           </div>

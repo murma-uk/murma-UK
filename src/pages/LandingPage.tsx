@@ -178,7 +178,7 @@ export default function LandingPage() {
                 </ul>
                 <div className="mt-4">
                   <Badge variant={accent === "accent" ? "demand" : accent === "civic" ? "civic" : "open"}>
-                    {accent === "civic" ? "Murmur Civic" : accent === "accent" ? "Murma Signals" : "MURMA"}
+                    {accent === "civic" ? "Murma Civic" : accent === "accent" ? "Murma Signals" : "Murma"}
                   </Badge>
                 </div>
               </motion.div>
