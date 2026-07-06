@@ -165,7 +165,7 @@ export default function CreateRequestDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[calc(100vw-2rem)] max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="font-display text-2xl uppercase tracking-[0.02em]">
+          <DialogTitle className="font-display text-2xl tracking-[-0.02em]">
             What would you love to see?
           </DialogTitle>
           {pinLocation ? (

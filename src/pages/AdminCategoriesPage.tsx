@@ -83,7 +83,7 @@ export default function AdminCategoriesPage() {
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="container max-w-md py-20 text-center">
-          <h1 className="font-heading text-2xl font-bold">Admin only</h1>
+          <h1 className="font-heading text-2xl font-semibold tracking-[-0.01em]">Admin only</h1>
           <p className="mt-2 text-muted-foreground">
             You need an admin role to manage request categories.
           </p>
@@ -127,7 +127,7 @@ export default function AdminCategoriesPage() {
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="section-heading mb-2">Admin · Taxonomy</p>
-            <h1 className="font-display text-4xl uppercase tracking-[0.02em] md:text-5xl">Request Categories</h1>
+            <h1 className="font-display text-4xl tracking-[-0.02em] md:text-5xl">Request Categories</h1>
             <p className="mt-2 font-body text-sm text-muted-foreground">
               Edit how categories appear across the app. Changes go live immediately.
             </p>

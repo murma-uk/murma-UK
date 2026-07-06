@@ -12,7 +12,7 @@ export default function TermsPage() {
       />
       <Navbar />
       <main className="container max-w-3xl py-12">
-        <h1 className="font-heading text-4xl font-bold mb-2">Terms of Service</h1>
+        <h1 className="font-heading text-4xl font-semibold tracking-[-0.01em] mb-2">Terms of Service</h1>
         <p className="text-sm text-muted-foreground mb-8">Last updated: {new Date().toLocaleDateString("en-GB")}</p>
 
         <div className="space-y-6 text-foreground">

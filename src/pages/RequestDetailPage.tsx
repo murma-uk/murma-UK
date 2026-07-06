@@ -187,7 +187,7 @@ export default function RequestDetailPage() {
             </span>
           </div>
 
-          <h1 className="font-display text-4xl uppercase leading-[0.95] tracking-[0.02em] md:text-5xl">{request.title}</h1>
+          <h1 className="font-display text-4xl leading-[1.02] tracking-[-0.02em] md:text-5xl">{request.title}</h1>
 
           {/* Stats */}
           <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -251,7 +251,7 @@ export default function RequestDetailPage() {
           )}
 
           {request.status && request.status !== "active" && (
-            <div className="mt-4 flex items-start gap-2 rounded-md border border-accent/40 bg-accent/5 p-3 text-sm">
+            <div className="mt-4 flex items-start gap-2 rounded-lg border border-accent/40 bg-accent/5 p-3 text-sm">
               <EyeOff className="h-4 w-4 text-accent shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium text-accent">

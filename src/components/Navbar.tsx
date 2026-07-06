@@ -13,7 +13,7 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useIsTrusted } from "@/hooks/useIsTrusted";
 import { LogOut, Plus, User, Shield, Compass, UserCircle2, ShieldCheck } from "lucide-react";
 import Wordmark from "@/components/brand/Wordmark";
-import BrickStripe from "@/components/brand/BrickStripe";
+import SignalLine from "@/components/brand/SignalLine";
 import LiveChip from "@/components/brand/LiveChip";
 
 export default function Navbar() {
@@ -24,7 +24,7 @@ export default function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 bg-popover/95 backdrop-blur-md">
-      <BrickStripe />
+      <SignalLine />
       <div className="border-b border-border">
         <div className="container flex h-16 items-center justify-between gap-2">
           <Link to="/" className="flex min-w-0 items-center gap-3">

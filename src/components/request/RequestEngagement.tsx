@@ -158,8 +158,8 @@ export default function RequestEngagement({ requestId, ownerId }: Props) {
     <div className="mt-8 space-y-6">
       {/* Owner inbox */}
       {isOwner && suggestions.length > 0 && (
-        <section className="rounded-md border-[1.5px] border-civic/40 bg-civic/5 p-4">
-          <h3 className="flex items-center gap-2 font-heading text-sm font-semibold uppercase tracking-[0.05em] text-civic">
+        <section className="rounded-lg border-[1.5px] border-civic/40 bg-civic/5 p-4">
+          <h3 className="flex items-center gap-2 font-heading text-sm font-semibold tracking-[-0.01em] text-civic">
             <GitMerge className="h-4 w-4" />
             {suggestions.length} merge {suggestions.length === 1 ? "suggestion" : "suggestions"}
           </h3>
@@ -206,7 +206,7 @@ export default function RequestEngagement({ requestId, ownerId }: Props) {
       {/* Co-signers */}
       {cosigners.length > 0 && (
         <section>
-          <h3 className="flex items-center gap-2 font-heading text-sm font-semibold uppercase tracking-[0.05em]">
+          <h3 className="flex items-center gap-2 font-heading text-sm font-semibold tracking-[-0.01em]">
             <Users className="h-4 w-4 text-primary" />
             {cosigners.length} co-{cosigners.length === 1 ? "signer" : "signers"}
           </h3>
@@ -228,13 +228,13 @@ export default function RequestEngagement({ requestId, ownerId }: Props) {
       {/* Angles */}
       {angles.length > 0 && (
         <section>
-          <h3 className="flex items-center gap-2 font-heading text-sm font-semibold uppercase tracking-[0.05em]">
+          <h3 className="flex items-center gap-2 font-heading text-sm font-semibold tracking-[-0.01em]">
             <Sparkles className="h-4 w-4 text-primary" />
             Angles
           </h3>
           <ul className="mt-2 space-y-2">
             {angles.map((a) => (
-              <li key={a.id} className="rounded-md border-l-2 border-primary bg-primary/5 p-3">
+              <li key={a.id} className="rounded-lg border-l-2 border-primary bg-primary/5 p-3">
                 <p className="text-sm whitespace-pre-line">{a.body}</p>
                 <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.1em] text-text-lo">
                   {nameFor(a.user_id)} · {new Date(a.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
@@ -247,7 +247,7 @@ export default function RequestEngagement({ requestId, ownerId }: Props) {
 
       {/* Comments */}
       <section>
-        <h3 className="flex items-center gap-2 font-heading text-sm font-semibold uppercase tracking-[0.05em]">
+        <h3 className="flex items-center gap-2 font-heading text-sm font-semibold tracking-[-0.01em]">
           <MessageSquare className="h-4 w-4" />
           Discussion {general.length > 0 && <span className="text-text-lo">({general.length})</span>}
         </h3>
@@ -273,7 +273,7 @@ export default function RequestEngagement({ requestId, ownerId }: Props) {
         {general.length > 0 && (
           <ul className="mt-3 space-y-2">
             {general.map((c) => (
-              <li key={c.id} className="rounded-md border border-border bg-popover p-3">
+              <li key={c.id} className="rounded-lg border border-border bg-popover p-3">
                 <p className="text-sm whitespace-pre-line">{c.body}</p>
                 <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.1em] text-text-lo">
                   {nameFor(c.user_id)} · {new Date(c.created_at).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}

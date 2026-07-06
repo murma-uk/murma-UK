@@ -12,7 +12,7 @@ export default function PrivacyPage() {
       />
       <Navbar />
       <main className="container max-w-3xl py-12">
-        <h1 className="font-heading text-4xl font-bold mb-2">Privacy Policy</h1>
+        <h1 className="font-heading text-4xl font-semibold tracking-[-0.01em] mb-2">Privacy Policy</h1>
         <p className="text-sm text-muted-foreground mb-8">Last updated: {new Date().toLocaleDateString("en-GB")}</p>
 
         <div className="prose prose-sm max-w-none space-y-6 text-foreground">
