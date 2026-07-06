@@ -14,9 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['Bebas Neue', 'Impact', 'sans-serif'],
-        heading: ['Barlow Condensed', 'Helvetica Neue', 'sans-serif'],
-        body: ['Barlow', 'system-ui', 'sans-serif'],
+        display: ['Fraunces', 'Georgia', 'serif'],
+        heading: ['Bricolage Grotesque', 'system-ui', 'sans-serif'],
+        body: ['Bricolage Grotesque', 'system-ui', 'sans-serif'],
         mono: ['DM Mono', 'IBM Plex Mono', 'monospace'],
       },
       colors: {
@@ -85,13 +85,17 @@ export default {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        DEFAULT: "var(--radius)",
+        lg: "var(--radius-lg)",
+        md: "var(--radius-md)",
+        sm: "var(--radius-sm)",
       },
       boxShadow: {
         card: "var(--shadow-card)",
         "card-hover": "var(--shadow-card-hover)",
+        input: "var(--shadow-input)",
+        btn: "var(--shadow-btn)",
+        "btn-hover": "var(--shadow-btn-hover)",
         "glow-signal": "var(--shadow-glow-signal)",
         "glow-demand": "var(--shadow-glow-demand)",
       },

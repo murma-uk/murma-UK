@@ -10,7 +10,7 @@ import { Loader2, FileText } from "lucide-react";
 import Wordmark from "@/components/brand/Wordmark";
 import LogoMark from "@/components/brand/LogoMark";
 import LiveChip from "@/components/brand/LiveChip";
-import BrickStripe from "@/components/brand/BrickStripe";
+import SignalLine from "@/components/brand/SignalLine";
 import SEO from "@/components/SEO";
 
 export default function AuthPage() {
@@ -61,13 +61,13 @@ export default function AuthPage() {
         description="Sign in or create an account to add murmas, add your voice, and help shape what your town gets next."
         path="/auth"
       />
-      <BrickStripe />
+      <SignalLine />
       <div className="flex flex-1 items-center justify-center p-4">
-        <div className="spray-hey w-full max-w-md rounded-md border-[1.5px] border-border bg-popover p-7 shadow-card">
+        <div className="signal-ripples w-full max-w-md rounded-lg border-[1.5px] border-border bg-popover p-7 shadow-card">
           <div className="mb-6 flex flex-col items-center text-center">
-            <LogoMark variant="solidGreen" size={72} className="mb-4 rounded-md shadow-card" />
+            <LogoMark variant="solidGreen" size={72} className="mb-4 rounded-lg shadow-card" />
             <Wordmark size="lg" />
-            <h1 className="mt-4 font-display text-3xl uppercase tracking-[0.02em]">
+            <h1 className="mt-4 font-display text-3xl tracking-[-0.02em]">
               {isSignUp ? "Create your account" : "Sign in to Murma"}
             </h1>
             <div className="mt-3 inline-flex">

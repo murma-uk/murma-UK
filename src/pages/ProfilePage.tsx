@@ -11,7 +11,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import StatTile, { formatLiveSince } from "@/components/brand/StatTile";
 import SectionHeading from "@/components/brand/SectionHeading";
-import BrickStripe from "@/components/brand/BrickStripe";
+import SignalLine from "@/components/brand/SignalLine";
 import ShareButton from "@/components/ShareButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -199,7 +199,7 @@ export default function ProfilePage() {
       <main className="container max-w-4xl py-8">
         {/* Header */}
         <section className="relative overflow-hidden rounded-lg border-[1.5px] border-border bg-popover">
-          <BrickStripe />
+          <SignalLine />
           <div className="flex flex-col gap-4 p-5 md:flex-row md:items-end md:justify-between">
             <div className="min-w-0">
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-text-lo">Your dashboard</p>
