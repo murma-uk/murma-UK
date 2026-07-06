@@ -177,7 +177,7 @@ export default function ExplorePage() {
           <div className="border-b border-border p-4">
             <p className="section-heading mb-2">The Signal</p>
             <div className="mb-3 flex items-center justify-between gap-2">
-              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">
+              <h2 className="font-display text-2xl tracking-[-0.02em]">
                 {viewMode === "businesses" ? "Businesses" : "Murmas"}
               </h2>
               <div className="flex gap-1">

@@ -22,6 +22,12 @@ const markPxMap = {
   xl: 72,
 };
 
+/**
+ * Murma UK — Wordmark (v2)
+ * "Murma UK" set in Bricolage Grotesque SemiBold, mixed-case, tightly
+ * tracked, with the "UK" in signal green. Optional cresting-arc mark
+ * alongside.
+ */
 export default function Wordmark({
   className,
   size = "md",
@@ -35,7 +41,7 @@ export default function Wordmark({
       {withMark && <LogoMark variant="light" size={markPxMap[size]} />}
       <span
         className={cn(
-          "font-display tracking-[0.1em] leading-none whitespace-nowrap",
+          "font-heading font-semibold tracking-[-0.02em] leading-none whitespace-nowrap",
           sizeMap[size],
           toneClass,
         )}

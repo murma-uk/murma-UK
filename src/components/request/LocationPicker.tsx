@@ -89,13 +89,13 @@ export default function LocationPicker({ value, onChange, mapCenter, pinLocation
         )}
 
         <div className="px-1 py-1">
-          <div className="mb-1 flex items-center gap-1 text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+          <div className="mb-1 flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
             <Search className="h-3 w-3" /> A town or city
           </div>
           <PlaceAutocomplete
             value={value?.source === "town" ? value.town : ""}
             placeholder="Start typing — Bristol, Hove…"
-            types={["locality", "postal_town"]}
+            types={["locality", "postal_town", "sublocality"]}
             onChange={(t) =>
               onChange({ source: "town", town: t })
             }

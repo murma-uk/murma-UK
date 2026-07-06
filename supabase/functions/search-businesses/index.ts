@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
       `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
         town
       )}&format=json&limit=1&countrycodes=gb,ie`,
-      { headers: { "User-Agent": "lovable-community-requests/1.0" } }
+      { headers: { "User-Agent": "murma-community-requests/1.0" } }
     );
     const geoData = await geoRes.json();
     if (!Array.isArray(geoData) || geoData.length === 0) {
@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
           body: `data=${encodeURIComponent(overpassQuery)}`,
           headers: {
             "Content-Type": "application/x-www-form-urlencoded",
-            "User-Agent": "lovable-community-requests/1.0",
+            "User-Agent": "murma-community-requests/1.0",
           },
         });
         if (!res.ok) {

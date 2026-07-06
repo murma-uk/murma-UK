@@ -12,13 +12,13 @@ export default function CookiesPage() {
       />
       <Navbar />
       <main className="container max-w-3xl py-12">
-        <h1 className="font-heading text-4xl font-bold mb-2">Cookie Policy</h1>
+        <h1 className="font-heading text-4xl font-semibold tracking-[-0.01em] mb-2">Cookie Policy</h1>
         <p className="text-sm text-muted-foreground mb-8">Last updated: {new Date().toLocaleDateString("en-GB")}</p>
 
         <div className="space-y-6 text-foreground">
           <section>
             <p className="text-muted-foreground">
-              This page explains the cookies and similar storage technologies used by Hey, Open Up,
+              This page explains the cookies and similar storage technologies used by Murma,
               in line with the UK GDPR and the Privacy and Electronic Communications Regulations
               (PECR).
             </p>
@@ -32,7 +32,7 @@ export default function CookiesPage() {
             </p>
             <ul className="list-disc pl-6 text-muted-foreground space-y-1">
               <li><strong>Authentication tokens</strong> — keep you signed in (stored in browser local storage by our backend).</li>
-              <li><strong>Consent preference</strong> (<code>houp-cookie-consent</code>) — remembers your choice on the cookie banner.</li>
+              <li><strong>Consent preference</strong> (<code>murma-cookie-consent</code>) — remembers your choice on the cookie banner.</li>
             </ul>
           </section>
 
@@ -48,8 +48,8 @@ export default function CookiesPage() {
           <section>
             <h2 className="font-heading text-xl font-semibold mb-2">Third-party content</h2>
             <p className="text-muted-foreground">
-              Maps are rendered by OpenStreetMap. Their tile servers may log standard request data
-              (IP address, user agent) for the purpose of serving map tiles. See the{" "}
+              Map tiles are rendered by OpenStreetMap. Their tile servers may log standard request
+              data (IP address, user agent) for the purpose of serving map tiles. See the{" "}
               <a
                 href="https://wiki.osmfoundation.org/wiki/Privacy_Policy"
                 className="text-primary underline"
@@ -57,6 +57,19 @@ export default function CookiesPage() {
                 rel="noopener noreferrer"
               >
                 OpenStreetMap privacy policy
+              </a>
+              .
+            </p>
+            <p className="text-muted-foreground mt-2">
+              Address and place search is powered by Google Maps Platform (Places API). When you use
+              location search, your query and approximate location are sent to Google. See the{" "}
+              <a
+                href="https://policies.google.com/privacy"
+                className="text-primary underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Google Privacy Policy
               </a>
               .
             </p>

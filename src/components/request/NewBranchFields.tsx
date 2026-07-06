@@ -153,14 +153,14 @@ function BrandConfirm({
   const draftHost = draft ? displayHostname(draft) : "";
 
   return (
-    <div className="rounded-md border-[1.5px] border-civic/40 bg-civic/5 p-3 space-y-2">
+    <div className="rounded-lg border-[1.5px] border-civic/40 bg-civic/5 p-3 space-y-2">
       <div className="flex items-start gap-2">
         <Globe className="h-4 w-4 text-civic mt-0.5 shrink-0" />
         <div className="flex-1 min-w-0">
           <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-civic">
             Do you mean
           </p>
-          <p className="font-heading text-base font-bold uppercase tracking-[0.02em] truncate">
+          <p className="font-heading text-base font-semibold tracking-[-0.01em] truncate">
             {name.trim()}
           </p>
           {!editing ? (
@@ -357,14 +357,14 @@ export default function NewBranchFields({ value, onChange, pinLocation, onReques
           <PlaceAutocomplete
             value={value.town}
             placeholder="Town or city"
-            types={["locality", "postal_town"]}
+            types={["locality", "postal_town", "sublocality"]}
             onChange={(t) => set({ town: t })}
             onSelect={(p) => set({ town: p.primaryText })}
           />
         )}
 
         {(value.locationMode === "pin" || value.locationMode === "radius") && (
-          <div className="space-y-2 rounded-md border border-dashed border-border bg-muted/30 p-3">
+          <div className="space-y-2 rounded-lg border border-dashed border-border bg-muted/30 p-3">
             {pinLocation ? (
               <p className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground">
                 <MapPin className="h-3.5 w-3.5 text-primary" />

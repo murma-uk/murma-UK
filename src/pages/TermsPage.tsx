@@ -12,14 +12,14 @@ export default function TermsPage() {
       />
       <Navbar />
       <main className="container max-w-3xl py-12">
-        <h1 className="font-heading text-4xl font-bold mb-2">Terms of Service</h1>
+        <h1 className="font-heading text-4xl font-semibold tracking-[-0.01em] mb-2">Terms of Service</h1>
         <p className="text-sm text-muted-foreground mb-8">Last updated: {new Date().toLocaleDateString("en-GB")}</p>
 
         <div className="space-y-6 text-foreground">
           <section>
             <h2 className="font-heading text-xl font-semibold mb-2">1. Acceptance</h2>
             <p className="text-muted-foreground">
-              By creating an account or using Hey, Open Up, you agree to these Terms. If you do not
+              By creating an account or using Murma, you agree to these Terms. If you do not
               agree, do not use the service. These Terms are governed by the laws of England and
               Wales.
             </p>
@@ -90,8 +90,11 @@ export default function TermsPage() {
           <section>
             <h2 className="font-heading text-xl font-semibold mb-2">9. Contact</h2>
             <p className="text-muted-foreground">
-              For questions about these Terms, contact us via the email associated with your
-              account.
+              For questions about these Terms, contact us at{" "}
+              <a href="mailto:murma@atomicmail.io" className="text-primary underline">
+                murma@atomicmail.io
+              </a>
+              .
             </p>
           </section>
         </div>

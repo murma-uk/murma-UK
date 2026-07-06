@@ -4,78 +4,89 @@
 
 @layer base {
   :root {
-    /* Surfaces — paste-up paper */
-    --background: 41 23% 93%;        /* #f2efe8 page */
-    --foreground: 45 21% 8%;         /* #18160f text-hi */
+    /* Surfaces — quiet civic, off-white paper */
+    --background: 40 12% 96%;        /* #f6f5f3 page */
+    --foreground: 220 6% 10%;        /* #191a1c ink */
 
-    --card: 44 33% 97%;              /* #faf8f3 surface */
-    --card-foreground: 45 21% 8%;
+    --card: 0 0% 100%;               /* #ffffff surface */
+    --card-foreground: 220 6% 10%;
 
     --popover: 0 0% 100%;            /* #ffffff surface-2 */
-    --popover-foreground: 45 21% 8%;
+    --popover-foreground: 220 6% 10%;
 
     --surface-2: 0 0% 100%;
-    --page: 41 23% 93%;
+    --page: 40 12% 96%;
 
     /* Brand */
-    --primary: 142 65% 29%;          /* #1a7a3c signal */
+    --primary: 149 49% 28%;          /* #256b47 signal */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 41 18% 84%;         /* warm tone secondary */
-    --secondary-foreground: 45 21% 8%;
+    --secondary: 45 12% 90%;         /* #e7e5df */
+    --secondary-foreground: 220 6% 10%;
 
-    --muted: 44 18% 90%;
-    --muted-foreground: 41 13% 31%;  /* #5a5446 text-mid */
+    --muted: 45 12% 92%;             /* #ecebe7 */
+    --muted-foreground: 225 4% 36%;  /* #585a5f text-mid */
 
-    --accent: 16 87% 45%;            /* #d4420f demand */
+    --accent: 18 50% 51%;            /* #c06a44 demand */
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 16 87% 45%;       /* demand */
+    --destructive: 18 50% 51%;       /* demand */
     --destructive-foreground: 0 0% 100%;
 
-    --civic: 211 68% 39%;            /* #1f5fa6 */
+    --civic: 216 33% 41%;            /* #46618a */
     --civic-foreground: 0 0% 100%;
 
-    --gate: 36 100% 24%;             /* #7a4a00 */
+    --gate: 38 45% 37%;              /* #8a6a34 */
     --gate-foreground: 0 0% 100%;
 
-    --warning: 36 100% 24%;
+    --warning: 38 45% 37%;
     --warning-foreground: 0 0% 100%;
 
-    --success: 142 65% 29%;
+    --success: 149 49% 28%;
     --success-foreground: 0 0% 100%;
 
-    --border: 41 18% 84%;            /* #ddd9cf */
-    --border-mid: 41 13% 75%;        /* #c8c3b5 */
-    --input: 41 13% 75%;
-    --ring: 142 65% 29%;
+    --border: 43 13% 88%;            /* #e4e2dc hairline */
+    --border-mid: 44 11% 80%;        /* #d2cfc7 */
+    --input: 44 11% 80%;
+    --ring: 149 49% 28%;
 
-    --text-lo: 39 12% 55%;           /* #9a9080 */
+    --text-lo: 52 5% 56%;            /* #93938c */
 
-    --radius: 0.375rem;              /* 6px md radius */
+    /* Radii */
+    --radius:      8px;    /* base — buttons, chips, inputs */
+    --radius-lg:   12px;   /* cards */
+    --radius-md:   8px;    /* buttons, tiles */
+    --radius-sm:   6px;    /* small controls */
+    --radius-full: 9999px; /* pills, live-chips, badges */
 
-    /* Shadows */
-    --shadow-card:        0 1px 4px hsl(45 21% 8% / 0.08), 0 4px 20px hsl(45 21% 8% / 0.06);
-    --shadow-card-hover:  0 4px 16px hsl(45 21% 8% / 0.14), 0 8px 32px hsl(45 21% 8% / 0.08);
-    --shadow-glow-signal: 0 0 0 3px hsl(142 65% 29% / 0.2);
-    --shadow-glow-demand: 0 0 0 3px hsl(16 87% 45% / 0.2);
+    /* Shadows (cool-ink, very soft) */
+    --shadow-card:        0 1px 2px hsl(220 6% 10% / 0.04), 0 12px 32px hsl(220 6% 10% / 0.05);
+    --shadow-card-hover:  0 4px 12px hsl(220 6% 10% / 0.08), 0 20px 48px hsl(220 6% 10% / 0.08);
+    --shadow-input:       0 1px 2px hsl(220 6% 10% / 0.03);
+    --shadow-btn:         0 1px 2px hsl(149 49% 28% / 0.18);
+    --shadow-btn-hover:   0 6px 18px hsl(149 49% 28% / 0.24);
+    --shadow-glow-signal: 0 0 0 3px hsl(149 49% 28% / 0.15);
+    --shadow-glow-demand: 0 0 0 3px hsl(18 50% 51% / 0.15);
 
-    /* Easing */
+    /* Easing / motion */
     --ease-snap: cubic-bezier(0.22, 1, 0.36, 1);
+    --dur-fast:  180ms;
+    --dur-base:  220ms;
+    --dur-slow:  420ms;
 
-    /* Sidebar (kept neutral on warm paper) */
-    --sidebar-background: 44 33% 97%;
-    --sidebar-foreground: 45 21% 8%;
-    --sidebar-primary: 142 65% 29%;
+    /* Sidebar (kept neutral on off-white) */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 6% 10%;
+    --sidebar-primary: 149 49% 28%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 44 18% 90%;
-    --sidebar-accent-foreground: 45 21% 8%;
-    --sidebar-border: 41 18% 84%;
-    --sidebar-ring: 142 65% 29%;
+    --sidebar-accent: 45 12% 92%;
+    --sidebar-accent-foreground: 220 6% 10%;
+    --sidebar-border: 43 13% 88%;
+    --sidebar-ring: 149 49% 28%;
 
-    --font-display:   'Bebas Neue', 'Impact', sans-serif;
-    --font-heading:   'Barlow Condensed', 'Helvetica Neue', sans-serif;
-    --font-body:      'Barlow', system-ui, sans-serif;
+    --font-display:   'Fraunces', Georgia, serif;
+    --font-heading:   'Bricolage Grotesque', system-ui, sans-serif;
+    --font-body:      'Bricolage Grotesque', system-ui, sans-serif;
     --font-mono:      'DM Mono', 'IBM Plex Mono', monospace;
   }
 }
@@ -93,26 +104,26 @@
     @apply bg-background text-foreground;
     font-family: var(--font-body);
     font-size: 16px;
-    line-height: 1.5;
+    line-height: 1.55;
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
-  /* Warm paper grain — fixed overlay */
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.055'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 9999;
-    mix-blend-mode: multiply;
-  }
-
+  /* Headings: soft grotesque, mixed-case, airy — no shouting. */
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
-    font-weight: 700;
-    letter-spacing: 0.03em;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.12;
     color: hsl(var(--foreground));
+  }
+
+  /* Elegant serif display — opt in for hero / big statements. */
+  .display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    line-height: 1.02;
   }
 
   code, pre, kbd, samp {
@@ -121,24 +132,26 @@
 }
 
 @layer components {
-  /* Brick stripe — repeating 4-color band */
-  .brick-stripe {
-    height: 5px;
-    background: repeating-linear-gradient(
+  /* The signal line: thin, calm, fades at the edges. Evolves the old
+     4-colour brick stripe into one quiet green line. */
+  .signal-line {
+    height: 2px;
+    width: 100%;
+    background: linear-gradient(
       90deg,
-      hsl(var(--primary))  0, hsl(var(--primary))  40px,
-      hsl(var(--accent))   40px, hsl(var(--accent))  80px,
-      hsl(var(--civic))    80px, hsl(var(--civic))  120px,
-      hsl(var(--gate))     120px, hsl(var(--gate))  160px,
-      hsl(var(--page))     160px, hsl(var(--page))  162px
+      transparent 0%,
+      hsl(var(--primary) / 0.35) 18%,
+      hsl(var(--primary)) 50%,
+      hsl(var(--primary) / 0.35) 82%,
+      transparent 100%
     );
   }
 
   /* Mono eyebrow label */
   .eyebrow {
     font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.2em;
+    font-size: 10.5px;
+    letter-spacing: 0.22em;
     text-transform: uppercase;
     color: hsl(var(--text-lo));
   }
@@ -150,28 +163,25 @@
   .section-heading::before {
     content: '//';
     color: hsl(var(--primary));
-    opacity: 0.6;
+    opacity: 0.7;
   }
 
-  /* Spray stencil "HEY!" decorative bg — apply to a relatively-positioned hero */
-  .spray-hey {
+  /* Signal ripples: quiet concentric rings — replaces the old spray "HEY!" */
+  .signal-ripples {
     position: relative;
     overflow: hidden;
   }
-  .spray-hey::before {
-    content: 'HEY!';
+  .signal-ripples::before {
+    content: '';
     position: absolute;
-    right: -0.05em;
-    top: -0.05em;
-    font-family: var(--font-display);
-    font-size: 26vw;
-    color: hsl(var(--primary) / 0.05);
-    line-height: 1;
+    inset: 0;
     pointer-events: none;
-    letter-spacing: -0.02em;
+    background-image:
+      repeating-radial-gradient(circle at 82% 28%, transparent 0 26px, hsl(var(--primary) / 0.05) 26px 27px),
+      repeating-radial-gradient(circle at 96% 78%, transparent 0 30px, hsl(var(--civic) / 0.045) 30px 31px);
     z-index: 0;
   }
-  .spray-hey > * { position: relative; z-index: 1; }
+  .signal-ripples > * { position: relative; z-index: 1; }
 
   /* Live pip indicator */
   .live-pip {
@@ -179,21 +189,23 @@
     height: 6px;
     border-radius: 50%;
     background: hsl(var(--primary));
-    animation: pip-pulse 2s ease-in-out infinite;
+    animation: pip-pulse 2.4s ease-in-out infinite;
     flex-shrink: 0;
   }
 
   /* Card hover legacy class */
   .card-hover {
     box-shadow: var(--shadow-card);
-    transition: box-shadow 0.22s var(--ease-snap), transform 0.22s var(--ease-snap), border-color 0.22s;
+    transition: box-shadow var(--dur-base) var(--ease-snap),
+                transform var(--dur-base) var(--ease-snap),
+                border-color var(--dur-base);
   }
   .card-hover:hover {
     box-shadow: var(--shadow-card-hover);
     transform: translateY(-2px);
   }
 
-  /* Demand-card pattern — 4px left accent strip */
+  /* Accent strip — coloured left rule on a card */
   .accent-strip {
     position: relative;
   }
@@ -201,9 +213,9 @@
     content: '';
     position: absolute;
     left: 0; top: 0; bottom: 0;
-    width: 4px;
+    width: 3px;
     background: hsl(var(--primary));
-    border-radius: var(--radius) 0 0 var(--radius);
+    border-radius: var(--radius-lg) 0 0 var(--radius-lg);
   }
   .accent-strip-demand::before { background: hsl(var(--accent)); }
   .accent-strip-civic::before  { background: hsl(var(--civic)); }
@@ -211,6 +223,22 @@
 }
 
 @keyframes pip-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.5); }
-  50%      { box-shadow: 0 0 0 5px hsl(var(--primary) / 0); }
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.45); }
+  50%      { box-shadow: 0 0 0 6px hsl(var(--primary) / 0); }
+}
+@keyframes pulse-up {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.18); }
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes bar-grow {
+  from { transform: scaleX(0); transform-origin: left; }
+  to   { transform: scaleX(1); }
+}
+@keyframes ripple-out {
+  from { transform: scale(0.4); opacity: 0.5; }
+  to   { transform: scale(1); opacity: 0; }
 }

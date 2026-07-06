@@ -5,31 +5,31 @@ import { cn } from "@/lib/utils";
 declare global {
   interface Window {
     google: any;
-    __lovableMapsReady?: Promise<void>;
-    __lovableInitMaps?: () => void;
+    __murmaMapsReady?: Promise<void>;
+    __murmaInitMaps?: () => void;
   }
 }
 
-const BROWSER_KEY = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY as
+const BROWSER_KEY = import.meta.env.VITE_GOOGLE_MAPS_BROWSER_KEY as
   | string
   | undefined;
-const TRACKING_ID = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID as
+const TRACKING_ID = import.meta.env.VITE_GOOGLE_MAPS_TRACKING_ID as
   | string
   | undefined;
 
 function loadMaps(): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
-  if (window.__lovableMapsReady) return window.__lovableMapsReady;
+  if (window.__murmaMapsReady) return window.__murmaMapsReady;
   if (!BROWSER_KEY) return Promise.reject(new Error("Google Maps key missing"));
 
-  window.__lovableMapsReady = new Promise((resolve, reject) => {
-    window.__lovableInitMaps = () => resolve();
+  window.__murmaMapsReady = new Promise((resolve, reject) => {
+    window.__murmaInitMaps = () => resolve();
     const s = document.createElement("script");
     const params = new URLSearchParams({
       key: BROWSER_KEY,
       libraries: "places",
       loading: "async",
-      callback: "__lovableInitMaps",
+      callback: "__murmaInitMaps",
       v: "weekly",
     });
     if (TRACKING_ID) params.set("channel", TRACKING_ID);
@@ -38,7 +38,7 @@ function loadMaps(): Promise<void> {
     s.onerror = () => reject(new Error("Failed to load Google Maps"));
     document.head.appendChild(s);
   });
-  return window.__lovableMapsReady;
+  return window.__murmaMapsReady;
 }
 
 export type PlaceSelection = {

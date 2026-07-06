@@ -216,7 +216,7 @@ export default function WishComposer({
 
       {/* Optional details */}
       {wishReady && locationReady && (
-        <div className="rounded-md border border-dashed border-border">
+        <div className="rounded-lg border border-dashed border-border">
           <button
             type="button"
             onClick={() => setExtraOpen((v) => !v)}

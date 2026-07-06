@@ -1,10 +1,10 @@
-# Hey, Open Up
+# Murma
 
 > Community demand-signaling platform. People request new services, opening hours, branches, or venues in their town and upvote what matters. Businesses and councils use the signals to make better decisions.
 
 ## Pages
 
-- [Home](/): What Hey, Open Up does and who it's for.
+- [Home](/): What Murma does and who it's for.
 - [Explore](/explore): Browse live requests and businesses on a map of your area.
 - [Privacy](/privacy): UK GDPR privacy policy.
 - [Terms](/terms): Terms of service.

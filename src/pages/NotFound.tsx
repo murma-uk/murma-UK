@@ -13,9 +13,9 @@ const NotFound = () => {
     <div className="flex min-h-screen items-center justify-center bg-background p-6">
       <div className="flex flex-col items-center text-center">
         <LogoMark variant="light" size={96} className="mb-6" />
-        <h1 className="font-display text-6xl uppercase tracking-[0.04em]">404</h1>
+        <h1 className="font-display text-6xl tracking-[-0.02em]">404</h1>
         <p className="mt-2 font-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
-          This door doesn&apos;t open
+          The signal doesn&apos;t reach here
         </p>
         <Link
           to="/"

@@ -61,7 +61,7 @@ export default function RequestCard({
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="accent-strip card-hover relative cursor-pointer overflow-hidden rounded-md border-[1.5px] border-border bg-popover p-4 pl-5"
+      className="accent-strip card-hover relative cursor-pointer overflow-hidden rounded-lg border-[1.5px] border-border bg-popover p-4 pl-5"
       onClick={() => navigate(buildRequestPath(id, slug))}
     >
       <div className="flex gap-3">
@@ -75,7 +75,7 @@ export default function RequestCard({
           aria-label="Upvote"
         >
           <ArrowBigUp className="h-4 w-4" />
-          <span className="font-display text-base leading-none mt-0.5">{upvoteCount}</span>
+          <span className="font-heading font-bold text-base leading-none mt-0.5">{upvoteCount}</span>
         </button>
 
         <div className="min-w-0 flex-1">
@@ -92,7 +92,7 @@ export default function RequestCard({
               {cat.label}
             </span>
           </div>
-          <h3 className="font-heading text-lg font-bold uppercase tracking-[0.03em] leading-tight text-card-foreground">
+          <h3 className="font-heading text-lg font-semibold tracking-[-0.01em] leading-tight text-card-foreground">
             {title}
           </h3>
           {description && (

@@ -134,7 +134,7 @@ export default function JoinRequestDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-display text-2xl uppercase tracking-[0.02em]">
+          <DialogTitle className="font-display text-2xl tracking-[-0.02em]">
             Join the murmur
           </DialogTitle>
           <DialogDescription>

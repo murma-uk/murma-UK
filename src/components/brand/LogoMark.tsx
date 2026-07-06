@@ -9,91 +9,92 @@ interface LogoMarkProps {
   title?: string;
 }
 
-// Palette
-const C = {
-  paper: "#f2efe8",
-  ink: "#18160f",
-  signal: "#1a7a3c",
-  pip: "#5a5446",
+/**
+ * Murma's mark — "Cresting Arc": a murmuration of dots gathering into a soft
+ * crest, with a few notes lifting free above it (the accent note in signal
+ * green). The flock (murmuration) and the rising voice (whisper -> signal)
+ * in one mark. Built parametrically from dots so it scales crisply at any
+ * size. GEOMETRY is the settled canonical proportion (9 arc dots, 1.1x size,
+ * 0.84 fill, 5 lift notes, crest 32) — regenerate public/favicon.svg if these
+ * constants ever change.
+ */
+const GEOMETRY = { arcDots: 9, dotSize: 1.1, fill: 0.84, liftNotes: 5, crestHeight: 32 };
+
+interface Dot {
+  x: number;
+  y: number;
+  r: number;
+  accent: boolean;
+}
+
+function buildDots({ arcDots, dotSize, fill, liftNotes, crestHeight }: typeof GEOMETRY): Dot[] {
+  const cx = 50;
+  const spread = 34;
+  const baseY = 52 + crestHeight / 2;
+  const dots: Dot[] = [];
+
+  for (let i = 0; i < arcDots; i++) {
+    const t = arcDots === 1 ? 0.5 : i / (arcDots - 1);
+    const x = cx - spread + t * 2 * spread;
+    const arc = 1 - Math.pow((t - 0.5) * 2, 2);
+    dots.push({ x, y: baseY - arc * crestHeight, r: 0.68 + 0.32 * arc, accent: false });
+  }
+
+  const peakY = baseY - crestHeight;
+  const miniN = Math.max(liftNotes - 1, 0);
+  const miniSpread = spread * 0.3;
+  const miniCrest = 3.4;
+  const gap = 6;
+  const miniY = peakY - gap;
+  for (let j = 0; j < miniN; j++) {
+    const t = miniN === 1 ? 0.5 : j / (miniN - 1);
+    const x = cx - miniSpread + t * 2 * miniSpread;
+    const arc = 1 - Math.pow((t - 0.5) * 2, 2);
+    dots.push({ x, y: miniY - arc * miniCrest, r: 0.5 + 0.06 * arc, accent: false });
+  }
+  if (liftNotes > 0) {
+    dots.push({ x: cx, y: miniY - miniCrest - gap * 0.8, r: 0.6, accent: true });
+  }
+
+  const baseR = 3.0;
+  dots.forEach((d) => { d.r = d.r * baseR * dotSize; });
+
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  dots.forEach((d) => {
+    minX = Math.min(minX, d.x - d.r);
+    maxX = Math.max(maxX, d.x + d.r);
+    minY = Math.min(minY, d.y - d.r);
+    maxY = Math.max(maxY, d.y + d.r);
+  });
+  const extent = Math.max(maxX - minX, maxY - minY) || 1;
+  const scale = (fill * 100) / extent;
+  const ccx = (minX + maxX) / 2;
+  const ccy = (minY + maxY) / 2;
+  dots.forEach((d) => {
+    d.x = 50 + (d.x - ccx) * scale;
+    d.y = 50 + (d.y - ccy) * scale;
+    d.r = d.r * scale;
+  });
+
+  return dots;
+}
+
+const DOTS = buildDots(GEOMETRY);
+
+const VARIANTS: Record<Variant, { bg: string | null; base: string; accent: string }> = {
+  light:      { bg: null,      base: "#191a1c", accent: "#256b47" },
+  dark:       { bg: "#191a1c", base: "#f3f2ee", accent: "#57c98e" },
+  solidGreen: { bg: "#256b47", base: "#ffffff", accent: "#bfe6cf" },
+  ink:        { bg: "#f6f5f3", base: "#191a1c", accent: "#256b47" },
 };
 
-/**
- * "Open Door" brand mark for Hey, Open Up.
- * Door frame with an ajar panel and a knob (signal green) — the gesture of "opening up".
- */
 export default function LogoMark({
   variant = "light",
   size = 40,
   className,
-  title = "Hey, Open Up",
+  title = "Murma",
 }: LogoMarkProps) {
-  // Each variant defines: bg (or none), frame, panel, knob, inset stroke, spill, pip
-  const v = (() => {
-    switch (variant) {
-      case "dark":
-        return {
-          bg: C.ink,
-          frame: C.paper,
-          frameOpacity: 0.08,
-          panel: C.signal,
-          panelOpacity: 1,
-          knob: C.paper,
-          inset: C.ink,
-          insetOpacity: 0.22,
-          spill: C.signal,
-          spillOpacity: 0.38,
-          pip: C.paper,
-          pipOpacity: 0.18,
-        };
-      case "solidGreen":
-        return {
-          bg: C.signal,
-          frame: C.paper,
-          frameOpacity: 0.15,
-          panel: C.paper,
-          panelOpacity: 0.92,
-          knob: C.signal,
-          inset: C.signal,
-          insetOpacity: 0.3,
-          spill: C.paper,
-          spillOpacity: 0.12,
-          pip: C.paper,
-          pipOpacity: 0.25,
-        };
-      case "ink":
-        return {
-          bg: C.paper,
-          frame: C.ink,
-          frameOpacity: 1,
-          panel: C.paper,
-          panelOpacity: 1,
-          knob: C.ink,
-          inset: C.ink,
-          insetOpacity: 1,
-          spill: C.ink,
-          spillOpacity: 0.06,
-          pip: C.pip,
-          pipOpacity: 0.3,
-        };
-      case "light":
-      default:
-        return {
-          bg: "transparent",
-          frame: C.ink,
-          frameOpacity: 1,
-          panel: C.paper,
-          panelOpacity: 1,
-          knob: C.signal,
-          inset: "#c8c3b5",
-          insetOpacity: 1,
-          spill: C.signal,
-          spillOpacity: 0.09,
-          pip: C.pip,
-          pipOpacity: 0.35,
-        };
-    }
-  })();
-
+  const v = VARIANTS[variant] ?? VARIANTS.light;
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -105,75 +106,17 @@ export default function LogoMark({
       className={cn("shrink-0", className)}
     >
       <title>{title}</title>
-      {variant !== "light" && (
-        <rect width="100" height="100" rx="14" fill={v.bg} />
-      )}
-      {/* Frame */}
-      <rect
-        x="26"
-        y="14"
-        width="44"
-        height="72"
-        rx="2"
-        fill={v.frame}
-        opacity={v.frameOpacity}
-      />
-      {/* Panel ajar */}
-      <polygon
-        points="30,18 64,21 64,82 30,79"
-        fill={v.panel}
-        opacity={v.panelOpacity}
-      />
-      {/* Insets */}
-      <rect
-        x="35"
-        y="25"
-        width="24"
-        height="18"
-        rx="0.8"
-        fill="none"
-        stroke={v.inset}
-        strokeOpacity={v.insetOpacity}
-        strokeWidth="1.2"
-      />
-      <rect
-        x="35"
-        y="48"
-        width="24"
-        height="26"
-        rx="0.8"
-        fill="none"
-        stroke={v.inset}
-        strokeOpacity={v.insetOpacity}
-        strokeWidth="1.2"
-      />
-      {/* Knob */}
-      <circle cx="60" cy="52" r="2.6" fill={v.knob} />
-      {/* Light spill */}
-      <polygon
-        points="64,21 78,14 78,82 64,82"
-        fill={v.spill}
-        opacity={v.spillOpacity}
-      />
-      {/* Hinge pips */}
-      <rect
-        x="26"
-        y="25"
-        width="5"
-        height="3.5"
-        rx="0.6"
-        fill={v.pip}
-        opacity={v.pipOpacity}
-      />
-      <rect
-        x="26"
-        y="69"
-        width="5"
-        height="3.5"
-        rx="0.6"
-        fill={v.pip}
-        opacity={v.pipOpacity}
-      />
+      {v.bg && <rect width="100" height="100" rx="22" fill={v.bg} />}
+      {DOTS.map((d, i) => (
+        <circle
+          key={i}
+          cx={d.x.toFixed(2)}
+          cy={d.y.toFixed(2)}
+          r={d.r.toFixed(2)}
+          fill={d.accent ? v.accent : v.base}
+          opacity={d.accent ? 1 : 0.96}
+        />
+      ))}
     </svg>
   );
 }
