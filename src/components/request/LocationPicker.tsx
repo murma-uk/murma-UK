@@ -95,7 +95,7 @@ export default function LocationPicker({ value, onChange, mapCenter, pinLocation
           <PlaceAutocomplete
             value={value?.source === "town" ? value.town : ""}
             placeholder="Start typing — Bristol, Hove…"
-            types={["locality", "postal_town"]}
+            types={["locality", "postal_town", "sublocality"]}
             onChange={(t) =>
               onChange({ source: "town", town: t })
             }
