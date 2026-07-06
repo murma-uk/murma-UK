@@ -37,7 +37,7 @@ const audiences = [
     ],
   },
   {
-    title: "Murmur Civic",
+    title: "Murma Civic",
     subtitle: "For Councils",
     icon: Landmark,
     tone: "civic",
