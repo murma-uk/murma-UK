@@ -7,13 +7,14 @@ import { useCategories, getCategory, type RequestCategory } from "@/lib/categori
 import { useCategoryFields, formatFieldValue } from "@/lib/categoryFields";
 import { buildRequestPath, parseRequestParam } from "@/lib/slug";
 import { Button } from "@/components/ui/button";
-import { ArrowBigUp, MapPin, ArrowLeft, Loader2, Store, Flag, EyeOff } from "lucide-react";
+import { ArrowBigUp, MapPin, ArrowLeft, Loader2, Store, Flag, EyeOff, Pencil } from "lucide-react";
 import ShareButton from "@/components/ShareButton";
 import StatTile, { formatLiveSince } from "@/components/brand/StatTile";
 import { motion } from "framer-motion";
 import SEO from "@/components/SEO";
 import RequestEngagement from "@/components/request/RequestEngagement";
 import FlagDialog from "@/components/moderation/FlagDialog";
+import EditMurmaDialog from "@/components/EditMurmaDialog";
 
 
 export default function RequestDetailPage() {
@@ -25,6 +26,7 @@ export default function RequestDetailPage() {
   const [hasUpvoted, setHasUpvoted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [flagOpen, setFlagOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const { data: categories } = useCategories();
   const cat = request ? getCategory(categories, request.category as RequestCategory) : null;
   const { data: fields = [] } = useCategoryFields(cat?.id || undefined);
@@ -284,6 +286,17 @@ export default function RequestDetailPage() {
               variant="full"
               onShared={handleShared}
             />
+            {user && user.id === request.user_id && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditOpen(true)}
+                className="gap-1.5"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                Edit
+              </Button>
+            )}
             {user && user.id !== request.user_id && (
               <Button
                 variant="ghost"
@@ -309,6 +322,12 @@ export default function RequestDetailPage() {
           onOpenChange={setFlagOpen}
           requestId={request.id}
           requestTitle={request.title}
+        />
+        <EditMurmaDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          requestId={request.id}
+          onSaved={fetchData}
         />
       </div>
     </div>

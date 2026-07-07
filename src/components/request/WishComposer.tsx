@@ -41,6 +41,9 @@ interface Props {
   initialCategory?: RequestCategory | null;
   initialLocation?: ResolvedLocation | null;
   initialExtra?: string;
+  mode?: 'create' | 'edit';
+  fieldValues?: Record<string, unknown>;
+  onCategoryChange?: (newCategory: RequestCategory) => void;
   onRequestPin?: (snapshot: { wish: string; category: RequestCategory | null; extra: string }) => void;
   onSubmit: (payload: WishComposerSubmit) => void;
 }
@@ -54,6 +57,9 @@ export default function WishComposer({
   initialCategory = null,
   initialLocation = null,
   initialExtra = "",
+  mode = 'create',
+  fieldValues: _fieldValues,
+  onCategoryChange,
   onRequestPin,
   onSubmit,
 }: Props) {
@@ -67,19 +73,20 @@ export default function WishComposer({
   const wishRef = useRef<HTMLTextAreaElement>(null);
 
 
-  // Cycle placeholders for a bit of life
+  // Cycle placeholders for a bit of life (only in create mode)
   const [placeholderIdx, setPlaceholderIdx] = useState(() => Math.floor(Math.random() * PLACEHOLDERS.length));
   useEffect(() => {
-    if (wish) return;
+    if (wish || mode === 'edit') return;
     const t = setInterval(() => setPlaceholderIdx((i) => (i + 1) % PLACEHOLDERS.length), 4500);
     return () => clearInterval(t);
-  }, [wish]);
+  }, [wish, mode]);
 
-  // Autofocus the wish input
+  // Autofocus the wish input (only in create mode)
   useEffect(() => {
+    if (mode === 'edit') return;
     const t = setTimeout(() => wishRef.current?.focus(), 80);
     return () => clearTimeout(t);
-  }, []);
+  }, [mode]);
 
   // Sync pin → location
   useEffect(() => {
@@ -223,13 +230,19 @@ export default function WishComposer({
           <CategoryChips
             selected={manualCategory}
             autoGuessed={guessedCategory}
-            onSelect={(c) => setManualCategory(c === manualCategory ? null : c)}
+            onSelect={(c) => {
+              const newCategory = c === manualCategory ? null : c;
+              setManualCategory(newCategory);
+              if (mode === 'edit' && newCategory && newCategory !== initialCategory) {
+                onCategoryChange?.(newCategory);
+              }
+            }}
           />
         </div>
       )}
 
-      {/* Similar murmas nearby — surfaced once we have murma + location */}
-      {wishReady && locationReady && !similarDismissed && (similarLoading || similar.length > 0) && (
+      {/* Similar murmas nearby — surfaced once we have murma + location (create mode only) */}
+      {mode === 'create' && wishReady && locationReady && !similarDismissed && (similarLoading || similar.length > 0) && (
         <SimilarRequestsPanel
           results={similar}
           loading={similarLoading}
@@ -279,6 +292,8 @@ export default function WishComposer({
               Continue to sign in
               <ArrowRight className="h-4 w-4" />
             </>
+          ) : mode === 'edit' ? (
+            "Save changes"
           ) : (
             "Add your murma"
           )}
@@ -290,18 +305,20 @@ export default function WishComposer({
         )}
       </div>
 
-      <JoinRequestDialog
-        open={!!joinTarget}
-        onOpenChange={(v) => !v && setJoinTarget(null)}
-        target={joinTarget}
-        defaultMode="upvote"
-        draft={{
-          title: wish.trim(),
-          body: extra.trim() || wish.trim(),
-          category: effectiveCategory ?? null,
-        }}
-        onJoined={() => setJoinTarget(null)}
-      />
+      {mode === 'create' && (
+        <JoinRequestDialog
+          open={!!joinTarget}
+          onOpenChange={(v) => !v && setJoinTarget(null)}
+          target={joinTarget}
+          defaultMode="upvote"
+          draft={{
+            title: wish.trim(),
+            body: extra.trim() || wish.trim(),
+            category: effectiveCategory ?? null,
+          }}
+          onJoined={() => setJoinTarget(null)}
+        />
+      )}
     </form>
   );
 }
