@@ -176,10 +176,7 @@ export default function ExplorePage() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <div
-          className="relative w-full flex-col border-r border-border md:flex md:w-96 md:flex-shrink-0"
-          style={{ display: mobileView === "list" ? "flex" : "none" }}
-        >
+        <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex flex-col relative w-full border-r border-border md:w-96 md:flex-shrink-0`}>
           <div className="border-b border-border p-4">
             <p className="section-heading mb-2">The Signal</p>
             <div className="mb-3 flex items-center justify-between gap-2">
@@ -301,10 +298,7 @@ export default function ExplorePage() {
         </div>
 
         {/* Map */}
-        <div
-          className="flex-1 relative md:flex"
-          style={{ display: mobileView === "map" ? "flex" : "none", flexDirection: "column" }}
-        >
+        <div className={`${mobileView === "map" ? "flex" : "hidden"} md:flex flex-1 relative`}>
           <MapView
             requests={viewMode === "requests" ? mapRequests : []}
             businesses={viewMode === "businesses" ? businesses : (selectedBiz ? [selectedBiz] : [])}
