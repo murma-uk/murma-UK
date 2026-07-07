@@ -62,7 +62,10 @@ export default function RequestCard({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       className="accent-strip card-hover relative cursor-pointer overflow-hidden rounded-lg border-[1.5px] border-border bg-popover p-4 pl-5"
-      onClick={() => navigate(buildRequestPath(id, slug))}
+      onClick={() => {
+        console.log("Clicked murma:", { id, slug, title });
+        navigate(buildRequestPath(id, slug));
+      }}
     >
       <div className="flex gap-3">
         <button

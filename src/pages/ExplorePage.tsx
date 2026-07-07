@@ -37,6 +37,7 @@ export default function ExplorePage() {
     if (error) {
       console.error("Error fetching requests:", error);
     }
+    console.log("Fetched requests:", data?.map((r: any) => ({ id: r.id, title: r.title, slug: r.slug })));
     setRequests(data ?? []);
     setLoading(false);
   }, [selectedCategory]);
