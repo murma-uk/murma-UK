@@ -16,6 +16,14 @@ CREATE POLICY "Active requests public to anon"
 CREATE POLICY "Active requests visible to authenticated"
   ON public.requests FOR SELECT
   TO authenticated
+-- By adding explicit TO clause, we ensure anon users can access active requests
+
+-- Drop the existing policy and recreate with explicit role grants
+DROP POLICY IF EXISTS "Active requests public; hidden visible to author/admin/trusted" ON public.requests;
+
+CREATE POLICY "Active requests public; hidden visible to author/admin/trusted"
+  ON public.requests FOR SELECT
+  TO public, anon, authenticated
   USING (
     status = 'active'
     OR auth.uid() = user_id
