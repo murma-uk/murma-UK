@@ -37,7 +37,10 @@ export default function ExplorePage() {
     let query = supabase.from("requests").select("*").eq("status", "active").order("upvote_count", { ascending: false }) as any;
     if (selectedCategory) query = query.eq("category", selectedCategory);
     if (selectedBusinessId) query = query.eq("business_id", selectedBusinessId);
-    const { data } = await query;
+    const { data, error } = await query;
+    if (error) {
+      console.error("Error fetching requests:", error);
+    }
     setRequests(data ?? []);
     setLoading(false);
   }, [selectedCategory, selectedBusinessId]);
