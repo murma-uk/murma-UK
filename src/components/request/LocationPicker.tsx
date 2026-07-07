@@ -29,9 +29,7 @@ export default function LocationPicker({ value, onChange, mapCenter, pinLocation
     // We just display it correctly below.
   }
 
-  const display = value
-    ? value.town || (value.lat != null ? `${value.lat.toFixed(3)}, ${value.lng?.toFixed(3)}` : "Set")
-    : "Choose location";
+  const display = value?.town || "Select location";
 
   const sourceLabel =
     value?.source === "map_view"

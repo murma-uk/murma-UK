@@ -98,10 +98,9 @@ export default function CreateRequestDialog({
         }
       }
 
-      // Final fallback
-      if (lat == null || lng == null) {
-        lat = 51.5074;
-        lng = -0.1278;
+      // Validate location is complete before submission
+      if (lat == null || lng == null || !town) {
+        throw new Error("Please select a location to submit your murma");
       }
 
       const { title, description } = suggestTitleAndDescription(payload.wish, payload.hints, town);
@@ -111,7 +110,7 @@ export default function CreateRequestDialog({
         title: title || payload.wish.slice(0, 120),
         description: finalDescription || null,
         category: payload.category,
-        town: town || "Unknown",
+        town,
         lat,
         lng,
         user_id: user.id,
@@ -168,11 +167,10 @@ export default function CreateRequestDialog({
           <DialogTitle className="font-display text-2xl tracking-[-0.02em]">
             What would you love to see?
           </DialogTitle>
-          {pinLocation ? (
+          {pinLocation?.town ? (
             <DialogDescription className="flex items-center gap-1.5 text-xs">
               <MapPin className="h-3.5 w-3.5 text-primary" />
-              Pinned at {pinLocation.lat.toFixed(4)}, {pinLocation.lng.toFixed(4)}
-              {pinLocation.town ? ` · ${pinLocation.town}` : ""}
+              Pinned at {pinLocation.town}
             </DialogDescription>
           ) : (
             <DialogDescription className="text-xs">
