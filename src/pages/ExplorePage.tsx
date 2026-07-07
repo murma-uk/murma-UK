@@ -37,7 +37,10 @@ export default function ExplorePage() {
     let query = supabase.from("requests").select("*").eq("status", "active").order("upvote_count", { ascending: false }) as any;
     if (selectedCategory) query = query.eq("category", selectedCategory);
     if (selectedBusinessId) query = query.eq("business_id", selectedBusinessId);
-    const { data } = await query;
+    const { data, error } = await query;
+    if (error) {
+      console.error("Error fetching requests:", error);
+    }
     setRequests(data ?? []);
     setLoading(false);
   }, [selectedCategory, selectedBusinessId]);
@@ -173,7 +176,7 @@ export default function ExplorePage() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar */}
-        <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex relative w-full flex-col border-r border-border md:w-96 md:flex-shrink-0`}>
+        <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex flex-col relative w-full border-r border-border md:w-96 md:flex-shrink-0`}>
           <div className="border-b border-border p-4">
             <p className="section-heading mb-2">The Signal</p>
             <div className="mb-3 flex items-center justify-between gap-2">
