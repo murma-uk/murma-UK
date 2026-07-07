@@ -3,13 +3,13 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "@/components/Navbar";
-import MapView, { type MapBusiness } from "@/components/MapView";
+import MapView from "@/components/MapView";
 import RequestCard from "@/components/RequestCard";
 import CategoryFilter from "@/components/CategoryFilter";
 import CreateRequestDialog from "@/components/CreateRequestDialog";
 import { type RequestCategory } from "@/lib/categories";
 import { buildRequestPath } from "@/lib/slug";
-import { Loader2, Store, List, Map as MapIcon, MapPin, X, Plus } from "lucide-react";
+import { Loader2, List, Map as MapIcon, MapPin, X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import SEO from "@/components/SEO";
@@ -20,13 +20,10 @@ export default function ExplorePage() {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const [requests, setRequests] = useState<any[]>([]);
-  const [businesses, setBusinesses] = useState<MapBusiness[]>([]);
   const [upvotedIds, setUpvotedIds] = useState<Set<string>>(new Set());
   const [selectedCategory, setSelectedCategory] = useState<RequestCategory | null>(null);
-  const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(searchParams.get("create") === "true");
-  const [viewMode, setViewMode] = useState<"businesses" | "requests">("businesses");
   const [mobileView, setMobileView] = useState<"list" | "map">("list");
   const [pinMode, setPinMode] = useState(false);
   const [droppedPin, setDroppedPin] = useState<{ lat: number; lng: number; town: string } | null>(null);
@@ -36,46 +33,13 @@ export default function ExplorePage() {
   const fetchRequests = useCallback(async () => {
     let query = supabase.from("requests").select("*").eq("status", "active").order("upvote_count", { ascending: false }) as any;
     if (selectedCategory) query = query.eq("category", selectedCategory);
-    if (selectedBusinessId) query = query.eq("business_id", selectedBusinessId);
     const { data, error } = await query;
     if (error) {
       console.error("Error fetching requests:", error);
     }
     setRequests(data ?? []);
     setLoading(false);
-  }, [selectedCategory, selectedBusinessId]);
-
-  const fetchBusinesses = useCallback(async () => {
-    // Fetch businesses that have at least one request linked
-    const { data } = await supabase.from("businesses").select("*");
-    if (!data) return;
-
-    // Count requests per business
-    const { data: reqCounts } = await (supabase
-      .from("requests")
-      .select("business_id")
-      .eq("status", "active")
-      .not("business_id", "is", null) as any);
-
-    const countMap = new Map<string, number>();
-    reqCounts?.forEach((r: any) => {
-      countMap.set(r.business_id, (countMap.get(r.business_id) || 0) + 1);
-    });
-
-    const mapped: MapBusiness[] = data
-      .filter((b: any) => countMap.has(b.id))
-      .map((b: any) => ({
-        id: b.id,
-        name: b.name,
-        business_type: b.business_type || "business",
-        lat: b.lat,
-        lng: b.lng,
-        town: b.town,
-        request_count: countMap.get(b.id) || 0,
-      }));
-
-    setBusinesses(mapped);
-  }, []);
+  }, [selectedCategory]);
 
   const fetchUpvotes = useCallback(async () => {
     if (!user) return;
@@ -85,9 +49,8 @@ export default function ExplorePage() {
 
   useEffect(() => {
     fetchRequests();
-    fetchBusinesses();
     fetchUpvotes();
-  }, [fetchRequests, fetchBusinesses, fetchUpvotes]);
+  }, [fetchRequests, fetchUpvotes]);
 
   // Resume pending draft after sign-in
   useEffect(() => {
@@ -131,11 +94,6 @@ export default function ExplorePage() {
     setCreateOpen(true);
   }, [user, navigate, toast]);
 
-  const handleBusinessClick = (id: string) => {
-    setSelectedBusinessId(id === selectedBusinessId ? null : id);
-    setViewMode("requests");
-  };
-
   const mapRequests = requests.map((r) => ({
     id: r.id,
     title: r.title,
@@ -145,8 +103,6 @@ export default function ExplorePage() {
     town: r.town,
     upvote_count: r.upvote_count,
   }));
-
-  const selectedBiz = businesses.find((b) => b.id === selectedBusinessId);
 
   return (
     <div className="flex h-screen flex-col bg-background">
@@ -179,49 +135,8 @@ export default function ExplorePage() {
         <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex flex-col relative w-full border-r border-border md:w-96 md:flex-shrink-0`}>
           <div className="border-b border-border p-4">
             <p className="section-heading mb-2">The Signal</p>
-            <div className="mb-3 flex items-center justify-between gap-2">
-              <h2 className="font-display text-2xl tracking-[-0.02em]">
-                {viewMode === "businesses" ? "Businesses" : "Murmas"}
-              </h2>
-              <div className="flex gap-1">
-                <Button
-                  variant={viewMode === "businesses" ? "default" : "outline"}
-                  size="sm"
-                  className="gap-1.5 text-xs"
-                  onClick={() => { setViewMode("businesses"); setSelectedBusinessId(null); }}
-                >
-                  <Store className="h-3.5 w-3.5" />
-                  Businesses
-                </Button>
-                <Button
-                  variant={viewMode === "requests" ? "default" : "outline"}
-                  size="sm"
-                  className="gap-1.5 text-xs"
-                  onClick={() => { setViewMode("requests"); setSelectedBusinessId(null); }}
-                >
-                  <List className="h-3.5 w-3.5" />
-                  Murmas
-                </Button>
-              </div>
-            </div>
-
-            {viewMode === "requests" && (
-              <>
-                {selectedBiz && (
-                  <div className="mb-3 flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-2">
-                    <Store className="h-4 w-4 text-primary shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{selectedBiz.name}</p>
-                      <p className="text-xs text-muted-foreground">{selectedBiz.request_count} request{selectedBiz.request_count !== 1 ? "s" : ""}</p>
-                    </div>
-                    <Button variant="ghost" size="sm" onClick={() => setSelectedBusinessId(null)}>
-                      Clear
-                    </Button>
-                  </div>
-                )}
-                <CategoryFilter selected={selectedCategory} onSelect={setSelectedCategory} />
-              </>
-            )}
+            <h2 className="font-display text-2xl tracking-[-0.02em] mb-3">Murmas</h2>
+            <CategoryFilter selected={selectedCategory} onSelect={setSelectedCategory} />
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -229,33 +144,6 @@ export default function ExplorePage() {
               <div className="flex justify-center py-12">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
-            ) : viewMode === "businesses" ? (
-              businesses.length === 0 ? (
-                <div className="py-12 text-center text-sm text-muted-foreground">
-                  No businesses with murmas yet. Add a murma and link a business!
-                </div>
-              ) : (
-                businesses.map((b) => (
-                  <button
-                    key={b.id}
-                    className="w-full rounded-lg border border-border bg-card p-4 text-left hover:border-primary/30 transition-colors"
-                    onClick={() => { handleBusinessClick(b.id); setMobileView("map"); }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                        <Store className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-heading font-semibold truncate">{b.name}</h3>
-                        <p className="text-sm text-muted-foreground capitalize">
-                          {b.business_type.replace(/_/g, " ")} · {b.town}
-                        </p>
-                      </div>
-                      <span className="text-sm font-bold text-primary">{b.request_count}</span>
-                    </div>
-                  </button>
-                ))
-              )
             ) : requests.length === 0 ? (
               <div className="py-12 text-center text-sm text-muted-foreground">
                 No requests yet. Be the first to make one!
@@ -300,14 +188,14 @@ export default function ExplorePage() {
         {/* Map */}
         <div className={`${mobileView === "map" ? "flex" : "hidden"} md:flex flex-1 relative`}>
           <MapView
-            requests={viewMode === "requests" ? mapRequests : []}
-            businesses={viewMode === "businesses" ? businesses : (selectedBiz ? [selectedBiz] : [])}
+            requests={mapRequests}
+            businesses={[]}
             onMarkerClick={(id) => {
               if (pinMode) return;
               const r = requests.find((x) => x.id === id);
               navigate(buildRequestPath(id, r?.slug));
             }}
-            onBusinessClick={(id) => pinMode ? undefined : handleBusinessClick(id)}
+            onBusinessClick={undefined}
             onMapClick={handleMapClick}
             onCenterChange={(lat, lng) => setMapCenter({ lat, lng })}
             pinMode={pinMode}
@@ -353,7 +241,6 @@ export default function ExplorePage() {
         onOpenChange={handleCreateOpenChange}
         onCreated={() => {
           fetchRequests();
-          fetchBusinesses();
           setDroppedPin(null);
           setInitialDraft(null);
           sessionStorage.removeItem("pendingRequest");
