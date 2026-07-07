@@ -13,6 +13,7 @@ import StatTile, { formatLiveSince } from "@/components/brand/StatTile";
 import SectionHeading from "@/components/brand/SectionHeading";
 import SignalLine from "@/components/brand/SignalLine";
 import ShareButton from "@/components/ShareButton";
+import EditMurmaDialog from "@/components/EditMurmaDialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -53,6 +54,7 @@ export default function ProfilePage() {
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
   const [sort, setSort] = useState<SortKey>("new");
+  const [editingRequestId, setEditingRequestId] = useState<string | null>(null);
 
   // ----- Profile (display name) -----
   const profileQuery = useQuery({
@@ -368,6 +370,9 @@ export default function ProfilePage() {
                     </div>
 
                     <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <Button variant="outline" size="sm" className="gap-1.5" onClick={() => setEditingRequestId(r.id)}>
+                        <Pencil className="h-3.5 w-3.5" /> Edit
+                      </Button>
                       <Link to={buildRequestPath(r.id, r.slug)}>
                         <Button variant="outline" size="sm" className="gap-1.5">
                           <ExternalLink className="h-3.5 w-3.5" /> Open
@@ -436,6 +441,15 @@ export default function ProfilePage() {
           </section>
         )}
       </main>
+      <EditMurmaDialog
+        open={!!editingRequestId}
+        onOpenChange={(open) => !open && setEditingRequestId(null)}
+        requestId={editingRequestId ?? ""}
+        onSaved={() => {
+          setEditingRequestId(null);
+          qc.invalidateQueries({ queryKey: ["my-requests", user?.id] });
+        }}
+      />
       <Footer />
     </div>
   );
