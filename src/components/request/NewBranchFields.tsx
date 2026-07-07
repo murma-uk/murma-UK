@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Check, ChevronsUpDown, MapPin, Pencil, Globe, Store, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 import {
   BUSINESS_TYPES,
   findBusinessType,
@@ -277,12 +278,35 @@ function ModeToggle<T extends string>({
 
 export default function NewBranchFields({ value, onChange, pinLocation, onRequestPin }: Props) {
   // Auto-fill town from a dropped pin if user hasn't typed anything.
+  // If pin doesn't have town yet, reverse geocode it.
   useEffect(() => {
-    if (pinLocation?.town && !value.town) {
-      onChange({ ...value, town: pinLocation.town });
-    }
+    if (!pinLocation || value.town) return;
+
+    const fillTownFromPin = async () => {
+      let town = pinLocation.town;
+
+      // If pin doesn't have town, reverse geocode it
+      if (!town && pinLocation.lat != null && pinLocation.lng != null) {
+        try {
+          const { data: geo } = await supabase.functions.invoke("geocode", {
+            body: { mode: "reverse", lat: pinLocation.lat, lng: pinLocation.lng },
+          });
+          if (geo && typeof (geo as any).town === "string") {
+            town = (geo as any).town;
+          }
+        } catch (err) {
+          // Silently fail; user can still type town manually
+        }
+      }
+
+      if (town) {
+        onChange({ ...value, town });
+      }
+    };
+
+    fillTownFromPin();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pinLocation?.town]);
+  }, [pinLocation?.lat, pinLocation?.lng]);
 
   const set = (patch: Partial<NewBranchValue>) => onChange({ ...value, ...patch });
 
@@ -365,11 +389,10 @@ export default function NewBranchFields({ value, onChange, pinLocation, onReques
 
         {(value.locationMode === "pin" || value.locationMode === "radius") && (
           <div className="space-y-2 rounded-lg border border-dashed border-border bg-muted/30 p-3">
-            {pinLocation ? (
+            {pinLocation?.town ? (
               <p className="flex items-center gap-1.5 font-mono text-xs text-muted-foreground">
                 <MapPin className="h-3.5 w-3.5 text-primary" />
-                Pinned at {pinLocation.lat.toFixed(4)}, {pinLocation.lng.toFixed(4)}
-                {pinLocation.town ? ` · ${pinLocation.town}` : ""}
+                Location set · {pinLocation.town}
               </p>
             ) : (
               <p className="font-mono text-xs text-muted-foreground">

@@ -8,6 +8,7 @@ import { Loader2, Lock, ArrowRight, Sparkles, ChevronDown, ChevronUp } from "luc
 import { type RequestCategory } from "@/lib/categories";
 import { classifyWish, suggestTitleAndDescription, type WishHints } from "@/lib/wishClassifier";
 import { flagNegativePhrasing } from "@/lib/positivityCheck";
+import { supabase } from "@/integrations/supabase/client";
 import CategoryChips from "./CategoryChips";
 import LocationPicker, { type ResolvedLocation } from "./LocationPicker";
 import SimilarRequestsPanel from "./SimilarRequestsPanel";
@@ -105,6 +106,30 @@ export default function WishComposer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapCenter?.lat, mapCenter?.lng]);
 
+  // Reverse geocode pin location to fill in town
+  useEffect(() => {
+    if (!location || location.source !== "pin" || location.town || location.lat == null || location.lng == null) {
+      return;
+    }
+    const geocode = async () => {
+      try {
+        const { data: geo } = await supabase.functions.invoke("geocode", {
+          body: { mode: "reverse", lat: location.lat, lng: location.lng },
+        });
+        if (geo && typeof (geo as any).town === "string") {
+          setLocation((prev) =>
+            prev && prev.source === "pin" && !prev.town
+              ? { ...prev, town: (geo as any).town }
+              : prev
+          );
+        }
+      } catch (err) {
+        // Silently fail; user can still type town manually
+      }
+    };
+    geocode();
+  }, [location?.lat, location?.lng, location?.source, location?.town]);
+
   const hints = useMemo(() => classifyWish(wish), [wish]);
   const guessedCategory = hints.category;
   const effectiveCategory = manualCategory ?? guessedCategory;
@@ -112,7 +137,7 @@ export default function WishComposer({
   const positivityWarning = useMemo(() => flagNegativePhrasing(wish), [wish]);
 
   const wishReady = wish.trim().length >= 6;
-  const locationReady = !!location && (!!location.town || location.lat != null);
+  const locationReady = !!location && !!location.town && location.lat != null && location.lng != null;
   const canSubmit = wishReady && locationReady && !!effectiveCategory && !loading;
 
   // Live similarity search
