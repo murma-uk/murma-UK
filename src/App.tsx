@@ -9,6 +9,7 @@ import LandingPage from "./pages/LandingPage";
 import ExplorePage from "./pages/ExplorePage";
 import AuthPage from "./pages/AuthPage";
 import RequestDetailPage from "./pages/RequestDetailPage";
+import TownPage from "./pages/TownPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import TermsPage from "./pages/TermsPage";
 import CookiesPage from "./pages/CookiesPage";
@@ -29,6 +30,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/explore" element={<ExplorePage />} />
+            <Route path="/town/:location" element={<TownPage />} />
             <Route path="/auth" element={<AuthPage />} />
             <Route path="/request/:id" element={<RequestDetailPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />

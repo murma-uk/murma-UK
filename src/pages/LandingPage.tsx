@@ -1,8 +1,9 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Users, Building2, Landmark } from "lucide-react";
+import { ArrowRight, Users, Building2, Landmark, MapPin } from "lucide-react";
 import { useCategories } from "@/lib/categories";
 import { useAuth } from "@/hooks/useAuth";
 import Navbar from "@/components/Navbar";
@@ -10,6 +11,7 @@ import Footer from "@/components/Footer";
 import LiveChip from "@/components/brand/LiveChip";
 import SectionHeading from "@/components/brand/SectionHeading";
 import SEO from "@/components/SEO";
+import TownFinderDialog from "@/components/TownFinderDialog";
 
 const audiences = [
   {
@@ -53,6 +55,7 @@ const audiences = [
 export default function LandingPage() {
   const { data: categories = [] } = useCategories();
   const { user } = useAuth();
+  const [townFinderOpen, setTownFinderOpen] = useState(false);
   return (
     <div className="min-h-screen bg-background">
       <SEO
@@ -86,14 +89,14 @@ export default function LandingPage() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/explore">
-                <Button size="lg" className="gap-2">
-                  View the Pattern
-                  <ArrowRight className="h-4 w-4" />
+              <button onClick={() => setTownFinderOpen(true)}>
+                <Button variant="outline" size="lg" className="gap-2">
+                  <MapPin className="h-4 w-4" />
+                  Find Your Town
                 </Button>
-              </Link>
+              </button>
               <Link to={user ? "/explore?create=true" : "/auth"}>
-                <Button variant="outline" size="lg">
+                <Button size="lg">
                   Add Your Murma
                 </Button>
               </Link>
@@ -211,6 +214,8 @@ export default function LandingPage() {
       </section>
 
       <Footer />
+
+      <TownFinderDialog open={townFinderOpen} onOpenChange={setTownFinderOpen} />
     </div>
   );
 }
