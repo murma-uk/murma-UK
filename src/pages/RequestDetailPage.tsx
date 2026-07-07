@@ -36,21 +36,48 @@ export default function RequestDetailPage() {
     if (!routeParam) return;
     const { uuid, shortId } = parseRequestParam(routeParam);
 
-    let reqQuery = supabase.from("requests").select("*");
+    let reqData = null;
+
     if (uuid) {
-      reqQuery = reqQuery.eq("id", uuid);
+      // Legacy full-UUID lookup
+      const { data: reqRows } = await supabase
+        .from("requests")
+        .select("*")
+        .eq("id", uuid)
+        .limit(1);
+      reqData = reqRows?.[0] ?? null;
     } else if (shortId) {
-      reqQuery = (reqQuery as any).eq("id_short", shortId);
+      // Extract slug from routeParam (everything before the last -{shortId})
+      const slugMatch = routeParam.match(/^(.+)-[0-9a-f]{8}$/i);
+      const slug = slugMatch?.[1] || null;
+
+      // Try to find by both short ID and slug for better matching
+      let reqRows;
+      if (slug) {
+        const { data } = await supabase
+          .from("requests")
+          .select("*")
+          .eq("slug", slug)
+          .limit(1);
+        reqRows = data;
+      } else {
+        // Fallback to short ID only if we can't extract slug
+        const { data } = await supabase
+          .from("requests")
+          .select("*")
+          .eq("id_short", shortId)
+          .order("created_at", { ascending: false })
+          .limit(1);
+        reqRows = data;
+      }
+
+      reqData = reqRows?.[0] ?? null;
     } else {
       setRequest(null);
       setLoading(false);
       return;
     }
 
-    const { data: reqRows } = await reqQuery
-      .order("created_at", { ascending: false })
-      .limit(1);
-    const reqData = reqRows?.[0] ?? null;
     setRequest(reqData);
 
     if (!reqData) {
