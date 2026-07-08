@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/useAuth";
 import CookieBanner from "@/components/CookieBanner";
 import LandingPage from "./pages/LandingPage";
+import AboutPage from "./pages/AboutPage";
 import ExplorePage from "./pages/ExplorePage";
 import AuthPage from "./pages/AuthPage";
 import RequestDetailPage from "./pages/RequestDetailPage";
@@ -29,6 +30,7 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<LandingPage />} />
+            <Route path="/about" element={<AboutPage />} />
             <Route path="/explore" element={<ExplorePage />} />
             <Route path="/town/:location" element={<TownPage />} />
             <Route path="/auth" element={<AuthPage />} />
