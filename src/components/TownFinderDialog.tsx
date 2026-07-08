@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { Loader2, MapPin } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import PlaceAutocomplete, { type PlaceSelection } from "./PlaceAutocomplete";
 
 interface Props {
@@ -11,6 +13,7 @@ interface Props {
 
 export default function TownFinderDialog({ open, onOpenChange }: Props) {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [searchText, setSearchText] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -25,6 +28,48 @@ export default function TownFinderDialog({ open, onOpenChange }: Props) {
     }
   };
 
+  const dialogHeader = (
+    <>
+      <h2 className="font-display text-2xl tracking-[-0.02em]">Find Your Town</h2>
+      <p className="flex items-center gap-1.5 text-xs text-muted-foreground mt-2">
+        <MapPin className="h-3.5 w-3.5 text-primary" />
+        Search for a location to see nearby murmas
+      </p>
+    </>
+  );
+
+  const searchContent = (
+    <div className="space-y-4">
+      <PlaceAutocomplete
+        value={searchText}
+        onChange={setSearchText}
+        onSelect={handleSelect}
+        placeholder="Enter a town or city..."
+        types={["(cities)"]}
+        className="w-full"
+      />
+
+      {loading && (
+        <div className="flex items-center justify-center py-4">
+          <Loader2 className="h-5 w-5 animate-spin text-primary" />
+        </div>
+      )}
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent className="max-h-[60svh] overflow-y-auto">
+          <div className="px-4 pt-4 pb-6">
+            {dialogHeader}
+            <div className="mt-6">{searchContent}</div>
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[calc(100vw-2rem)] max-w-md p-4 sm:p-6">
@@ -38,22 +83,7 @@ export default function TownFinderDialog({ open, onOpenChange }: Props) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <PlaceAutocomplete
-            value={searchText}
-            onChange={setSearchText}
-            onSelect={handleSelect}
-            placeholder="Enter a town or city..."
-            types={["(cities)"]}
-            className="w-full"
-          />
-
-          {loading && (
-            <div className="flex items-center justify-center py-4">
-              <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            </div>
-          )}
-        </div>
+        {searchContent}
       </DialogContent>
     </Dialog>
   );

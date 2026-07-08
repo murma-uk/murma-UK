@@ -2,11 +2,13 @@ import { useMemo, useState } from "react";
 import { Constants } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useQueryClient } from "@tanstack/react-query";
 import { ICON_NAMES, getIcon } from "@/lib/iconRegistry";
 import { Loader2, Info } from "lucide-react";
@@ -20,6 +22,7 @@ interface Props {
 
 export default function AddCategoryDialog({ open, onOpenChange, existing }: Props) {
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const qc = useQueryClient();
 
   const enumValues = Constants.public.Enums.request_category as readonly string[];
@@ -36,6 +39,34 @@ export default function AddCategoryDialog({ open, onOpenChange, existing }: Prop
   const [saving, setSaving] = useState(false);
 
   if (availableSlugs.length === 0) {
+    const noSlugsContent = (
+      <>
+        <h2 className="font-heading text-lg">Add category</h2>
+        <p className="text-sm text-muted-foreground">All available category slugs are in use.</p>
+        <div className="flex items-start gap-2 rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+          <Info className="h-4 w-4 shrink-0 mt-0.5" />
+          <p>
+            To add a brand-new slug, a developer needs to extend the underlying
+            <code className="mx-1">request_category</code> database enum first. Once
+            that's done, the new slug will appear here automatically.
+          </p>
+        </div>
+        <div className="flex justify-end">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
+        </div>
+      </>
+    );
+
+    if (isMobile) {
+      return (
+        <Drawer open={open} onOpenChange={onOpenChange}>
+          <DrawerContent className="max-h-[60svh] overflow-y-auto">
+            <div className="px-4 pt-4 pb-6 space-y-4">{noSlugsContent}</div>
+          </DrawerContent>
+        </Drawer>
+      );
+    }
+
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-md">
@@ -88,6 +119,97 @@ export default function AddCategoryDialog({ open, onOpenChange, existing }: Prop
 
   const Preview = getIcon(iconName);
 
+  const formContent = (
+    <div className="space-y-3">
+      <div>
+        <Label className="text-xs">Slug</Label>
+        <Select value={slug} onValueChange={setSlug}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {availableSlugs.map((s) => (
+              <SelectItem key={s} value={s}>{s}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label className="text-xs">Label</Label>
+        <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="e.g. New Branch" />
+      </div>
+
+      <div>
+        <Label className="text-xs">Icon</Label>
+        <Select value={iconName} onValueChange={setIconName}>
+          <SelectTrigger>
+            <SelectValue>
+              <span className="flex items-center gap-2">
+                <Preview className="h-4 w-4" />
+                {iconName}
+              </span>
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent className="max-h-72">
+            {ICON_NAMES.map((name) => {
+              const I = getIcon(name);
+              return (
+                <SelectItem key={name} value={name}>
+                  <span className="flex items-center gap-2">
+                    <I className="h-4 w-4" />
+                    {name}
+                  </span>
+                </SelectItem>
+              );
+            })}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div>
+        <Label className="text-xs">Color (HSL)</Label>
+        <Input value={color} onChange={(e) => setColor(e.target.value)} />
+      </div>
+
+      <div>
+        <Label className="text-xs">Sort order</Label>
+        <Input
+          type="number"
+          value={sortOrder}
+          onChange={(e) => setSortOrder(parseInt(e.target.value, 10) || 0)}
+        />
+      </div>
+    </div>
+  );
+
+  const formButtons = (
+    <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+      <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto">Cancel</Button>
+      <Button onClick={submit} disabled={saving} className="w-full sm:w-auto">
+        {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add category"}
+      </Button>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent className="max-h-[80svh] overflow-y-auto">
+          <div className="px-4 pt-4 pb-6 space-y-4">
+            <div>
+              <h2 className="font-heading text-lg">Add category</h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Pick from slugs available in the database enum. Field questions can be
+                configured after creation.
+              </p>
+            </div>
+            {formContent}
+            {formButtons}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -99,65 +221,7 @@ export default function AddCategoryDialog({ open, onOpenChange, existing }: Prop
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3">
-          <div>
-            <Label className="text-xs">Slug</Label>
-            <Select value={slug} onValueChange={setSlug}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {availableSlugs.map((s) => (
-                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label className="text-xs">Label</Label>
-            <Input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="e.g. New Branch" />
-          </div>
-
-          <div>
-            <Label className="text-xs">Icon</Label>
-            <Select value={iconName} onValueChange={setIconName}>
-              <SelectTrigger>
-                <SelectValue>
-                  <span className="flex items-center gap-2">
-                    <Preview className="h-4 w-4" />
-                    {iconName}
-                  </span>
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent className="max-h-72">
-                {ICON_NAMES.map((name) => {
-                  const I = getIcon(name);
-                  return (
-                    <SelectItem key={name} value={name}>
-                      <span className="flex items-center gap-2">
-                        <I className="h-4 w-4" />
-                        {name}
-                      </span>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label className="text-xs">Color (HSL)</Label>
-            <Input value={color} onChange={(e) => setColor(e.target.value)} />
-          </div>
-
-          <div>
-            <Label className="text-xs">Sort order</Label>
-            <Input
-              type="number"
-              value={sortOrder}
-              onChange={(e) => setSortOrder(parseInt(e.target.value, 10) || 0)}
-            />
-          </div>
-        </div>
+        {formContent}
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
