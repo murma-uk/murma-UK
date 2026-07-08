@@ -12,6 +12,63 @@ Live at [murma.uk](https://murma.uk).
 - Database, auth, and storage on Supabase
 - Address search via Google Maps Platform
 
+## Open Source Components
+
+Murma is built on the following open source libraries:
+
+### Core Framework & UI
+- **React** - JavaScript library for UI components
+- **React Router DOM** - Client-side routing
+- **TypeScript** - Type-safe JavaScript
+- **Tailwind CSS** - Utility-first CSS framework
+
+### UI Component Libraries
+- **Radix UI** - Collection of unstyled, accessible components (Accordion, Alert Dialog, Avatar, Checkbox, Collapsible, Context Menu, Dialog, Dropdown Menu, Hover Card, Label, Menubar, Navigation Menu, Popover, Progress, Radio Group, Scroll Area, Select, Separator, Slider, Switch, Tabs, Toast, Toggle, Tooltip)
+- **Lucide React** - Icon library
+- **Embla Carousel** - Carousel/slider component
+
+### Forms & Validation
+- **React Hook Form** - Performant form handling
+- **Zod** - TypeScript-first schema validation
+- **@hookform/resolvers** - Validation resolvers for Hook Form
+
+### Data & State Management
+- **TanStack React Query** - Data fetching and caching
+- **Supabase JS** - Backend database, auth, and storage
+
+### Maps & Location
+- **Leaflet** - Interactive maps library
+- **React Leaflet** - React wrapper for Leaflet
+
+### UI & Animation
+- **Framer Motion** - Animation library
+- **React Markdown** - Markdown rendering
+- **Sonner** - Toast notifications
+- **Vaul** - Drawer component
+- **React Resizable Panels** - Resizable panel layout
+- **Recharts** - Chart library
+- **React Day Picker** - Date picker
+
+### Utilities
+- **Date-fns** - Date manipulation
+- **Class Variance Authority** - CSS utility helper
+- **clsx** - Conditional class names
+- **Tailwind Merge** - Merge Tailwind CSS classes
+- **Input OTP** - OTP input component
+- **next-themes** - Theme management
+- **React Helmet Async** - Document head management
+- **cmdk** - Command palette
+- **@fontsource/space-grotesk** - Space Grotesk font
+
+### Development Tools
+- **Vite** - Build tool and dev server
+- **Vitest** - Unit testing framework
+- **ESLint** - Code linting
+- **Autoprefixer** - CSS vendor prefix handler
+- **PostCSS** - CSS transformation
+- **JSDOM** - DOM implementation for testing
+- **Testing Library** - Component testing utilities
+
 ## Development
 
 ```sh
