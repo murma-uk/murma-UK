@@ -3,6 +3,9 @@ import { z } from "zod";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Drawer, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle,
+} from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +14,7 @@ import { Flag, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 
 const REASONS = [
@@ -40,6 +44,7 @@ export default function FlagDialog({ open, onOpenChange, requestId, requestTitle
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [reason, setReason] = useState<Reason>("spam");
   const [note, setNote] = useState("");
   const [existing, setExisting] = useState<string | null>(null);
@@ -67,6 +72,26 @@ export default function FlagDialog({ open, onOpenChange, requestId, requestTitle
   }, [open, user, requestId]);
 
   if (!user) {
+    const signInContent = (
+      <>
+        <h2 className="text-lg font-semibold">Sign in to flag</h2>
+        <p className="text-sm text-muted-foreground">You need an account to flag posts.</p>
+        <Button onClick={() => navigate("/auth")} className="w-full mt-4">
+          Sign in
+        </Button>
+      </>
+    );
+
+    if (isMobile) {
+      return (
+        <Drawer open={open} onOpenChange={onOpenChange}>
+          <DrawerContent className="max-h-[40svh]">
+            <div className="px-4 pt-4 pb-6">{signInContent}</div>
+          </DrawerContent>
+        </Drawer>
+      );
+    }
+
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-md">
@@ -118,6 +143,70 @@ export default function FlagDialog({ open, onOpenChange, requestId, requestTitle
     onOpenChange(false);
   };
 
+  const dialogContent = (
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Reason</Label>
+        <RadioGroup value={reason} onValueChange={(v) => setReason(v as Reason)} className="space-y-1">
+          {REASONS.map((r) => (
+            <label key={r.value} className="flex cursor-pointer items-center gap-2 rounded-sm border border-border-mid bg-surface-2 px-2.5 py-1.5 text-sm">
+              <RadioGroupItem value={r.value} />
+              <span>{r.label}</span>
+            </label>
+          ))}
+        </RadioGroup>
+      </div>
+      <div className="space-y-2">
+        <Label className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+          Note (optional)
+        </Label>
+        <Textarea
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          rows={2}
+          maxLength={280}
+          placeholder="Add context for reviewers…"
+        />
+      </div>
+      <p className="text-[11px] text-muted-foreground">
+        Three flags will auto-hide the post until a moderator reviews it.
+      </p>
+    </div>
+  );
+
+  const dialogButtons = (
+    <div className="gap-2 flex flex-col-reverse sm:flex-row sm:justify-end">
+      {existing && (
+        <Button variant="outline" onClick={withdraw} disabled={loading}>
+          Withdraw
+        </Button>
+      )}
+      <Button onClick={submit} disabled={loading} className="w-full sm:w-auto">
+        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : existing ? "Update" : "Submit flag"}
+      </Button>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent className="max-h-[80svh] overflow-y-auto">
+          <div className="px-4 pt-4 pb-6 space-y-4">
+            <div>
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <Flag className="h-4 w-4 text-accent" />
+                {existing ? "You've flagged this" : "Flag this post"}
+              </h2>
+              <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{requestTitle}</p>
+            </div>
+            {dialogContent}
+            {dialogButtons}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -129,34 +218,7 @@ export default function FlagDialog({ open, onOpenChange, requestId, requestTitle
           <DialogDescription className="line-clamp-2">{requestTitle}</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Reason</Label>
-            <RadioGroup value={reason} onValueChange={(v) => setReason(v as Reason)} className="space-y-1">
-              {REASONS.map((r) => (
-                <label key={r.value} className="flex cursor-pointer items-center gap-2 rounded-sm border border-border-mid bg-surface-2 px-2.5 py-1.5 text-sm">
-                  <RadioGroupItem value={r.value} />
-                  <span>{r.label}</span>
-                </label>
-              ))}
-            </RadioGroup>
-          </div>
-          <div className="space-y-2">
-            <Label className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
-              Note (optional)
-            </Label>
-            <Textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              rows={2}
-              maxLength={280}
-              placeholder="Add context for reviewers…"
-            />
-          </div>
-          <p className="text-[11px] text-muted-foreground">
-            Three flags will auto-hide the post until a moderator reviews it.
-          </p>
-        </div>
+        {dialogContent}
 
         <DialogFooter className="gap-2 sm:gap-2">
           {existing && (

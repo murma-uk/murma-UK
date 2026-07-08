@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { MapPin, Lock } from "lucide-react";
 import { type RequestCategory } from "@/lib/categories";
 import { suggestTitleAndDescription } from "@/lib/wishClassifier";
@@ -50,6 +52,7 @@ export default function CreateRequestDialog({
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [loading, setLoading] = useState(false);
   const [hydrated, setHydrated] = useState<RequestDraft | null>(null);
 
@@ -160,6 +163,70 @@ export default function CreateRequestDialog({
           ? { source: "town", town: hydrated.town ?? "", lat: hydrated.lat, lng: hydrated.lng }
           : null;
 
+  const dialogHeader = (
+    <>
+      <div>
+        <h2 className="font-display text-2xl tracking-[-0.02em]">What would you love to see?</h2>
+        {pinLocation?.town ? (
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+            <MapPin className="h-3.5 w-3.5 text-primary" />
+            Pinned at {pinLocation.town}
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground mt-1">
+            Big or small, natural or commercial — only positive wishes here.
+          </p>
+        )}
+      </div>
+      {isGuest && (
+        <Alert className="border-primary/30 bg-primary/5">
+          <Lock className="h-4 w-4 text-primary" />
+          <AlertDescription className="text-xs">
+            You can plan your wish now. Sign-in only kicks in when you post — your draft will be saved.
+          </AlertDescription>
+        </Alert>
+      )}
+    </>
+  );
+
+  const dialogForm = (
+    <WishComposer
+      isGuest={isGuest}
+      loading={loading}
+      pinLocation={pinLocation}
+      mapCenter={mapCenter}
+      initialWish={hydrated?.wish ?? ""}
+      initialCategory={hydrated?.category ?? null}
+      initialLocation={initialLocation}
+      initialExtra={hydrated?.extra ?? ""}
+      onRequestPin={
+        onRequestPin
+          ? (snap) =>
+              onRequestPin({
+                wish: snap.wish,
+                category: snap.category,
+                extra: snap.extra,
+                location: initialLocation,
+              })
+          : undefined
+      }
+      onSubmit={handleSubmit}
+    />
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent className="max-h-[80svh] overflow-y-auto">
+          <div className="px-4 pt-4 pb-6">
+            {dialogHeader}
+            <div className="mt-6">{dialogForm}</div>
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[calc(100vw-2rem)] max-w-md max-h-[90vh] overflow-y-auto p-4 sm:p-6">
@@ -188,28 +255,7 @@ export default function CreateRequestDialog({
           </Alert>
         )}
 
-        <WishComposer
-          isGuest={isGuest}
-          loading={loading}
-          pinLocation={pinLocation}
-          mapCenter={mapCenter}
-          initialWish={hydrated?.wish ?? ""}
-          initialCategory={hydrated?.category ?? null}
-          initialLocation={initialLocation}
-          initialExtra={hydrated?.extra ?? ""}
-          onRequestPin={
-            onRequestPin
-              ? (snap) =>
-                  onRequestPin({
-                    wish: snap.wish,
-                    category: snap.category,
-                    extra: snap.extra,
-                    location: initialLocation,
-                  })
-              : undefined
-          }
-          onSubmit={handleSubmit}
-        />
+        {dialogForm}
       </DialogContent>
     </Dialog>
   );

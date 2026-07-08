@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { MapPin, AlertTriangle } from "lucide-react";
 import { type RequestCategory } from "@/lib/categories";
 import { suggestTitleAndDescription } from "@/lib/wishClassifier";
@@ -31,6 +33,7 @@ export default function EditMurmaDialog({
 }: Props) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
   const [request, setRequest] = useState<Request | null>(null);
@@ -173,6 +176,73 @@ export default function EditMurmaDialog({
       }
     : null;
 
+  const dialogHeader = (
+    <>
+      <div>
+        <h2 className="font-display text-2xl tracking-[-0.02em]">Edit your murma</h2>
+        {request?.town ? (
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+            <MapPin className="h-3.5 w-3.5 text-primary" />
+            Located at {request.town}
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground mt-1">Update your request details.</p>
+        )}
+      </div>
+    </>
+  );
+
+  const dialogForm = request && (
+    <WishComposer
+      isGuest={false}
+      loading={loading}
+      mapCenter={mapCenter}
+      initialWish={request.title}
+      initialCategory={request.category as RequestCategory}
+      initialLocation={initialLocation}
+      initialExtra={request.description ?? ""}
+      mode="edit"
+      fieldValues={request.field_values as Record<string, unknown> ?? {}}
+      onCategoryChange={handleCategoryChange}
+      onSubmit={handleSubmit}
+    />
+  );
+
+  if (isMobile) {
+    return (
+      <>
+        <Drawer open={open && !fetching} onOpenChange={onOpenChange}>
+          <DrawerContent className="max-h-[80svh] overflow-y-auto">
+            <div className="px-4 pt-4 pb-6">
+              {dialogHeader}
+              <div className="mt-6">{dialogForm}</div>
+            </div>
+          </DrawerContent>
+        </Drawer>
+
+        <AlertDialog open={showCategoryWarning} onOpenChange={setShowCategoryWarning}>
+          <AlertDialogContent>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-accent" />
+              Changing category?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Changing the category might affect your custom fields. Some information may be lost. Continue?
+            </AlertDialogDescription>
+            <div className="flex gap-3 justify-end">
+              <AlertDialogCancel onClick={handleCancelCategoryChange}>
+                Keep original category
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={handleConfirmCategoryChange}>
+                Yes, change it
+              </AlertDialogAction>
+            </div>
+          </AlertDialogContent>
+        </AlertDialog>
+      </>
+    );
+  }
+
   return (
     <>
       <Dialog open={open && !fetching} onOpenChange={onOpenChange}>
@@ -193,21 +263,7 @@ export default function EditMurmaDialog({
             )}
           </DialogHeader>
 
-          {request && (
-            <WishComposer
-              isGuest={false}
-              loading={loading}
-              mapCenter={mapCenter}
-              initialWish={request.title}
-              initialCategory={request.category as RequestCategory}
-              initialLocation={initialLocation}
-              initialExtra={request.description ?? ""}
-              mode="edit"
-              fieldValues={request.field_values as Record<string, unknown> ?? {}}
-              onCategoryChange={handleCategoryChange}
-              onSubmit={handleSubmit}
-            />
-          )}
+          {dialogForm}
         </DialogContent>
       </Dialog>
 

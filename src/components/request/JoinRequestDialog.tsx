@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -8,6 +9,7 @@ import { Loader2, ArrowBigUp, Users, GitMerge } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useNavigate } from "react-router-dom";
 import { buildRequestPath } from "@/lib/slug";
 import type { SimilarRequest } from "@/lib/similarRequests";
@@ -40,6 +42,7 @@ export default function JoinRequestDialog({
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const [mode, setMode] = useState<JoinMode>(defaultMode);
   const [note, setNote] = useState(draft?.body ?? "");
   const [busy, setBusy] = useState(false);
@@ -130,6 +133,122 @@ export default function JoinRequestDialog({
     }
   };
 
+  const dialogHeader = (
+    <>
+      <h2 className="font-display text-2xl tracking-[-0.02em]">Join the murmur</h2>
+      <div className="mt-2">
+        <p className="font-medium text-foreground">{target.title}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {target.town} · {target.distance_km < 0.1 ? "<0.1" : target.distance_km.toFixed(1)} km · {target.upvote_count} voices
+        </p>
+      </div>
+    </>
+  );
+
+  const tabsContent = (
+    <Tabs value={mode} onValueChange={(v) => setMode(v as JoinMode)}>
+      <TabsList className="grid w-full grid-cols-3">
+        <TabsTrigger value="upvote" className="gap-1.5 text-xs">
+          <ArrowBigUp className="h-3.5 w-3.5" /> Add voice
+        </TabsTrigger>
+        <TabsTrigger value="cosign" className="gap-1.5 text-xs">
+          <Users className="h-3.5 w-3.5" /> Co-sign
+        </TabsTrigger>
+        <TabsTrigger value="suggest_merge" className="gap-1.5 text-xs" disabled={!draft?.title}>
+          <GitMerge className="h-3.5 w-3.5" /> Merge
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="upvote" className="space-y-3 pt-3">
+        <p className="text-xs text-muted-foreground">
+          Add your voice. Optionally leave an angle — a short note on why this matters to you.
+        </p>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Your angle (optional)</Label>
+          <Textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="e.g. especially needed for night-shift workers…"
+            rows={3}
+            maxLength={500}
+          />
+        </div>
+        <Button onClick={handleUpvote} disabled={busy} className="w-full gap-2">
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowBigUp className="h-4 w-4" />}
+          Add your voice
+        </Button>
+      </TabsContent>
+
+      <TabsContent value="cosign" className="space-y-3 pt-3">
+        <p className="text-xs text-muted-foreground">
+          Become a named co-signer. Your name appears publicly with this murma.
+        </p>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Note (optional, max 200 chars)</Label>
+          <Textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value.slice(0, 200))}
+            placeholder="Why you're behind this"
+            rows={2}
+            maxLength={200}
+          />
+        </div>
+        <Button onClick={handleCosign} disabled={busy} className="w-full gap-2">
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Users className="h-4 w-4" />}
+          Co-sign this murma
+        </Button>
+      </TabsContent>
+
+      <TabsContent value="suggest_merge" className="space-y-3 pt-3">
+        <p className="text-xs text-muted-foreground">
+          Suggest merging your murma into this one. The original poster decides — if accepted,
+          you become a co-signer and your angle is added.
+        </p>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Your angle</Label>
+          <Textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder={draft?.body ?? "Anything to add?"}
+            rows={3}
+            maxLength={500}
+          />
+        </div>
+        <Button onClick={handleMerge} disabled={busy} className="w-full gap-2">
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <GitMerge className="h-4 w-4" />}
+          Suggest merge
+        </Button>
+      </TabsContent>
+    </Tabs>
+  );
+
+  const footer = (
+    <div className="border-t border-border pt-2 text-center">
+      <a
+        href={buildRequestPath(target.id, target.slug)}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground"
+      >
+        View full murma →
+      </a>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={onOpenChange}>
+        <DrawerContent className="max-h-[80svh] overflow-y-auto">
+          <div className="px-4 pt-4 pb-6 space-y-4">
+            {dialogHeader}
+            {tabsContent}
+            {footer}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
@@ -145,91 +264,8 @@ export default function JoinRequestDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={mode} onValueChange={(v) => setMode(v as JoinMode)}>
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="upvote" className="gap-1.5 text-xs">
-              <ArrowBigUp className="h-3.5 w-3.5" /> Add voice
-            </TabsTrigger>
-            <TabsTrigger value="cosign" className="gap-1.5 text-xs">
-              <Users className="h-3.5 w-3.5" /> Co-sign
-            </TabsTrigger>
-            <TabsTrigger value="suggest_merge" className="gap-1.5 text-xs" disabled={!draft?.title}>
-              <GitMerge className="h-3.5 w-3.5" /> Merge
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="upvote" className="space-y-3 pt-3">
-            <p className="text-xs text-muted-foreground">
-              Add your voice. Optionally leave an angle — a short note on why this matters to you.
-            </p>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Your angle (optional)</Label>
-              <Textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder="e.g. especially needed for night-shift workers…"
-                rows={3}
-                maxLength={500}
-              />
-            </div>
-            <Button onClick={handleUpvote} disabled={busy} className="w-full gap-2">
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ArrowBigUp className="h-4 w-4" />}
-              Add your voice
-            </Button>
-          </TabsContent>
-
-          <TabsContent value="cosign" className="space-y-3 pt-3">
-            <p className="text-xs text-muted-foreground">
-              Become a named co-signer. Your name appears publicly with this murma.
-            </p>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Note (optional, max 200 chars)</Label>
-              <Textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value.slice(0, 200))}
-                placeholder="Why you're behind this"
-                rows={2}
-                maxLength={200}
-              />
-            </div>
-            <Button onClick={handleCosign} disabled={busy} className="w-full gap-2">
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Users className="h-4 w-4" />}
-              Co-sign this murma
-            </Button>
-          </TabsContent>
-
-          <TabsContent value="suggest_merge" className="space-y-3 pt-3">
-            <p className="text-xs text-muted-foreground">
-              Suggest merging your murma into this one. The original poster decides — if accepted,
-              you become a co-signer and your angle is added.
-            </p>
-            <div className="space-y-1.5">
-              <Label className="text-xs">Your angle</Label>
-              <Textarea
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                placeholder={draft?.body ?? "Anything to add?"}
-                rows={3}
-                maxLength={500}
-              />
-            </div>
-            <Button onClick={handleMerge} disabled={busy} className="w-full gap-2">
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <GitMerge className="h-4 w-4" />}
-              Suggest merge
-            </Button>
-          </TabsContent>
-        </Tabs>
-
-        <div className="border-t border-border pt-2 text-center">
-          <a
-            href={buildRequestPath(target.id, target.slug)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground"
-          >
-            View full murma →
-          </a>
-        </div>
+        {tabsContent}
+        {footer}
       </DialogContent>
     </Dialog>
   );
