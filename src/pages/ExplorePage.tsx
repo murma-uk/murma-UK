@@ -171,7 +171,7 @@ export default function ExplorePage() {
           <div className="md:hidden pointer-events-auto absolute bottom-4 right-4 z-20 flex flex-col items-end gap-1">
             <Button
               size="sm"
-              className="rounded-full shadow-lg gap-2 h-11 px-4"
+              className="pointer-events-auto rounded-full shadow-lg gap-2 h-11 px-4"
               onClick={() => setCreateOpen(true)}
             >
               <Plus className="h-4 w-4" />
