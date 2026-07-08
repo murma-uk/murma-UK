@@ -54,7 +54,9 @@ export default function ExplorePage() {
 
   // Sync createOpen state with URL search params
   useEffect(() => {
-    setCreateOpen(searchParams.get("create") === "true");
+    const shouldOpen = searchParams.get("create") === "true";
+    console.log("useEffect triggered, searchParams:", searchParams.toString(), "shouldOpen:", shouldOpen);
+    setCreateOpen(shouldOpen);
   }, [searchParams]);
 
   // Resume pending draft after sign-in
@@ -179,8 +181,10 @@ export default function ExplorePage() {
               size="sm"
               className="pointer-events-auto rounded-full shadow-lg gap-2 h-11 px-4"
               onClick={() => {
+                console.log("Button clicked, setting createOpen to true");
                 setCreateOpen(true);
                 setSearchParams({ create: "true" });
+                console.log("After setSearchParams");
               }}
             >
               <Plus className="h-4 w-4" />
