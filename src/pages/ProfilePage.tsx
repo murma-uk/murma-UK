@@ -317,11 +317,6 @@ export default function ProfilePage() {
               <p className="mt-1 font-mono text-xs uppercase tracking-[0.12em] text-text-lo">
                 Be impossible to ignore.
               </p>
-              <Link to="/explore?create=true" className="mt-4 inline-block">
-                <Button className="gap-1.5">
-                  <Plus className="h-4 w-4" /> Add your first murma
-                </Button>
-              </Link>
             </div>
           ) : (
             <ul className="mt-3 space-y-2">
