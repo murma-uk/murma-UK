@@ -92,7 +92,8 @@ export default function ExplorePage() {
     }
     setDroppedPin({ lat, lng, town });
     setCreateOpen(true);
-  }, [user, navigate, toast]);
+    setSearchParams({ create: "true" });
+  }, [user, navigate, toast, setSearchParams]);
 
   const mapRequests = requests.map((r) => ({
     id: r.id,
@@ -172,7 +173,10 @@ export default function ExplorePage() {
             <Button
               size="sm"
               className="pointer-events-auto rounded-full shadow-lg gap-2 h-11 px-4"
-              onClick={() => setCreateOpen(true)}
+              onClick={() => {
+                setCreateOpen(true);
+                setSearchParams({ create: "true" });
+              }}
             >
               <Plus className="h-4 w-4" />
               Add murma
