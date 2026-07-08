@@ -52,6 +52,11 @@ export default function ExplorePage() {
     fetchUpvotes();
   }, [fetchRequests, fetchUpvotes]);
 
+  // Sync createOpen state with URL search params
+  useEffect(() => {
+    setCreateOpen(searchParams.get("create") === "true");
+  }, [searchParams]);
+
   // Resume pending draft after sign-in
   useEffect(() => {
     if (!user) return;
