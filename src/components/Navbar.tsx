@@ -35,6 +35,11 @@ export default function Navbar() {
           </Link>
 
           <div className="flex items-center gap-1.5">
+            {/* About: text link on sm+ */}
+            <Link to="/about" className="hidden sm:block">
+              <Button variant="ghost" size="sm">About</Button>
+            </Link>
+
             {/* Explore: full button on sm+, icon on mobile */}
             <Link to="/explore" className="hidden sm:block">
               <Button variant="ghost" size="sm">Explore</Button>
