@@ -9,6 +9,7 @@ export default function Footer() {
           <Wordmark size="md" tone="muted" withMark />
 
           <nav className="flex flex-wrap gap-x-6 gap-y-2 font-mono text-xs uppercase tracking-[0.15em] text-muted-foreground">
+            <Link to="/about" className="hover:text-primary transition-colors">About</Link>
             <Link to="/explore" className="hover:text-primary transition-colors">Explore</Link>
             <Link to="/privacy" className="hover:text-primary transition-colors">Privacy</Link>
             <Link to="/terms" className="hover:text-primary transition-colors">Terms</Link>
