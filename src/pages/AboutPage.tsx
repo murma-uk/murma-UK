@@ -21,10 +21,10 @@ export default function AboutPage() {
       <section className="border-b border-border bg-popover">
         <div className="container py-16 md:py-24">
           <h1 className="font-display text-4xl tracking-[-0.02em] md:text-5xl mb-4">
-            We're changing neighbourhoods, towns and cities for the better.
+            We want you to be able change your neighbourhoods, towns and cities for the better.
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-3xl">
-            What's different about murma? Every change starts with you—the voice of the user.
+            What's different about murma? Every change starts with you, your voice.
           </p>
         </div>
       </section>
@@ -35,16 +35,16 @@ export default function AboutPage() {
           <div className="max-w-3xl">
             <SectionHeading className="mb-3">Join us as we build</SectionHeading>
             <h2 className="font-heading text-3xl md:text-4xl font-semibold mb-8 tracking-[-0.01em]">
-              This is in active development. That's intentional.
+              Murma is in active development.
             </h2>
 
             <div className="prose prose-sm max-w-none space-y-6 text-foreground">
               <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
-                This website—and murma itself—is in active development. Things will change. Rapidly. That's intentional.
+                We're in the early stages. Things will change. Rapidly. That's intentional.
               </p>
 
               <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
-                We're building in the open because we believe the best neighbourhoods, towns, and cities are shaped by the people who live in them. Your feedback, ideas, and participation aren't nice-to-haves. They're essential.
+                We're building in the open because we believe neighbourhoods, towns, and cities are better when they areshaped by the people who live in them. Your feedback, ideas, and participation aren't nice-to-haves. They're essential.
               </p>
 
               <div className="space-y-4 bg-card rounded-lg border border-border p-6">
