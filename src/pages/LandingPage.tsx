@@ -20,8 +20,8 @@ const audiences = [
     icon: Users,
     tone: "primary",
     points: [
-      "Add your murma to things you need",
-      "See what your community cares about",
+      "Start a murma about things you need",
+      "Share with your community cares about",
       "Support ideas you love",
       "Make your town impossible to ignore",
     ],
@@ -40,7 +40,7 @@ const audiences = [
   },
   {
     title: "Murma Civic",
-    subtitle: "For Councils",
+    subtitle: "For the Public Sector",
     icon: Landmark,
     tone: "civic",
     points: [
