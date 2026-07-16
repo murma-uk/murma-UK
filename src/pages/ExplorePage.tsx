@@ -141,7 +141,7 @@ export default function ExplorePage() {
         <div className={`${mobileView === "list" ? "flex" : "hidden"} md:flex flex-col relative w-full border-r border-border md:w-96 md:flex-shrink-0`}>
           <div className="border-b border-border p-4">
             <p className="section-heading mb-2">The Signal</p>
-            <h2 className="font-display text-2xl tracking-[-0.02em] mb-3">Murmas</h2>
+            <h2 className="font-display text-2xl tracking-[-0.02em] mb-3">{requests.length} murmas</h2>
             <CategoryFilter selected={selectedCategory} onSelect={setSelectedCategory} />
           </div>
 
