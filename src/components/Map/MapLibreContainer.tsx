@@ -61,7 +61,7 @@ export function MapLibreContainer({
     const nextMap = new maplibregl.Map({
       container: containerRef.current,
       style,
-      center: isValidLatLng(center) ? [center[0], center[1]] : [0, 0],
+      center: isValidLatLng(center) ? [center[1], center[0]] : [0, 0],
       zoom,
       attributionControl: true,
     });
