@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -110,15 +110,19 @@ export default function ExplorePage() {
     setMapCenter({ lat, lng });
   }, []);
 
-  const mapRequests = requests.map((r) => ({
-    id: r.id,
-    title: r.title,
-    category: r.category as RequestCategory,
-    lat: r.lat,
-    lng: r.lng,
-    town: r.town,
-    upvote_count: r.upvote_count,
-  }));
+  const mapRequests = useMemo(
+    () =>
+      requests.map((r) => ({
+        id: r.id,
+        title: r.title,
+        category: r.category as RequestCategory,
+        lat: r.lat,
+        lng: r.lng,
+        town: r.town,
+        upvote_count: r.upvote_count,
+      })),
+    [requests]
+  );
 
   return (
     <div className="flex h-screen flex-col bg-background">
