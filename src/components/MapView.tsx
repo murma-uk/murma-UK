@@ -273,7 +273,7 @@ export default function MapView({
       map.remove();
       mapRef.current = null;
     };
-  }, []);
+  }, [center, zoom]);
 
   useEffect(() => {
     const map = mapRef.current;
