@@ -120,19 +120,29 @@ export default function MapView({
   useEffect(() => {
     if (!mapElementRef.current || mapRef.current) return;
 
+    const container = mapElementRef.current;
     const initialCenter = getSafeCenter(center);
     const initialZoom = Number.isFinite(zoom) ? zoom : 6;
 
-    const map = new maplibregl.Map({
-      container: mapElementRef.current,
-      style: OSM_STYLE,
-      center: initialCenter,
-      zoom: initialZoom,
-      attributionControl: true,
-    });
+    // Check container dimensions
+    if (container.clientWidth === 0 || container.clientHeight === 0) {
+      console.warn("Map container has zero dimensions", {
+        width: container.clientWidth,
+        height: container.clientHeight,
+      });
+    }
 
-    // Add navigation controls
-    map.addControl(new maplibregl.NavigationControl());
+    try {
+      const map = new maplibregl.Map({
+        container,
+        style: OSM_STYLE,
+        center: initialCenter,
+        zoom: initialZoom,
+        attributionControl: true,
+      });
+
+      // Add navigation controls
+      map.addControl(new maplibregl.NavigationControl());
 
     // Handle map click
     map.on("click", (e) => {
@@ -168,19 +178,25 @@ export default function MapView({
     });
     resizeObserver.observe(mapElementRef.current);
 
-    mapRef.current = map;
+      mapRef.current = map;
 
-    return () => {
-      resizeObserver.disconnect();
-      markersRef.current.forEach((marker) => marker.remove());
-      markersRef.current = [];
-      if (droppedPinMarkerRef.current) {
-        droppedPinMarkerRef.current.remove();
-        droppedPinMarkerRef.current = null;
-      }
-      map.remove();
-      mapRef.current = null;
-    };
+      return () => {
+        resizeObserver.disconnect();
+        markersRef.current.forEach((marker) => marker.remove());
+        markersRef.current = [];
+        if (droppedPinMarkerRef.current) {
+          droppedPinMarkerRef.current.remove();
+          droppedPinMarkerRef.current = null;
+        }
+        map.remove();
+        mapRef.current = null;
+      };
+    } catch (error) {
+      console.error("Failed to initialize map:", error);
+      return () => {
+        // Cleanup on error
+      };
+    }
   }, []);
 
   // Update pin mode cursor
