@@ -96,6 +96,8 @@ export default function MapView({
 }: MapViewProps) {
   const mapElementRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
+  const markersRef = useRef<maplibregl.Marker[]>([]);
+  const droppedPinMarkerRef = useRef<maplibregl.Marker | null>(null);
   const onMapClickRef = useRef(onMapClick);
   onMapClickRef.current = onMapClick;
   const onCenterChangeRef = useRef(onCenterChange);
@@ -166,6 +168,12 @@ export default function MapView({
 
     return () => {
       resizeObserver.disconnect();
+      markersRef.current.forEach((marker) => marker.remove());
+      markersRef.current = [];
+      if (droppedPinMarkerRef.current) {
+        droppedPinMarkerRef.current.remove();
+        droppedPinMarkerRef.current = null;
+      }
       map.remove();
       mapRef.current = null;
     };
@@ -199,8 +207,8 @@ export default function MapView({
     if (!map) return;
 
     // Clean up existing markers
-    const existingMarkers = document.querySelectorAll(".maplibre-marker");
-    existingMarkers.forEach((marker) => marker.remove());
+    markersRef.current.forEach((marker) => marker.remove());
+    markersRef.current = [];
 
     // Add request markers
     requests.forEach((req) => {
@@ -210,7 +218,6 @@ export default function MapView({
 
       // Create marker element
       const el = document.createElement("div");
-      el.className = "maplibre-marker";
       el.style.cursor = "pointer";
       el.innerHTML = `
         <div style="
@@ -248,6 +255,8 @@ export default function MapView({
           onMarkerClick(req.id);
         }
       });
+
+      markersRef.current.push(marker);
     });
 
     // Add business markers
@@ -255,7 +264,6 @@ export default function MapView({
       if (!isValidLatLng(biz.lat, biz.lng)) return;
 
       const el = document.createElement("div");
-      el.className = "maplibre-marker";
       el.style.cursor = "pointer";
       el.innerHTML = `
         <div style="
@@ -293,6 +301,8 @@ export default function MapView({
           onBusinessClick(biz.id);
         }
       });
+
+      markersRef.current.push(marker);
     });
   }, [requests, businesses, onMarkerClick, onBusinessClick, colorBySlug]);
 
@@ -302,14 +312,13 @@ export default function MapView({
     if (!map) return;
 
     // Remove existing dropped pin marker
-    const existingPin = document.querySelector(".maplibre-dropped-pin");
-    if (existingPin) {
-      existingPin.remove();
+    if (droppedPinMarkerRef.current) {
+      droppedPinMarkerRef.current.remove();
+      droppedPinMarkerRef.current = null;
     }
 
     if (droppedPin && isValidLatLng(droppedPin.lat, droppedPin.lng)) {
       const el = document.createElement("div");
-      el.className = "maplibre-dropped-pin";
       el.innerHTML = `
         <div style="
           width: 12px; height: 12px; border-radius: 50%;
@@ -319,7 +328,7 @@ export default function MapView({
         "></div>
       `;
 
-      new maplibregl.Marker({ element: el })
+      droppedPinMarkerRef.current = new maplibregl.Marker({ element: el })
         .setLngLat([droppedPin.lng, droppedPin.lat])
         .addTo(map);
     }
