@@ -100,6 +100,16 @@ export default function ExplorePage() {
     setSearchParams({ create: "true" });
   }, [user, navigate, toast, setSearchParams]);
 
+  const handleMarkerClick = useCallback((id: string) => {
+    if (pinMode) return;
+    const r = requests.find((x) => x.id === id);
+    navigate(buildRequestPath(id, r?.slug));
+  }, [pinMode, requests, navigate]);
+
+  const handleCenterChange = useCallback((lat: number, lng: number) => {
+    setMapCenter({ lat, lng });
+  }, []);
+
   const mapRequests = requests.map((r) => ({
     id: r.id,
     title: r.title,
@@ -199,14 +209,10 @@ export default function ExplorePage() {
           <MapView
             requests={mapRequests}
             businesses={[]}
-            onMarkerClick={(id) => {
-              if (pinMode) return;
-              const r = requests.find((x) => x.id === id);
-              navigate(buildRequestPath(id, r?.slug));
-            }}
+            onMarkerClick={handleMarkerClick}
             onBusinessClick={undefined}
             onMapClick={handleMapClick}
-            onCenterChange={(lat, lng) => setMapCenter({ lat, lng })}
+            onCenterChange={handleCenterChange}
             pinMode={pinMode}
             droppedPin={droppedPin}
           />
