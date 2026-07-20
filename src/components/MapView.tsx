@@ -241,7 +241,15 @@ export default function MapView({
     });
 
     map.on("zoomend", () => {
-      console.log("[ZOOM END] Center:", map.getCenter(), "Zoom:", map.getZoom());
+      const finalCenter = map.getCenter();
+      const finalZoom = map.getZoom();
+      console.log("[ZOOM END] Center:", finalCenter, "Zoom:", finalZoom);
+
+      // Log first marker position for comparison
+      if (requestMarkersRef.current.length > 0) {
+        const firstMarker = requestMarkersRef.current[0];
+        console.log("[ZOOM END MARKER CHECK] First marker LngLat:", firstMarker.marker.getLngLat());
+      }
     });
 
     // TEST MARKERS: Add hardcoded test markers to verify marker positioning works
