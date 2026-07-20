@@ -283,7 +283,7 @@ export default function TownPage() {
                   {centerLat !== null && centerLng !== null && (
                     <MapView
                       requests={mapRequests}
-                      initialCenter={{ lat: centerLat, lng: centerLng }}
+                      center={[centerLat, centerLng]}
                       onRequestClick={() => {}} // Read-only map
                     />
                   )}

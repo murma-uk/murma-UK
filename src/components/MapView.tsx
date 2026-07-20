@@ -295,7 +295,7 @@ export default function MapView({
     if (droppedPin && isValidLatLng(droppedPin.lat, droppedPin.lng)) {
       pinMarkerRef.current = createMarkerWithPopup({
         map,
-        position: [droppedPin.lat, droppedPin.lng],
+        position: [droppedPin.lng, droppedPin.lat],
         element: createDroppedPinElement(),
         popupHtml: `<div class="font-heading"><strong>Drop pin</strong></div>`,
       });
@@ -330,7 +330,7 @@ export default function MapView({
 
       const marker = createMarkerWithPopup({
         map,
-        position: [business.lat, business.lng],
+        position: [business.lng, business.lat],
         element: createBusinessElement(),
         popupHtml: `
           <div class="font-heading">
@@ -352,7 +352,7 @@ export default function MapView({
 
       const marker = createMarkerWithPopup({
         map,
-        position: [request.lat, request.lng],
+        position: [request.lng, request.lat],
         element: createCategoryElement(colorBySlug.get(request.category) ?? FALLBACK_COLOR),
         popupHtml: `
           <div class="font-heading">
