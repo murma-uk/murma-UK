@@ -1,77 +1,15 @@
 import { useEffect, useMemo, useRef } from "react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import { useCategories, type RequestCategory, type CategoryInfo } from "@/lib/categories";
-
-// Fix default marker icon
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-});
+import maplibregl from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+import { useCategories, type RequestCategory } from "@/lib/categories";
 
 const DEFAULT_CENTER: [number, number] = [51.5, -0.12]; // London, UK
-
-function isValidLatLng(lat: unknown, lng: unknown): lat is number {
-  return typeof lat === "number" && typeof lng === "number" && Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
-}
-
-function getSafeCenter(center: [number, number] | undefined) {
-  return center && isValidLatLng(center[0], center[1]) ? center : DEFAULT_CENTER;
-}
-
-function hasVisibleSize(map: L.Map) {
-  const container = map.getContainer();
-  return container.clientWidth > 0 && container.clientHeight > 0;
-}
-
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
 const FALLBACK_COLOR = "hsl(210, 100%, 50%)";
+const OSM_STYLE_URL = "https://demotiles.maplibre.org/style.json";
 
-function createCategoryIcon(color: string) {
-  return L.divIcon({
-    className: "custom-marker",
-    html: `<div style="
-      width: 28px; height: 28px; border-radius: 50% 50% 50% 0;
-      background: ${color}; transform: rotate(-45deg);
-      border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-      position: relative;
-    "><div style="
-      width: 10px; height: 10px; border-radius: 50%;
-      background: white; position: absolute;
-      top: 50%; left: 50%; transform: translate(-50%, -50%);
-    "></div></div>`,
-    iconSize: [28, 28],
-    iconAnchor: [14, 28],
-    popupAnchor: [0, -28],
-  });
-}
-
-function createBusinessIcon() {
-  return L.divIcon({
-    className: "custom-marker",
-    html: `<div style="
-      width: 32px; height: 32px; border-radius: 6px;
-      background: hsl(var(--primary));
-      border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.35);
-      display: flex; align-items: center; justify-content: center;
-    "><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-      <polyline points="9 22 9 12 15 12 15 22"></polyline>
-    </svg></div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 32],
-    popupAnchor: [0, -32],
-  });
+interface MarkerHandle {
+  marker: maplibregl.Marker;
+  cleanup: () => void;
 }
 
 interface MapRequest {
@@ -108,6 +46,134 @@ interface MapViewProps {
   className?: string;
 }
 
+function isValidLatLng(lat: unknown, lng: unknown): lat is number {
+  return typeof lat === "number" && typeof lng === "number" && Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
+}
+
+function getSafeCenter(center: [number, number] | undefined): [number, number] {
+  if (center && isValidLatLng(center[0], center[1])) {
+    return center;
+  }
+  return DEFAULT_CENTER;
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function toMapLibreCenter(center: [number, number]): [number, number] {
+  return [center[1], center[0]];
+}
+
+function createCategoryElement(color: string): HTMLDivElement {
+  const element = document.createElement("div");
+  element.className = "custom-marker";
+  element.style.width = "28px";
+  element.style.height = "28px";
+  element.style.borderRadius = "50% 50% 50% 0";
+  element.style.background = color;
+  element.style.transform = "rotate(-45deg)";
+  element.style.border = "2px solid white";
+  element.style.boxShadow = "0 2px 6px rgba(0,0,0,0.3)";
+  element.style.position = "relative";
+  element.style.cursor = "pointer";
+  element.innerHTML = `
+    <div style="
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: white;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    " />
+  `;
+  return element;
+}
+
+function createBusinessElement(): HTMLDivElement {
+  const element = document.createElement("div");
+  element.className = "custom-marker";
+  element.style.width = "32px";
+  element.style.height = "32px";
+  element.style.borderRadius = "6px";
+  element.style.background = "hsl(var(--primary))";
+  element.style.border = "2px solid white";
+  element.style.boxShadow = "0 2px 8px rgba(0,0,0,0.35)";
+  element.style.display = "flex";
+  element.style.alignItems = "center";
+  element.style.justifyContent = "center";
+  element.style.cursor = "pointer";
+  element.innerHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+      <polyline points="9 22 9 12 15 12 15 22"></polyline>
+    </svg>
+  `;
+  return element;
+}
+
+function createDroppedPinElement(): HTMLDivElement {
+  const element = document.createElement("div");
+  element.style.width = "18px";
+  element.style.height = "18px";
+  element.style.borderRadius = "999px";
+  element.style.background = "#f43f5e";
+  element.style.border = "2px solid white";
+  element.style.boxShadow = "0 2px 8px rgba(0,0,0,0.35)";
+  return element;
+}
+
+function createMarkerWithPopup({
+  map,
+  position,
+  element,
+  popupHtml,
+  onClick,
+}: {
+  map: maplibregl.Map;
+  position: [number, number];
+  element: HTMLDivElement;
+  popupHtml: string;
+  onClick?: () => void;
+}): MarkerHandle {
+  const marker = new maplibregl.Marker({
+    element,
+    anchor: "bottom",
+  });
+
+  const popup = new maplibregl.Popup({ offset: 12 }).setHTML(popupHtml);
+  marker.setLngLat(position);
+  marker.setPopup(popup);
+
+  const handleClick = () => {
+    popup.setLngLat(position);
+    popup.addTo(map);
+    onClick?.();
+  };
+
+  element.addEventListener("click", handleClick);
+  marker.addTo(map);
+
+  return {
+    marker,
+    cleanup: () => {
+      element.removeEventListener("click", handleClick);
+      popup.remove();
+      marker.remove();
+    },
+  };
+}
+
+/**
+ * Renders a MapLibre-based map for requests, businesses, and pin interactions.
+ */
 export default function MapView({
   requests,
   businesses = [],
@@ -118,170 +184,186 @@ export default function MapView({
   pinMode = false,
   droppedPin = null,
   center = DEFAULT_CENTER,
-  zoom = 5, // UK-wide view
+  zoom = 5,
   className = "",
 }: MapViewProps) {
   const mapElementRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<L.Map | null>(null);
-  const markerLayerRef = useRef<L.LayerGroup | null>(null);
-  const pinMarkerRef = useRef<L.Marker | null>(null);
+  const mapRef = useRef<maplibregl.Map | null>(null);
+  const requestMarkersRef = useRef<MarkerHandle[]>([]);
+  const businessMarkersRef = useRef<MarkerHandle[]>([]);
+  const pinMarkerRef = useRef<MarkerHandle | null>(null);
   const onMapClickRef = useRef(onMapClick);
-  onMapClickRef.current = onMapClick;
   const onCenterChangeRef = useRef(onCenterChange);
-  onCenterChangeRef.current = onCenterChange;
   const pinModeRef = useRef(pinMode);
+
+  onMapClickRef.current = onMapClick;
+  onCenterChangeRef.current = onCenterChange;
   pinModeRef.current = pinMode;
 
   const { data: categories } = useCategories();
   const colorBySlug = useMemo(() => {
-    const map = new Map<string, string>();
-    (categories ?? []).forEach((c) => map.set(c.slug, c.color));
-    return map;
+    const nextMap = new Map<string, string>();
+    (categories ?? []).forEach((category) => nextMap.set(category.slug, category.color));
+    return nextMap;
   }, [categories]);
 
   useEffect(() => {
-    if (!mapElementRef.current || mapRef.current) return;
+    if (!mapElementRef.current || mapRef.current) {
+      return;
+    }
 
-    const initialCenter = getSafeCenter(center);
+    const initialCenter = toMapLibreCenter(getSafeCenter(center));
     const initialZoom = Number.isFinite(zoom) ? zoom : 6;
 
-    const map = L.map(mapElementRef.current, {
-      zoomControl: true,
+    const map = new maplibregl.Map({
+      container: mapElementRef.current,
+      style: OSM_STYLE_URL,
+      center: initialCenter,
+      zoom: initialZoom,
       attributionControl: true,
-    }).setView(initialCenter, initialZoom);
+    });
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>',
-    }).addTo(map);
-
-    markerLayerRef.current = L.layerGroup().addTo(map);
     mapRef.current = map;
 
-    map.on("click", (e: L.LeafletMouseEvent) => {
+    map.on("click", (event) => {
       if (pinModeRef.current && onMapClickRef.current) {
-        onMapClickRef.current(e.latlng.lat, e.latlng.lng);
+        onMapClickRef.current(event.lngLat.lat, event.lngLat.lng);
       }
     });
 
     map.on("moveend", () => {
-      if (!onCenterChangeRef.current) return;
-      const c = map.getCenter();
-      onCenterChangeRef.current(c.lat, c.lng, map.getZoom());
+      if (!onCenterChangeRef.current) {
+        return;
+      }
+      const centerValue = map.getCenter();
+      onCenterChangeRef.current(centerValue.lat, centerValue.lng, map.getZoom());
     });
 
-    // Watch container size — Leaflet needs invalidateSize() when its container
-    // goes from hidden (0x0) to visible (e.g. mobile tab toggle, orientation change).
-    let lastW = 0;
-    let lastH = 0;
+    let lastWidth = 0;
+    let lastHeight = 0;
     const resizeObserver = new ResizeObserver((entries) => {
       const entry = entries[0];
-      if (!entry) return;
+      if (!entry) {
+        return;
+      }
       const { width, height } = entry.contentRect;
-      if (width === lastW && height === lastH) return;
-      const wasHidden = lastW === 0 || lastH === 0;
-      lastW = width;
-      lastH = height;
-      if (width === 0 || height === 0) return;
-      map.invalidateSize(false);
-      // When revealing from hidden, re-centre so tiles load around the right spot.
-      if (wasHidden) {
-        map.setView(map.getCenter(), map.getZoom(), { animate: false });
+      if (width === lastWidth && height === lastHeight) {
+        return;
+      }
+      lastWidth = width;
+      lastHeight = height;
+      if (width === 0 || height === 0) {
+        return;
+      }
+      map.resize();
+      if (lastWidth === 0 || lastHeight === 0) {
+        map.jumpTo({ center: map.getCenter(), zoom: map.getZoom() });
       }
     });
     resizeObserver.observe(mapElementRef.current);
 
     return () => {
       resizeObserver.disconnect();
-      markerLayerRef.current?.clearLayers();
-      markerLayerRef.current = null;
+      requestMarkersRef.current.forEach((marker) => marker.cleanup());
+      businessMarkersRef.current.forEach((marker) => marker.cleanup());
+      pinMarkerRef.current?.cleanup();
+      requestMarkersRef.current = [];
+      businessMarkersRef.current = [];
       pinMarkerRef.current = null;
       map.remove();
       mapRef.current = null;
     };
   }, []);
 
-  // Pin mode cursor + dropped pin marker
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
-    const container = map.getContainer();
-    container.style.cursor = pinMode ? "crosshair" : "";
+    if (!map) {
+      return;
+    }
+    map.getCanvas().style.cursor = pinMode ? "crosshair" : "";
   }, [pinMode]);
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
-    if (pinMarkerRef.current) {
-      pinMarkerRef.current.remove();
-      pinMarkerRef.current = null;
+    if (!map) {
+      return;
     }
+
+    pinMarkerRef.current?.cleanup();
+    pinMarkerRef.current = null;
+
     if (droppedPin && isValidLatLng(droppedPin.lat, droppedPin.lng)) {
-      pinMarkerRef.current = L.marker([droppedPin.lat, droppedPin.lng], {
-        zIndexOffset: 1000,
-      }).addTo(map);
+      pinMarkerRef.current = createMarkerWithPopup({
+        map,
+        position: [droppedPin.lng, droppedPin.lat],
+        element: createDroppedPinElement(),
+        popupHtml: `<div class="font-heading"><strong>Drop pin</strong></div>`,
+      });
     }
   }, [droppedPin]);
 
   useEffect(() => {
-    if (!mapRef.current) return;
     const map = mapRef.current;
-    const nextCenter = getSafeCenter(center);
-    const nextZoom = Number.isFinite(zoom) ? zoom : 6;
-    if (!hasVisibleSize(map)) {
-      map.setView(nextCenter, nextZoom, { animate: false });
+    if (!map) {
       return;
     }
-    map.invalidateSize(false);
-    map.flyTo(nextCenter, nextZoom, { duration: 1 });
+
+    const nextCenter = toMapLibreCenter(getSafeCenter(center));
+    const nextZoom = Number.isFinite(zoom) ? zoom : 6;
+
+    map.jumpTo({ center: nextCenter, zoom: nextZoom });
   }, [center, zoom]);
 
   useEffect(() => {
-    const layer = markerLayerRef.current;
-    if (!layer) return;
+    const map = mapRef.current;
+    if (!map) {
+      return;
+    }
 
-    layer.clearLayers();
+    requestMarkersRef.current.forEach((marker) => marker.cleanup());
+    requestMarkersRef.current = [];
 
-    businesses.forEach((biz) => {
-      if (!isValidLatLng(biz.lat, biz.lng)) return;
-
-      const marker = L.marker([biz.lat, biz.lng], {
-        icon: createBusinessIcon(),
-      });
-
-      marker.bindPopup(`
-        <div class="font-heading">
-          <strong>${escapeHtml(biz.name)}</strong><br />
-          <span class="text-sm capitalize">${escapeHtml(biz.business_type.replace(/_/g, " "))}</span><br />
-          <span class="text-sm">${escapeHtml(biz.town)} · ${biz.request_count} request${biz.request_count !== 1 ? "s" : ""}</span>
-        </div>
-      `);
-
-      if (onBusinessClick) {
-        marker.on("click", () => onBusinessClick(biz.id));
+    businesses.forEach((business) => {
+      if (!isValidLatLng(business.lat, business.lng)) {
+        return;
       }
 
-      marker.addTo(layer);
+      const marker = createMarkerWithPopup({
+        map,
+        position: [business.lng, business.lat],
+        element: createBusinessElement(),
+        popupHtml: `
+          <div class="font-heading">
+            <strong>${escapeHtml(business.name)}</strong><br />
+            <span class="text-sm capitalize">${escapeHtml(business.business_type.replace(/_/g, " "))}</span><br />
+            <span class="text-sm">${escapeHtml(business.town)} · ${business.request_count} request${business.request_count !== 1 ? "s" : ""}</span>
+          </div>
+        `,
+        onClick: () => onBusinessClick?.(business.id),
+      });
+
+      businessMarkersRef.current.push(marker);
     });
 
-    requests.forEach((req) => {
-      if (!isValidLatLng(req.lat, req.lng)) return;
-
-      const marker = L.marker([req.lat, req.lng], {
-        icon: createCategoryIcon(colorBySlug.get(req.category) ?? FALLBACK_COLOR),
-      });
-
-      marker.bindPopup(`
-        <div class="font-heading">
-          <strong>${escapeHtml(req.title)}</strong><br />
-          <span class="text-sm">${escapeHtml(req.town)} · ${req.upvote_count} voices</span>
-        </div>
-      `);
-
-      if (onMarkerClick) {
-        marker.on("click", () => onMarkerClick(req.id));
+    requests.forEach((request) => {
+      if (!isValidLatLng(request.lat, request.lng)) {
+        return;
       }
 
-      marker.addTo(layer);
+      const marker = createMarkerWithPopup({
+        map,
+        position: [request.lng, request.lat],
+        element: createCategoryElement(colorBySlug.get(request.category) ?? FALLBACK_COLOR),
+        popupHtml: `
+          <div class="font-heading">
+            <strong>${escapeHtml(request.title)}</strong><br />
+            <span class="text-sm">${escapeHtml(request.town)} · ${request.upvote_count} voices</span>
+          </div>
+        `,
+        onClick: () => onMarkerClick?.(request.id),
+      });
+
+      requestMarkersRef.current.push(marker);
     });
   }, [requests, businesses, onMarkerClick, onBusinessClick, colorBySlug]);
 
