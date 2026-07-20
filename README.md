@@ -37,8 +37,8 @@ Murma is built on the following open source libraries:
 - **Supabase JS** - Backend database, auth, and storage
 
 ### Maps & Location
-- **Leaflet** - Interactive maps library
-- **React Leaflet** - React wrapper for Leaflet
+- **MapLibre GL JS** - High-performance, open-source vector map library
+- **@maplibre/maplibre-gl** - WebGL rendering for interactive maps
 
 ### UI & Animation
 - **Framer Motion** - Animation library
