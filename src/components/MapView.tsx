@@ -228,12 +228,36 @@ export default function MapView({
     mapRef.current = map;
 
     // DEBUG: Log map center initialization
-    console.log("[MAPLIBRE DEBUG] Map initialized");
-    console.log("[MAPLIBRE DEBUG] Input center prop:", center);
-    console.log("[MAPLIBRE DEBUG] After getSafeCenter:", getSafeCenter(center));
-    console.log("[MAPLIBRE DEBUG] After toMapLibreCenter:", initialCenter);
-    console.log("[MAPLIBRE DEBUG] Map.getCenter():", map.getCenter());
-    console.log("[MAPLIBRE DEBUG] Zoom level:", initialZoom);
+    console.log("[MAP INIT] Input center prop:", center, "| getSafeCenter result:", getSafeCenter(center));
+    console.log("[MAP INIT] toMapLibreCenter transform:", initialCenter);
+    console.log("[MAP INIT] Map initialized with center:", initialCenter, "zoom:", initialZoom);
+
+    map.once("load", () => {
+      console.log("[MAP LOAD] Map loaded. Center is:", map.getCenter());
+    });
+
+    map.on("zoomstart", () => {
+      console.log("[ZOOM START] Center:", map.getCenter(), "Zoom:", map.getZoom());
+    });
+
+    map.on("zoomend", () => {
+      console.log("[ZOOM END] Center:", map.getCenter(), "Zoom:", map.getZoom());
+    });
+
+    // TEST MARKERS: Add hardcoded test markers to verify marker positioning works
+    createMarkerWithPopup({
+      map,
+      position: [-0.1278, 51.5074],  // [lng, lat] - London
+      element: createCategoryElement("#ff0000"),
+      popupHtml: "<strong>TEST 1: London at [-0.1278, 51.5074]</strong>",
+    });
+
+    createMarkerWithPopup({
+      map,
+      position: [-2.0, 53.0],  // [lng, lat] - UK center
+      element: createCategoryElement("#00ff00"),
+      popupHtml: "<strong>TEST 2: UK Center at [-2.0, 53.0]</strong>",
+    });
 
     map.on("click", (event) => {
       if (pinModeRef.current && onMapClickRef.current) {
