@@ -344,8 +344,18 @@ export default function MapView({
 
     const nextCenter = toMapLibreCenter(getSafeCenter(center));
     const nextZoom = Number.isFinite(zoom) ? zoom : 6;
+    const currentCenter = map.getCenter();
+    const currentZoom = map.getZoom();
 
-    map.jumpTo({ center: nextCenter, zoom: nextZoom });
+    // Only jump if center or zoom actually changed significantly
+    // This prevents unnecessary recentering during user zoom/pan events
+    const centerChanged = Math.abs(currentCenter.lng - nextCenter[0]) > 0.001 || Math.abs(currentCenter.lat - nextCenter[1]) > 0.001;
+    const zoomChanged = Math.abs(currentZoom - nextZoom) > 0.01;
+
+    if (centerChanged || zoomChanged) {
+      console.log("[CENTER UPDATE] Jumping to new center:", nextCenter, "zoom:", nextZoom);
+      map.jumpTo({ center: nextCenter, zoom: nextZoom });
+    }
   }, [center, zoom]);
 
   useEffect(() => {
