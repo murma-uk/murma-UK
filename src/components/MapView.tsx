@@ -366,11 +366,21 @@ export default function MapView({
     }
   }, [center, zoom]);
 
+  const prevDepsRef = useRef<any>({});
+
   useEffect(() => {
     const map = mapRef.current;
     if (!map) {
       return;
     }
+
+    // Log which dependency changed
+    const deps = { requests: requests.length, businesses: businesses.length, onMarkerClick: !!onMarkerClick, onBusinessClick: !!onBusinessClick, colorBySlug: colorBySlug.size };
+    const changedDeps = Object.keys(deps).filter(key => prevDepsRef.current[key] !== deps[key as keyof typeof deps]);
+    if (changedDeps.length > 0) {
+      console.log("[MARKER DEPS CHANGED]", changedDeps, "new deps:", deps);
+    }
+    prevDepsRef.current = deps;
 
     console.log("[MARKER RECREATE] Recreating markers. Map state:", {
       center: map.getCenter(),
