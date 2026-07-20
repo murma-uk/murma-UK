@@ -330,6 +330,12 @@ export default function MapView({
       return;
     }
 
+    console.log("[MARKER RECREATE] Recreating markers. Map state:", {
+      center: map.getCenter(),
+      zoom: map.getZoom(),
+      numRequests: requests.length,
+    });
+
     requestMarkersRef.current.forEach((marker) => marker.cleanup());
     requestMarkersRef.current = [];
 
@@ -378,6 +384,15 @@ export default function MapView({
 
       requestMarkersRef.current.push(marker);
     });
+
+    // Log after all markers are created
+    const mapAfterCreation = mapRef.current;
+    if (mapAfterCreation) {
+      console.log("[MARKER RECREATE] After creating markers. Map state:", {
+        center: mapAfterCreation.getCenter(),
+        zoom: mapAfterCreation.getZoom(),
+      });
+    }
   }, [requests, businesses, onMarkerClick, onBusinessClick, colorBySlug]);
 
   return <div ref={mapElementRef} className={`z-0 rounded-lg ${className}`} style={{ height: "100%", width: "100%" }} />;
