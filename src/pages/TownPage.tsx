@@ -283,8 +283,8 @@ export default function TownPage() {
                   {centerLat !== null && centerLng !== null && (
                     <MapView
                       requests={mapRequests}
-                      initialCenter={{ lat: centerLat, lng: centerLng }}
-                      onRequestClick={() => {}} // Read-only map
+                      center={[centerLat, centerLng]}
+                      onMarkerClick={() => {}} // Read-only map
                     />
                   )}
                 </div>
