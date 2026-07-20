@@ -26,8 +26,9 @@ function escapeHtml(value: string) {
 const OSM_STYLE = {
   version: 8,
   name: "OpenStreetMap",
+  glyphs: "https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf",
   sources: {
-    osm: {
+    "osm-raster": {
       type: "raster",
       tiles: [
         "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -35,19 +36,22 @@ const OSM_STYLE = {
         "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png",
       ],
       tileSize: 256,
-      attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      minzoom: 0,
+      maxzoom: 19,
     },
   },
   layers: [
     {
-      id: "osm-base",
+      id: "osm-base-layer",
       type: "raster",
-      source: "osm",
+      source: "osm-raster",
       minzoom: 0,
-      maxzoom: 28,
+      maxzoom: 19,
     },
   ],
-};
+} as any;
 
 const FALLBACK_COLOR = "hsl(210, 100%, 50%)";
 
