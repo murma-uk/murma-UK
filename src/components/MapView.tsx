@@ -149,6 +149,8 @@ function createMarkerWithPopup({
   });
 
   const popup = new maplibregl.Popup({ offset: 12 }).setHTML(popupHtml);
+  // DEBUG: Log position being set
+  console.log("[SETLNGLAT DEBUG] Calling marker.setLngLat with position:", position);
   marker.setLngLat(position);
   marker.setPopup(popup);
 
@@ -224,6 +226,14 @@ export default function MapView({
     });
 
     mapRef.current = map;
+
+    // DEBUG: Log map center initialization
+    console.log("[MAPLIBRE DEBUG] Map initialized");
+    console.log("[MAPLIBRE DEBUG] Input center prop:", center);
+    console.log("[MAPLIBRE DEBUG] After getSafeCenter:", getSafeCenter(center));
+    console.log("[MAPLIBRE DEBUG] After toMapLibreCenter:", initialCenter);
+    console.log("[MAPLIBRE DEBUG] Map.getCenter():", map.getCenter());
+    console.log("[MAPLIBRE DEBUG] Zoom level:", initialZoom);
 
     map.on("click", (event) => {
       if (pinModeRef.current && onMapClickRef.current) {
@@ -349,6 +359,9 @@ export default function MapView({
       if (!isValidLatLng(request.lat, request.lng)) {
         return;
       }
+
+      // DEBUG: Log request coordinates
+      console.log(`[MARKER DEBUG] "${request.title}" - DB coords [lat=${request.lat}, lng=${request.lng}] -> position=[${request.lat}, ${request.lng}]`);
 
       const marker = createMarkerWithPopup({
         map,
