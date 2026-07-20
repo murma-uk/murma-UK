@@ -29,7 +29,11 @@ const OSM_STYLE = {
   sources: {
     osm: {
       type: "raster",
-      tiles: ["https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"],
+      tiles: [
+        "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png",
+      ],
       tileSize: 256,
       attribution: '&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors',
     },
