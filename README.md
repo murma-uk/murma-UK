@@ -23,7 +23,7 @@ Murma is built on the following open source libraries:
 - **Tailwind CSS** - Utility-first CSS framework
 
 ### UI Component Libraries
-- **Radix UI** - Collection of unstyled, accessible components (Accordion, Alert Dialog, Avatar, Checkbox, Collapsible, Context Menu, Dialog, Dropdown Menu, Hover Card, Label, Menubar, Navigation Menu, Popover, Progress, Radio Group, Scroll Area, Select, Separator, Slider, Switch, Tabs, Toast, Toggle, Tooltip)
+- **Radix UI** - Collection of unstyled, accessible components (Accordion, Alert Dialog, Aspect Ratio, Avatar, Checkbox, Collapsible, Context Menu, Dialog, Dropdown Menu, Hover Card, Label, Menubar, Navigation Menu, Popover, Progress, Radio Group, Scroll Area, Select, Separator, Slider, Slot, Switch, Tabs, Toast, Toggle, Toggle Group, Tooltip)
 - **Lucide React** - Icon library
 - **Embla Carousel** - Carousel/slider component
 
@@ -37,8 +37,9 @@ Murma is built on the following open source libraries:
 - **Supabase JS** - Backend database, auth, and storage
 
 ### Maps & Location
-- **Leaflet** - Interactive maps library
-- **React Leaflet** - React wrapper for Leaflet
+- **MapLibre GL** - Open-source maps library
+- **React Map GL** - React wrapper for MapLibre GL
+- **@types/maplibre-gl** - TypeScript types for MapLibre GL
 
 ### UI & Animation
 - **Framer Motion** - Animation library
@@ -48,6 +49,7 @@ Murma is built on the following open source libraries:
 - **React Resizable Panels** - Resizable panel layout
 - **Recharts** - Chart library
 - **React Day Picker** - Date picker
+- **tailwindcss-animate** - Tailwind CSS animation utilities
 
 ### Utilities
 - **Date-fns** - Date manipulation
