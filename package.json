@@ -1,6 +1,7 @@
 {
   "name": "vite_react_shadcn_ts",
   "private": true,
+  "license": "MIT",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
@@ -10,7 +11,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "license-check": "license-checker-rseidelsohn --production --onlyAllow \"MIT;Apache-2.0;Apache 2.0;BSD;BSD-2-Clause;BSD-3-Clause;ISC;OFL-1.1;MPL-2.0;LGPL-2.1;LGPL-3.0;BlueOak-1.0.0\" --excludePackages \"license-checker-rseidelsohn;vite_react_shadcn_ts\""
   },
   "dependencies": {
     "@fontsource/space-grotesk": "^5.2.10",
@@ -86,6 +88,7 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.15.0",
     "jsdom": "^20.0.3",
+    "license-checker-rseidelsohn": "^5.0.1",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
